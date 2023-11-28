@@ -1,1 +1,1 @@
-# StreamLCM
+# StreamDiffusion
