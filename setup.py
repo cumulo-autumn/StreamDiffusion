@@ -9,11 +9,16 @@ _deps = [
     "diffusers",
     "transformers",
     "accelerate",
+    "fire",
+    "omegaconf",
+    "pywin32",
+    "cuda-python",
+    "onnx==1.13.1",
+    "onnxruntime==1.14.1",
+    "colored"
 ]
 
-deps = {
-    b: a for a, b in (re.findall(r"^(([^!=<>~]+)(?:[!=<>~].*)?$)", x)[0] for x in _deps)
-}
+deps = {b: a for a, b in (re.findall(r"^(([^!=<>~]+)(?:[!=<>~].*)?$)", x)[0] for x in _deps)}
 
 
 def deps_list(*pkgs):
@@ -23,16 +28,19 @@ def deps_list(*pkgs):
 extras = {}
 extras["xformers"] = deps_list("xformers")
 extras["torch"] = deps_list("torch", "accelerate")
+extras["tensorrt"] = deps_list("pywin32", "cuda-python", "onnx", "onnxruntime", "colored")
 
-extras["dev"] = extras["xformers"] + extras["torch"]
+extras["dev"] = extras["xformers"] + extras["torch"] + extras["tensorrt"]
 
 install_requires = [
+    deps["fire"],
+    deps["omegaconf"],
     deps["diffusers"],
     deps["transformers"],
 ]
 
 setup(
-    name="streamlcm",
+    name="stream-diffusion",
     version="0.1.0",
     description="",
     long_description=open("README.md", "r", encoding="utf-8").read(),
