@@ -4,8 +4,39 @@
 ![](https://img.shields.io/badge/Open%20in%20Colab-blue?style=for-the-badge&logo=googlecolab&labelColor=5c5c5c)
 
 ## Installation
+
+### Step0: Make conda environment
+```
+conda create -n stream-diffusion python=3.10
+```
+
+### Step1: Install Torch
+Select the appropriate version for your system.
+
+CUDA 11.1
+```
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+```
+CUDA 12.1
+```
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+```
+details: https://pytorch.org/
+
+### Step2: Install StreamDiffusion
 ```
 pip install git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=stream-diffusion
+```
+OR
+```
+git clone https://github.com/cumulo-autumn/StreamDiffusion.git
+python -m pip install .
+```
+OR (if you want to use tensorrt)
+```
+git clone https://github.com/cumulo-autumn/StreamDiffusion.git
+pip install .[tensorrt]
+python -m streamdiffusion.tools.install-tensorrt
 ```
 
 ## Usage
@@ -31,7 +62,7 @@ def download_image(url: str):
 
 
 def run(wamup: int = 10, iterations: int = 50):
-    pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file("./model.safetensors").to(
+    pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file("./models/model.safetensors").to(
         device=torch.device("cuda"),
         dtype=torch.float16,
     )
