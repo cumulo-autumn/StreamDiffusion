@@ -9,7 +9,7 @@ import fire
 import mss
 import PIL.Image
 import torch
-from diffusers import AutoencoderTiny, LCMScheduler, StableDiffusionPipeline
+from diffusers import AutoencoderTiny, StableDiffusionPipeline
 from matplotlib import pyplot as plt
 from socks import UDP, receive_udp_data
 
@@ -48,24 +48,23 @@ def result_window(server_ip: str, server_port: int):
         plt.pause(0.00001)
 
 
-def run(address: str = "127.0.0.1", port: int = 8080):
+def run(prompt: str = "Girl with panda ears wearing a hood", address: str = "127.0.0.1", port: int = 8080):
     pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file("./model.safetensors").to(
         device=torch.device("cuda")
     )
-    pipe.scheduler = LCMScheduler.from_config(pipe.scheduler.config)
-    pipe.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
-    pipe.load_lora_weights("latent-consistency/lcm-lora-sdv1-5")
-    pipe.fuse_lora()
 
     stream = StreamDiffusion(
         pipe,
         [32, 45],
     )
+    stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
+    stream.load_lcm_lora()
+    stream.fuse_lora()
+    stream.enable_similar_image_filter(0.95)
     stream = accelerate_with_tensorrt(stream, "./engines", max_batch_size=2)
     stream.prepare(
-        "Girl with panda ears wearing a hood",
+        prompt,
         num_inference_steps=50,
-        generator=torch.manual_seed(2),
     )
 
     output_window = mp.Process(target=result_window, args=(address, port))
