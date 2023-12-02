@@ -1,3 +1,4 @@
+import os
 import re
 
 from setuptools import find_packages, setup
@@ -15,7 +16,7 @@ _deps = [
     "cuda-python",
     "onnx==1.13.1",
     "onnxruntime==1.14.1",
-    "colored"
+    "colored",
 ]
 
 deps = {b: a for a, b in (re.findall(r"^(([^!=<>~]+)(?:[!=<>~].*)?$)", x)[0] for x in _deps)}
@@ -31,6 +32,9 @@ extras["torch"] = deps_list("torch", "accelerate")
 extras["tensorrt"] = deps_list("pywin32", "cuda-python", "onnx", "onnxruntime", "colored")
 
 extras["dev"] = extras["xformers"] + extras["torch"] + extras["tensorrt"]
+
+if os.name == "nt":
+    extras["tensorrt"] = extras["tensorrt"] + deps_list("pywin32")
 
 install_requires = [
     deps["fire"],

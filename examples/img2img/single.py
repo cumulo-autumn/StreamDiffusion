@@ -4,22 +4,29 @@ from typing import *
 import fire
 import PIL.Image
 import torch
-from diffusers import AutoencoderTiny, LCMScheduler, StableDiffusionPipeline
+from diffusers import AutoencoderTiny, StableDiffusionPipeline
 
 from streamdiffusion import StreamDiffusion
 from streamdiffusion.image_utils import pil2tensor, postprocess_image
 
 
-def main(input: str, output: str, scale: int = 1):
-    pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file("./model.safetensors").to(
+def main(input: str, output: str, prompt: str = "Girl with panda ears wearing a hood", scale: int = 1):
+    pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file("../../model.safetensors").to(
         device=torch.device("cuda"),
         dtype=torch.float16,
     )
-    pipe.scheduler = LCMScheduler.from_config(pipe.scheduler.config)
-    pipe.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
-    pipe.load_lora_weights("latent-consistency/lcm-lora-sdv1-5")
-    pipe.fuse_lora()
     pipe.enable_xformers_memory_efficient_attention()
+
+    stream = StreamDiffusion(
+        pipe, [32, 40, 45], torch_dtype=torch.float16, width=width, height=height, is_drawing=True
+    )
+    stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
+    stream.load_lcm_lora()
+    stream.fuse_lora()
+    stream.prepare(
+        prompt,
+        num_inference_steps=50,
+    )
 
     input_image = PIL.Image.open(os.path.join(input))
     width = int(input_image.width * scale)
@@ -27,13 +34,13 @@ def main(input: str, output: str, scale: int = 1):
 
     stream = StreamDiffusion(
         pipe,
-        [35, 45],
+        [22, 32, 45],
         torch_dtype=torch.float16,
         width=width,
         height=height,
     )
     stream.prepare(
-        "Girl with panda ears wearing a hood",
+        "beach, sea, a palm tree, clouds",
         num_inference_steps=50,
         generator=torch.manual_seed(2),
     )

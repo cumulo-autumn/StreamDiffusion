@@ -5,7 +5,7 @@ import ffmpeg
 import fire
 import PIL.Image
 import torch
-from diffusers import AutoencoderTiny, LCMScheduler, StableDiffusionPipeline
+from diffusers import AutoencoderTiny, StableDiffusionPipeline
 from tqdm import tqdm
 
 from streamdiffusion import StreamDiffusion
@@ -24,7 +24,7 @@ def get_frame_rate(video_path: str):
     return int(video_info["r_frame_rate"].split("/")[0])
 
 
-def main(input: str, output: str, scale: int = 1):
+def main(input: str, output: str, prompt: str = "Girl with panda ears wearing a hood", scale: int = 1):
     if os.path.isdir(output):
         raise ValueError("Output directory already exists")
     frame_rate = get_frame_rate(input)
@@ -35,10 +35,6 @@ def main(input: str, output: str, scale: int = 1):
         device=torch.device("cuda"),
         dtype=torch.float16,
     )
-    pipe.scheduler = LCMScheduler.from_config(pipe.scheduler.config)
-    pipe.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
-    pipe.load_lora_weights("latent-consistency/lcm-lora-sdv1-5")
-    pipe.fuse_lora()
 
     sample_image = PIL.Image.open(os.path.join(output, "frames", images[0]))
     width = int(sample_image.width * scale)
@@ -46,16 +42,18 @@ def main(input: str, output: str, scale: int = 1):
 
     stream = StreamDiffusion(
         pipe,
-        [40, 49],
+        [35, 45],
         torch_dtype=torch.float16,
         width=width,
         height=height,
     )
+    stream.load_lcm_lora()
+    stream.fuse_lora()
+    stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
     stream = accelerate_with_stable_fast(stream)
     stream.prepare(
-        "Girl with panda ears wearing a hood",
+        prompt,
         num_inference_steps=50,
-        generator=torch.manual_seed(2),
     )
 
     for _ in range(stream.batch_size - 1):

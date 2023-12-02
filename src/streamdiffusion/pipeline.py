@@ -1,7 +1,10 @@
 from typing import *
 
+import numpy as np
+import PIL.Image
 import torch
-from diffusers import StableDiffusionPipeline
+from diffusers import LCMScheduler, StableDiffusionPipeline
+from diffusers.image_processor import VaeImageProcessor
 from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import retrieve_latents
 
 
@@ -31,18 +34,43 @@ class StreamDiffusion:
         self.is_drawing = is_drawing
 
         self.pipe = pipe
+        self.image_processor = VaeImageProcessor(pipe.vae_scale_factor)
 
-        self.scheduler = pipe.scheduler
+        self.scheduler = LCMScheduler.from_config(self.pipe.scheduler.config)
         self.text_encoder = pipe.text_encoder
         self.unet = pipe.unet
         self.vae = pipe.vae
+
+    def load_lcm_lora(
+        self,
+        pretrained_model_name_or_path_or_dict: Union[
+            str, Dict[str, torch.Tensor]
+        ] = "latent-consistency/lcm-lora-sdv1-5",
+        adapter_name=None,
+        **kwargs,
+    ):
+        self.pipe.load_lora_weights(pretrained_model_name_or_path_or_dict, adapter_name, **kwargs)
+
+    def fuse_lora(
+        self,
+        fuse_unet: bool = True,
+        fuse_text_encoder: bool = True,
+        lora_scale: float = 1.0,
+        safe_fusing: bool = False,
+    ):
+        self.pipe.fuse_lora(
+            fuse_unet=fuse_unet,
+            fuse_text_encoder=fuse_text_encoder,
+            lora_scale=lora_scale,
+            safe_fusing=safe_fusing,
+        )
 
     @torch.no_grad()
     def prepare(
         self,
         prompt: str,
         num_inference_steps: int = 50,
-        generator: Optional[torch.Generator] = None,
+        generator: Optional[torch.Generator] = torch.Generator(),
     ):
         self.generator = generator
         # initialize x_t_latent (it can be any random tensor)
@@ -55,13 +83,13 @@ class StreamDiffusion:
         else:
             self.x_t_latent_buffer = None
 
-        self.additional_embeds = self.pipe.encode_prompt(
+        encoder_output = self.pipe.encode_prompt(
             prompt=prompt,
             device=self.device,
             num_images_per_prompt=1,
             do_classifier_free_guidance=False,
         )
-        self.prompt_embeds = self.additional_embeds[0].repeat(self.batch_size, 1, 1)
+        self.prompt_embeds = encoder_output[0].repeat(self.batch_size, 1, 1)
 
         self.scheduler.set_timesteps(num_inference_steps, self.device)
         self.timesteps = self.scheduler.timesteps.to(self.device)
@@ -100,6 +128,16 @@ class StreamDiffusion:
         self.beta_prod_t_sqrt = (
             torch.stack(beta_prod_t_sqrt_list).view(self.batch_size, 1, 1, 1).to(dtype=self.dtype, device=self.device)
         )
+
+    @torch.no_grad()
+    def update_prompt(self, prompt: str):
+        encoder_output = self.pipe.encode_prompt(
+            prompt=prompt,
+            device=self.device,
+            num_images_per_prompt=1,
+            do_classifier_free_guidance=False,
+        )
+        self.prompt_embeds = encoder_output[0].repeat(self.batch_size, 1, 1)
 
     def add_noise(self, original_samples, noise, t_index):
         noisy_samples = self.alpha_prod_t_sqrt[t_index] * original_samples + self.beta_prod_t_sqrt[t_index] * noise
@@ -159,7 +197,8 @@ class StreamDiffusion:
         return x_0_pred_out
 
     @torch.no_grad()
-    def __call__(self, x: torch.Tensor):
+    def __call__(self, x: Union[torch.FloatTensor, PIL.Image.Image, np.ndarray]):
+        x = self.image_processor.preprocess(x, self.height, self.width).to(device=self.device, dtype=self.dtype)
         x_t_latent = self.encode_image(x)
         x_0_pred_out = self.predict_x0_batch(x_t_latent)
         x_output = self.decode_image(x_0_pred_out).detach().clone()
