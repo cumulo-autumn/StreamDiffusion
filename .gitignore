@@ -1,7 +1,9 @@
 # https://github.com/github/gitignore/blob/main/Python.gitignore
 
-./model.safetensors
-./model.ckpt
+.vscode/
+engines/
+model.safetensors
+model.ckpt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
