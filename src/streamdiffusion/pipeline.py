@@ -9,6 +9,8 @@ from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img impo
     retrieve_latents,
 )
 
+from streamdiffusion.image_filter import SimilarImageFilter
+
 
 class StreamDiffusion:
     def __init__(
@@ -34,6 +36,10 @@ class StreamDiffusion:
         self.t_list = t_index_list
 
         self.is_drawing = is_drawing
+
+        self.similar_image_filter = False
+        self.similar_filter = SimilarImageFilter()
+        self.prev_image_result = None
 
         self.pipe = pipe
         self.image_processor = VaeImageProcessor(pipe.vae_scale_factor)
@@ -66,6 +72,13 @@ class StreamDiffusion:
             lora_scale=lora_scale,
             safe_fusing=safe_fusing,
         )
+
+    def enable_similar_image_filter(self, threshold: float = 0.95):
+        self.similar_image_filter = True
+        self.similar_filter.set_threshold(threshold)
+
+    def disable_similar_image_filter(self):
+        self.similar_image_filter = False
 
     @torch.no_grad()
     def prepare(
@@ -201,9 +214,17 @@ class StreamDiffusion:
     @torch.no_grad()
     def __call__(self, x: Union[torch.FloatTensor, PIL.Image.Image, np.ndarray]):
         x = self.image_processor.preprocess(x, self.height, self.width).to(device=self.device, dtype=self.dtype)
+        if self.similar_image_filter:
+            x = self.similar_filter(x)
+            if x is None:
+                return self.prev_image_result
+
         x_t_latent = self.encode_image(x)
         x_0_pred_out = self.predict_x0_batch(x_t_latent)
         x_output = self.decode_image(x_0_pred_out).detach().clone()
+
+        self.prev_image_result = x_output
+
         return x_output
 
     @torch.no_grad()

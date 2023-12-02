@@ -60,6 +60,7 @@ def run(prompt: str = "Girl with panda ears wearing a hood", address: str = "127
     stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
     stream.load_lcm_lora()
     stream.fuse_lora()
+    stream.enable_similar_image_filter(0.95)
     stream = accelerate_with_tensorrt(stream, "./engines", max_batch_size=2)
     stream.prepare(
         prompt,
