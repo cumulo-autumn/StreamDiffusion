@@ -61,7 +61,7 @@ def run(prompt: str = "Girl with panda ears wearing a hood", address: str = "127
     stream.load_lcm_lora()
     stream.fuse_lora()
     stream.enable_similar_image_filter(0.95)
-    stream = accelerate_with_tensorrt(stream, "./engines", max_batch_size=2)
+    stream = accelerate_with_tensorrt(stream, "./engines", max_batch_size=6)
     stream.prepare(
         prompt,
         num_inference_steps=50,
@@ -91,12 +91,13 @@ def run(prompt: str = "Girl with panda ears wearing a hood", address: str = "127
         start.record()
 
         x_output = stream(input.to(device=stream.device, dtype=stream.dtype))
-        output_images = postprocess_image(x_output, output_type="pil")[0]
+        output_images = postprocess_image(x_output, output_type="pil")
 
-        udp.send_udp_data(output_images)
+        for output_image in output_images:
+            udp.send_udp_data(output_image)
         end.record()
         torch.cuda.synchronize()
-        main_thread_time = start.elapsed_time(end) / 1000
+        main_thread_time = start.elapsed_time(end) / (1000 * output_images[0].shape[0])
         main_thread_time_cumulative = (
             lowpass_alpha * main_thread_time + (1 - lowpass_alpha) * main_thread_time_cumulative
         )
