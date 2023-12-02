@@ -5,7 +5,9 @@ import PIL.Image
 import torch
 from diffusers import LCMScheduler, StableDiffusionPipeline
 from diffusers.image_processor import VaeImageProcessor
-from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import retrieve_latents
+from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import (
+    retrieve_latents,
+)
 
 
 class StreamDiffusion:
@@ -201,5 +203,13 @@ class StreamDiffusion:
         x = self.image_processor.preprocess(x, self.height, self.width).to(device=self.device, dtype=self.dtype)
         x_t_latent = self.encode_image(x)
         x_0_pred_out = self.predict_x0_batch(x_t_latent)
+        x_output = self.decode_image(x_0_pred_out).detach().clone()
+        return x_output
+
+    @torch.no_grad()
+    def txt2img(self):
+        x_0_pred_out = self.predict_x0_batch(
+            torch.randn((1, 4, self.latent_height, self.latent_width)).to(device=self.device, dtype=self.dtype)
+        )
         x_output = self.decode_image(x_0_pred_out).detach().clone()
         return x_output
