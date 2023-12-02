@@ -18,7 +18,7 @@ from streamdiffusion.acceleration.tensorrt import accelerate_with_tensorrt
 from streamdiffusion.image_utils import pil2tensor, postprocess_image
 
 
-input = []
+inputs = []
 
 
 def screen(
@@ -26,13 +26,13 @@ def screen(
     width: int = 512,
     monitor: Dict[str, int] = {"top": 300, "left": 200, "width": 512, "height": 512},
 ):
-    global input
+    global inputs
     with mss.mss() as sct:
         while True:
             img = sct.grab(monitor)
             img = PIL.Image.frombytes("RGB", img.size, img.bgra, "raw", "BGRX")
             img.resize((height, width))
-            input.append(pil2tensor(img))
+            inputs.append(pil2tensor(img))
 
 
 def result_window(server_ip: str, server_port: int):
@@ -64,7 +64,7 @@ def run(prompt: str = "Girl with panda ears wearing a hood",
     stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
     stream.load_lcm_lora()
     stream.fuse_lora()
-    stream.enable_similar_image_filter(0.95)
+    # stream.enable_similar_image_filter(0.95)
     stream = accelerate_with_tensorrt(stream, "./engines", max_batch_size=6)
     stream.prepare(
         prompt,
@@ -85,7 +85,7 @@ def run(prompt: str = "Girl with panda ears wearing a hood",
     lowpass_alpha = 0.1
 
     while True:
-        if len(input) < frame_buffer_size:
+        if len(inputs) < frame_buffer_size:
             sleep(0.01)
             continue
 
@@ -94,7 +94,9 @@ def run(prompt: str = "Girl with panda ears wearing a hood",
 
         start.record()
         
-        input_batch = torch.cat(input[:frame_buffer_size])
+        input_batch = torch.cat(inputs[:frame_buffer_size])
+        for _ in range(frame_buffer_size):
+            inputs.pop(0)
         x_output = stream(input_batch.to(device=stream.device, dtype=stream.dtype))
         output_images = postprocess_image(x_output, output_type="pil")
 
@@ -102,7 +104,7 @@ def run(prompt: str = "Girl with panda ears wearing a hood",
             udp.send_udp_data(output_image)
         end.record()
         torch.cuda.synchronize()
-        main_thread_time = start.elapsed_time(end) / (1000 * output_images[0].shape[0])
+        main_thread_time = start.elapsed_time(end) / (1000 * frame_buffer_size)
         main_thread_time_cumulative = (
             lowpass_alpha * main_thread_time + (1 - lowpass_alpha) * main_thread_time_cumulative
         )

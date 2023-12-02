@@ -117,7 +117,8 @@ class StreamDiffusion:
         for t in self.t_list:
             self.sub_timesteps.append(self.timesteps[t])
 
-        self.sub_timesteps_tensor = torch.tensor(self.sub_timesteps, dtype=torch.long, device=self.device)
+        sub_timesteps_tensor = torch.tensor(self.sub_timesteps, dtype=torch.long, device=self.device)
+        self.sub_timesteps_tensor = torch.repeat_interleave(sub_timesteps_tensor, repeats=self.frame_bff_size, dim=0)
 
         self.init_noise = torch.randn(
             (self.batch_size, 4, self.latent_height, self.latent_width),
@@ -206,13 +207,13 @@ class StreamDiffusion:
 
         x_0_pred_batch, model_pred = self.lcm_step(x_t_latent)
         if prev_latent_batch is not None:
-            x_0_pred_out = x_0_pred_batch[-self.frame_bff_size:].unsqueeze(0)
+            x_0_pred_out = x_0_pred_batch[-self.frame_bff_size:]
             if self.is_drawing:
                 self.x_t_latent_buffer = (
-                    self.alpha_prod_t_sqrt[self.frame_bff_size :]
-                    * x_0_pred_batch[self.frame_bff_size :]
-                    + self.beta_prod_t_sqrt[self.frame_bff_size :]
-                    * self.init_noise[self.frame_bff_size :]
+                    self.alpha_prod_t_sqrt[self.frame_bff_size:]
+                    * x_0_pred_batch[:-self.frame_buffer_size]
+                    + self.beta_prod_t_sqrt[self.frame_bff_size:]
+                    * self.init_noise[self.frame_bff_size:]
                 )
             else:
                 self.x_t_latent_buffer = self.alpha_prod_t_sqrt[self.frame_bff_size:] * x_0_pred_batch[:-self.frame_bff_size]
