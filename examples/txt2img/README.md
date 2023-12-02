@@ -1,7 +1,7 @@
 # Txt2Img Example
 
 <p align="center">
-  <img src="./assets/output.gif" width=80%>
+  <img src="./assets/example.gif" width=80%>
 </p>
 
 This example provides a simple implementation of the use of StreamDiffusion to generate images from text.
@@ -17,6 +17,6 @@ or
 ```bash
 cd server
 python3 main.py &
-cd ../client
+cd ../view
 npm start
 ```

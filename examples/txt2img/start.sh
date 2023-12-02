@@ -1,4 +1,4 @@
 cd server
 python3 main.py &
-cd ../client
+cd ../view
 npm start
