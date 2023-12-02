@@ -18,7 +18,7 @@ from streamdiffusion.acceleration.tensorrt import accelerate_with_tensorrt
 from streamdiffusion.image_utils import pil2tensor, postprocess_image
 
 
-input = None
+input = []
 
 
 def screen(
@@ -32,7 +32,7 @@ def screen(
             img = sct.grab(monitor)
             img = PIL.Image.frombytes("RGB", img.size, img.bgra, "raw", "BGRX")
             img.resize((height, width))
-            input = pil2tensor(img)
+            input.append(pil2tensor(img))
 
 
 def result_window(server_ip: str, server_port: int):
@@ -48,7 +48,10 @@ def result_window(server_ip: str, server_port: int):
         plt.pause(0.00001)
 
 
-def run(prompt: str = "Girl with panda ears wearing a hood", address: str = "127.0.0.1", port: int = 8080):
+def run(prompt: str = "Girl with panda ears wearing a hood", 
+        address: str = "127.0.0.1", 
+        port: int = 8080, 
+        frame_buffer_size: int = 1):
     pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file("./model.safetensors").to(
         device=torch.device("cuda")
     )
@@ -56,6 +59,7 @@ def run(prompt: str = "Girl with panda ears wearing a hood", address: str = "127
     stream = StreamDiffusion(
         pipe,
         [32, 45],
+        frame_buffer_size = frame_buffer_size,
     )
     stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
     stream.load_lcm_lora()
@@ -81,7 +85,7 @@ def run(prompt: str = "Girl with panda ears wearing a hood", address: str = "127
     lowpass_alpha = 0.1
 
     while True:
-        if input is None:
+        if len(input) < frame_buffer_size:
             sleep(0.01)
             continue
 
@@ -89,8 +93,9 @@ def run(prompt: str = "Girl with panda ears wearing a hood", address: str = "127
         end = torch.cuda.Event(enable_timing=True)
 
         start.record()
-
-        x_output = stream(input.to(device=stream.device, dtype=stream.dtype))
+        
+        input_batch = torch.cat(input[:frame_buffer_size])
+        x_output = stream(input_batch.to(device=stream.device, dtype=stream.dtype))
         output_images = postprocess_image(x_output, output_type="pil")
 
         for output_image in output_images:
