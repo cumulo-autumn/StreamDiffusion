@@ -51,7 +51,7 @@ def result_window(server_ip: str, server_port: int):
 def run(prompt: str = "Girl with panda ears wearing a hood", 
         address: str = "127.0.0.1", 
         port: int = 8080, 
-        frame_buffer_size: int = 1):
+        frame_buffer_size: int = 3):
     pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file("./model.safetensors").to(
         device=torch.device("cuda")
     )
@@ -86,7 +86,7 @@ def run(prompt: str = "Girl with panda ears wearing a hood",
 
     while True:
         if len(inputs) < frame_buffer_size:
-            sleep(0.01)
+            sleep(0.005)
             continue
 
         start = torch.cuda.Event(enable_timing=True)
@@ -94,9 +94,13 @@ def run(prompt: str = "Girl with panda ears wearing a hood",
 
         start.record()
         
-        input_batch = torch.cat(inputs[:frame_buffer_size])
-        for _ in range(frame_buffer_size):
-            inputs.pop(0)
+        sampled_inputs = []
+        for i in range(frame_buffer_size):
+            index = (len(inputs) // frame_buffer_size) * i
+            sampled_inputs.append(inputs[len(inputs)-index-1])
+        
+        input_batch = torch.cat(sampled_inputs)
+        inputs.clear()
         x_output = stream(input_batch.to(device=stream.device, dtype=stream.dtype))
         output_images = postprocess_image(x_output, output_type="pil")
 
