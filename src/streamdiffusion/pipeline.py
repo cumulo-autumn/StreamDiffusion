@@ -224,6 +224,7 @@ class StreamDiffusion:
 
     @torch.no_grad()
     def __call__(self, x: Union[torch.FloatTensor, PIL.Image.Image, np.ndarray]):
+        assert x.shape[0] == self.frame_bff_size, "Input batch size must be equal to frame buffer size."
         x = self.image_processor.preprocess(x, self.height, self.width).to(device=self.device, dtype=self.dtype)
         if self.similar_image_filter:
             x = self.similar_filter(x)
