@@ -16,6 +16,7 @@ chmod +x ./start.sh && ./start.sh
 or
 
 ```bash
+pip install -r requirements.txt
 cd view
 npm start &
 cd ../server

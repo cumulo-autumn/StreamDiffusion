@@ -1,3 +1,4 @@
+pip install -r requirements.txt
 cd view
 npm start &
 cd ../server
