@@ -27,6 +27,8 @@ def accelerate_with_tensorrt(
     use_cuda_graph: bool = False,
     engine_build_options: dict = {},
 ):
+    if "opt_batch_size" not in engine_build_options or engine_build_options["opt_batch_size"] is None:
+        engine_build_options["opt_batch_size"] = max_batch_size
     text_encoder = stream.text_encoder
     unet = stream.unet
     vae = stream.vae
