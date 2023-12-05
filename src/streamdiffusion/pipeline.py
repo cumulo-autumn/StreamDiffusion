@@ -54,9 +54,7 @@ class StreamDiffusion:
 
     def load_lcm_lora(
         self,
-        pretrained_model_name_or_path_or_dict: Union[
-            str, Dict[str, torch.Tensor]
-        ] = "latent-consistency/lcm-lora-sdv1-5",
+        pretrained_model_name_or_path_or_dict: Union[str, Dict[str, torch.Tensor]] = "latent-consistency/lcm-lora-sdv1-5",
         adapter_name=None,
         **kwargs,
     ):
@@ -143,14 +141,8 @@ class StreamDiffusion:
             beta_prod_t_sqrt = (1 - self.scheduler.alphas_cumprod[timestep]).sqrt()
             alpha_prod_t_sqrt_list.append(alpha_prod_t_sqrt)
             beta_prod_t_sqrt_list.append(beta_prod_t_sqrt)
-        alpha_prod_t_sqrt = (
-            torch.stack(alpha_prod_t_sqrt_list)
-            .view(len(self.t_list), 1, 1, 1)
-            .to(dtype=self.dtype, device=self.device)
-        )
-        beta_prod_t_sqrt = (
-            torch.stack(beta_prod_t_sqrt_list).view(len(self.t_list), 1, 1, 1).to(dtype=self.dtype, device=self.device)
-        )
+        alpha_prod_t_sqrt = torch.stack(alpha_prod_t_sqrt_list).view(len(self.t_list), 1, 1, 1).to(dtype=self.dtype, device=self.device)
+        beta_prod_t_sqrt = torch.stack(beta_prod_t_sqrt_list).view(len(self.t_list), 1, 1, 1).to(dtype=self.dtype, device=self.device)
         self.alpha_prod_t_sqrt = torch.repeat_interleave(alpha_prod_t_sqrt, repeats=self.frame_bff_size, dim=0)
         self.beta_prod_t_sqrt = torch.repeat_interleave(beta_prod_t_sqrt, repeats=self.frame_bff_size, dim=0)
 
@@ -181,6 +173,7 @@ class StreamDiffusion:
             x_t_latent,
             self.sub_timesteps_tensor,
             encoder_hidden_states=self.prompt_embeds,
+            return_dict=False,
         )[0]
 
         # compute the previous noisy sample x_t -> x_t-1
@@ -216,9 +209,7 @@ class StreamDiffusion:
                     + self.beta_prod_t_sqrt[self.frame_bff_size :] * self.init_noise[self.frame_bff_size :]
                 )
             else:
-                self.x_t_latent_buffer = (
-                    self.alpha_prod_t_sqrt[self.frame_bff_size :] * x_0_pred_batch[: -self.frame_bff_size]
-                )
+                self.x_t_latent_buffer = self.alpha_prod_t_sqrt[self.frame_bff_size :] * x_0_pred_batch[: -self.frame_bff_size]
         else:
             x_0_pred_out = x_0_pred_batch
             self.x_t_latent_buffer = None
@@ -243,8 +234,6 @@ class StreamDiffusion:
 
     @torch.no_grad()
     def txt2img(self):
-        x_0_pred_out = self.predict_x0_batch(
-            torch.randn((1, 4, self.latent_height, self.latent_width)).to(device=self.device, dtype=self.dtype)
-        )
+        x_0_pred_out = self.predict_x0_batch(torch.randn((1, 4, self.latent_height, self.latent_width)).to(device=self.device, dtype=self.dtype))
         x_output = self.decode_image(x_0_pred_out).detach().clone()
         return x_output
