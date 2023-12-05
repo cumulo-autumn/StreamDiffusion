@@ -5,9 +5,13 @@
 
 ## Installation
 
-### Step0: Make conda environment
+### Step0: Make environment
 ```
 conda create -n stream-diffusion python=3.10
+
+# or
+
+python -m venv .venv
 ```
 
 ### Step1: Install Torch
@@ -15,11 +19,11 @@ Select the appropriate version for your system.
 
 CUDA 11.1
 ```
-pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+pip3 install torch torchvision xformers --index-url https://download.pytorch.org/whl/cu118
 ```
 CUDA 12.1
 ```
-pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+pip3 install torch torchvision xformers --index-url https://download.pytorch.org/whl/cu121
 ```
 details: https://pytorch.org/
 
@@ -91,7 +95,9 @@ def run(
     elif acceleration == "tensorrt":
         from streamdiffusion.acceleration.tensorrt import accelerate_with_tensorrt
 
-        stream = accelerate_with_tensorrt(stream, "engines", max_batch_size=2)
+        stream = accelerate_with_tensorrt(
+            stream, "engines", max_batch_size=2, engine_build_options={"build_static_batch": True}
+        )
     elif acceleration == "sfast":
         from streamdiffusion.acceleration.sfast import accelerate_with_stable_fast
 
