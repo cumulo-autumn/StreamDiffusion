@@ -4,7 +4,7 @@ import { TextField, Grid } from "@mui/material";
 function App() {
   const [inputPrompt, setInputPrompt] = useState("");
   const [lastPrompt, setLastPrompt] = useState("");
-  const [images, setImages] = useState(Array(25).fill("images/white.jpg"));
+  const [images, setImages] = useState(Array(16).fill("images/white.jpg"));
 
   const calculateEditDistance = (a: string, b: string) => {
     if (a.length === 0) return b.length;
@@ -66,7 +66,7 @@ function App() {
     if (editDistance >= 2) {
       setInputPrompt(newPrompt);
       setLastPrompt(newPrompt);
-      for (let i = 0; i < 25; i++) {
+      for (let i = 0; i < 16; i++) {
         fetchImage(i);
       }
     }
@@ -101,13 +101,13 @@ function App() {
           style={{ maxWidth: "50%", maxHeight: "70%" }}
         >
           {images.map((image, index) => (
-            <Grid item xs={2.4} key={index}>
+            <Grid item xs={3} key={index}>
               <img
                 src={image}
                 alt={`Generated ${index}`}
                 style={{
                   maxWidth: "100%",
-                  maxHeight: "120px",
+                  maxHeight: "150px",
                   borderRadius: "10px",
                 }}
               />
