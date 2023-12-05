@@ -21,6 +21,7 @@ class StreamDiffusion:
         width: int = 512,
         height: int = 512,
         is_drawing: bool = False,
+        frame_buffer_size: int = 1,
     ):
         self.device = pipe.device
         self.dtype = torch_dtype
@@ -31,11 +32,13 @@ class StreamDiffusion:
 
         self.latent_height = int(height // pipe.vae_scale_factor)
         self.latent_width = int(width // pipe.vae_scale_factor)
-
-        self.batch_size = len(t_index_list)
+        
+        self.batch_size = len(t_index_list) * frame_buffer_size
         self.t_list = t_index_list
 
         self.is_drawing = is_drawing
+        
+        self.frame_bff_size = frame_buffer_size
 
         self.similar_image_filter = False
         self.similar_filter = SimilarImageFilter()
@@ -91,7 +94,7 @@ class StreamDiffusion:
         # initialize x_t_latent (it can be any random tensor)
         if self.batch_size > 1:
             self.x_t_latent_buffer = torch.zeros(
-                (self.batch_size - 1, 4, self.latent_height, self.latent_width),
+                (self.batch_size - self.frame_bff_size, 4, self.latent_height, self.latent_width),
                 dtype=self.dtype,
                 device=self.device,
             )
@@ -114,7 +117,8 @@ class StreamDiffusion:
         for t in self.t_list:
             self.sub_timesteps.append(self.timesteps[t])
 
-        self.sub_timesteps_tensor = torch.tensor(self.sub_timesteps, dtype=torch.long, device=self.device)
+        sub_timesteps_tensor = torch.tensor(self.sub_timesteps, dtype=torch.long, device=self.device)
+        self.sub_timesteps_tensor = torch.repeat_interleave(sub_timesteps_tensor, repeats=self.frame_bff_size, dim=0)
 
         self.init_noise = torch.randn(
             (self.batch_size, 4, self.latent_height, self.latent_width),
@@ -127,8 +131,10 @@ class StreamDiffusion:
             c_skip, c_out = self.scheduler.get_scalings_for_boundary_condition_discrete(timestep)
             c_skip_list.append(c_skip)
             c_out_list.append(c_out)
-        self.c_skip = torch.stack(c_skip_list).view(self.batch_size, 1, 1, 1).to(dtype=self.dtype, device=self.device)
-        self.c_out = torch.stack(c_out_list).view(self.batch_size, 1, 1, 1).to(dtype=self.dtype, device=self.device)
+        c_skip = torch.stack(c_skip_list).view(len(self.t_list), 1, 1, 1).to(dtype=self.dtype, device=self.device)
+        c_out = torch.stack(c_out_list).view(len(self.t_list), 1, 1, 1).to(dtype=self.dtype, device=self.device)
+        self.c_skip = torch.repeat_interleave(c_skip, repeats=self.frame_bff_size, dim=0)
+        self.c_out = torch.repeat_interleave(c_out, repeats=self.frame_bff_size, dim=0)
 
         alpha_prod_t_sqrt_list = []
         beta_prod_t_sqrt_list = []
@@ -137,12 +143,14 @@ class StreamDiffusion:
             beta_prod_t_sqrt = (1 - self.scheduler.alphas_cumprod[timestep]).sqrt()
             alpha_prod_t_sqrt_list.append(alpha_prod_t_sqrt)
             beta_prod_t_sqrt_list.append(beta_prod_t_sqrt)
-        self.alpha_prod_t_sqrt = (
-            torch.stack(alpha_prod_t_sqrt_list).view(self.batch_size, 1, 1, 1).to(dtype=self.dtype, device=self.device)
+        alpha_prod_t_sqrt = (
+            torch.stack(alpha_prod_t_sqrt_list).view(len(self.t_list), 1, 1, 1).to(dtype=self.dtype, device=self.device)
         )
-        self.beta_prod_t_sqrt = (
-            torch.stack(beta_prod_t_sqrt_list).view(self.batch_size, 1, 1, 1).to(dtype=self.dtype, device=self.device)
+        beta_prod_t_sqrt = (
+            torch.stack(beta_prod_t_sqrt_list).view(len(self.t_list), 1, 1, 1).to(dtype=self.dtype, device=self.device)
         )
+        self.alpha_prod_t_sqrt = torch.repeat_interleave(alpha_prod_t_sqrt, repeats=self.frame_bff_size, dim=0)
+        self.beta_prod_t_sqrt = torch.repeat_interleave(beta_prod_t_sqrt, repeats=self.frame_bff_size, dim=0)
 
     @torch.no_grad()
     def update_prompt(self, prompt: str):
@@ -199,13 +207,16 @@ class StreamDiffusion:
 
         x_0_pred_batch, model_pred = self.lcm_step(x_t_latent)
         if prev_latent_batch is not None:
-            x_0_pred_out = x_0_pred_batch[-1].unsqueeze(0)
+            x_0_pred_out = x_0_pred_batch[-self.frame_bff_size:]
             if self.is_drawing:
                 self.x_t_latent_buffer = (
-                    self.alpha_prod_t_sqrt[1:] * x_0_pred_batch[:-1] + self.beta_prod_t_sqrt[1:] * self.init_noise[1:]
+                    self.alpha_prod_t_sqrt[self.frame_bff_size:]
+                    * x_0_pred_batch[:-self.frame_buffer_size]
+                    + self.beta_prod_t_sqrt[self.frame_bff_size:]
+                    * self.init_noise[self.frame_bff_size:]
                 )
             else:
-                self.x_t_latent_buffer = self.alpha_prod_t_sqrt[1:] * x_0_pred_batch[:-1]
+                self.x_t_latent_buffer = self.alpha_prod_t_sqrt[self.frame_bff_size:] * x_0_pred_batch[:-self.frame_bff_size]
         else:
             x_0_pred_out = x_0_pred_batch
             self.x_t_latent_buffer = None
@@ -213,6 +224,7 @@ class StreamDiffusion:
 
     @torch.no_grad()
     def __call__(self, x: Union[torch.FloatTensor, PIL.Image.Image, np.ndarray]):
+        assert x.shape[0] == self.frame_bff_size, "Input batch size must be equal to frame buffer size."
         x = self.image_processor.preprocess(x, self.height, self.width).to(device=self.device, dtype=self.dtype)
         if self.similar_image_filter:
             x = self.similar_filter(x)

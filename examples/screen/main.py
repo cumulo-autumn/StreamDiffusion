@@ -18,7 +18,7 @@ from streamdiffusion.acceleration.tensorrt import accelerate_with_tensorrt
 from streamdiffusion.image_utils import pil2tensor, postprocess_image
 
 
-input = None
+inputs = []
 
 
 def screen(
@@ -26,13 +26,13 @@ def screen(
     width: int = 512,
     monitor: Dict[str, int] = {"top": 300, "left": 200, "width": 512, "height": 512},
 ):
-    global input
+    global inputs
     with mss.mss() as sct:
         while True:
             img = sct.grab(monitor)
             img = PIL.Image.frombytes("RGB", img.size, img.bgra, "raw", "BGRX")
             img.resize((height, width))
-            input = pil2tensor(img)
+            inputs.append(pil2tensor(img))
 
 
 def result_window(server_ip: str, server_port: int):
@@ -48,7 +48,10 @@ def result_window(server_ip: str, server_port: int):
         plt.pause(0.00001)
 
 
-def run(prompt: str = "Girl with panda ears wearing a hood", address: str = "127.0.0.1", port: int = 8080):
+def run(prompt: str = "Girl with panda ears wearing a hood", 
+        address: str = "127.0.0.1", 
+        port: int = 8080, 
+        frame_buffer_size: int = 3):
     pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file("./model.safetensors").to(
         device=torch.device("cuda")
     )
@@ -56,12 +59,13 @@ def run(prompt: str = "Girl with panda ears wearing a hood", address: str = "127
     stream = StreamDiffusion(
         pipe,
         [32, 45],
+        frame_buffer_size = frame_buffer_size,
     )
     stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
     stream.load_lcm_lora()
     stream.fuse_lora()
     stream.enable_similar_image_filter(0.95)
-    stream = accelerate_with_tensorrt(stream, "./engines", max_batch_size=2)
+    stream = accelerate_with_tensorrt(stream, "./engines", max_batch_size=6)
     stream.prepare(
         prompt,
         num_inference_steps=50,
@@ -81,22 +85,30 @@ def run(prompt: str = "Girl with panda ears wearing a hood", address: str = "127
     lowpass_alpha = 0.1
 
     while True:
-        if input is None:
-            sleep(0.01)
+        if len(inputs) < frame_buffer_size:
+            sleep(0.005)
             continue
 
         start = torch.cuda.Event(enable_timing=True)
         end = torch.cuda.Event(enable_timing=True)
 
         start.record()
+        
+        sampled_inputs = []
+        for i in range(frame_buffer_size):
+            index = (len(inputs) // frame_buffer_size) * i
+            sampled_inputs.append(inputs[len(inputs)-index-1])
+        
+        input_batch = torch.cat(sampled_inputs)
+        inputs.clear()
+        x_output = stream(input_batch.to(device=stream.device, dtype=stream.dtype))
+        output_images = postprocess_image(x_output, output_type="pil")
 
-        x_output = stream(input.to(device=stream.device, dtype=stream.dtype))
-        output_images = postprocess_image(x_output, output_type="pil")[0]
-
-        udp.send_udp_data(output_images)
+        for output_image in output_images:
+            udp.send_udp_data(output_image)
         end.record()
         torch.cuda.synchronize()
-        main_thread_time = start.elapsed_time(end) / 1000
+        main_thread_time = start.elapsed_time(end) / (1000 * frame_buffer_size)
         main_thread_time_cumulative = (
             lowpass_alpha * main_thread_time + (1 - lowpass_alpha) * main_thread_time_cumulative
         )
