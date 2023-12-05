@@ -40,6 +40,7 @@ class StreamDiffusionWrapper:
             t_index_list=t_index_list,
             warmup=warmup,
         )
+        self.stream.prepare("")
 
     def _load_model(
         self,
@@ -108,7 +109,6 @@ class StreamDiffusionWrapper:
 
     def __call__(self, prompt: str) -> PIL.Image.Image:
         if self.prompt != prompt:
-            self.stream.prepare("")
             self.stream.update_prompt(prompt)
             self.prompt = prompt
             for i in range(self.batch_size):
