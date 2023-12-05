@@ -32,13 +32,13 @@ class StreamDiffusion:
 
         self.latent_height = int(height // pipe.vae_scale_factor)
         self.latent_width = int(width // pipe.vae_scale_factor)
-        
+
+        self.frame_bff_size = frame_buffer_size
+
         self.batch_size = len(t_index_list) * frame_buffer_size
         self.t_list = t_index_list
 
         self.is_drawing = is_drawing
-        
-        self.frame_bff_size = frame_buffer_size
 
         self.similar_image_filter = False
         self.similar_filter = SimilarImageFilter()
@@ -144,7 +144,9 @@ class StreamDiffusion:
             alpha_prod_t_sqrt_list.append(alpha_prod_t_sqrt)
             beta_prod_t_sqrt_list.append(beta_prod_t_sqrt)
         alpha_prod_t_sqrt = (
-            torch.stack(alpha_prod_t_sqrt_list).view(len(self.t_list), 1, 1, 1).to(dtype=self.dtype, device=self.device)
+            torch.stack(alpha_prod_t_sqrt_list)
+            .view(len(self.t_list), 1, 1, 1)
+            .to(dtype=self.dtype, device=self.device)
         )
         beta_prod_t_sqrt = (
             torch.stack(beta_prod_t_sqrt_list).view(len(self.t_list), 1, 1, 1).to(dtype=self.dtype, device=self.device)
@@ -207,16 +209,16 @@ class StreamDiffusion:
 
         x_0_pred_batch, model_pred = self.lcm_step(x_t_latent)
         if prev_latent_batch is not None:
-            x_0_pred_out = x_0_pred_batch[-self.frame_bff_size:]
+            x_0_pred_out = x_0_pred_batch[-self.frame_bff_size :]
             if self.is_drawing:
                 self.x_t_latent_buffer = (
-                    self.alpha_prod_t_sqrt[self.frame_bff_size:]
-                    * x_0_pred_batch[:-self.frame_buffer_size]
-                    + self.beta_prod_t_sqrt[self.frame_bff_size:]
-                    * self.init_noise[self.frame_bff_size:]
+                    self.alpha_prod_t_sqrt[self.frame_bff_size :] * x_0_pred_batch[: -self.frame_bff_size]
+                    + self.beta_prod_t_sqrt[self.frame_bff_size :] * self.init_noise[self.frame_bff_size :]
                 )
             else:
-                self.x_t_latent_buffer = self.alpha_prod_t_sqrt[self.frame_bff_size:] * x_0_pred_batch[:-self.frame_bff_size]
+                self.x_t_latent_buffer = (
+                    self.alpha_prod_t_sqrt[self.frame_bff_size :] * x_0_pred_batch[: -self.frame_bff_size]
+                )
         else:
             x_0_pred_out = x_0_pred_batch
             self.x_t_latent_buffer = None
