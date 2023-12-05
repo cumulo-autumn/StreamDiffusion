@@ -8,9 +8,10 @@
 ### Step0: Make environment
 ```
 conda create -n stream-diffusion python=3.10
-
-# or
-
+conda activate stream-diffusion
+```
+OR
+```
 python -m venv .venv
 ```
 
@@ -36,13 +37,18 @@ OR
 git clone https://github.com/cumulo-autumn/StreamDiffusion.git
 python -m pip install .
 ```
-OR (if you want to use tensorrt)
+OR [if you want to use tensorrt]
 ```
 git clone https://github.com/cumulo-autumn/StreamDiffusion.git
 pip install .[tensorrt]
 python -m streamdiffusion.tools.install-tensorrt
 ```
-
+OR [if you are a developer]
+```
+git clone https://github.com/cumulo-autumn/StreamDiffusion.git
+python setup.py develop easy_install stream-diffusion[tensorrt]
+python -m streamdiffusion.tools.install-tensorrt
+```
 ## Usage
 ```python
 import io
