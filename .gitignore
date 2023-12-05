@@ -197,3 +197,4 @@ __pycache__/
 *$py.class
 
 models/RealESR*
+*.safetensors

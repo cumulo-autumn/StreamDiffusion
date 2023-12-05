@@ -19,12 +19,6 @@ class Config:
     workers: int = 1
 
     ####################################################################
-    # Generation configuration
-    ####################################################################
-    # The threshold for the Levenstein distance.
-    levenstein_distance_threshold: int = 3
-
-    ####################################################################
     # Model configuration
     ####################################################################
     # SD1.x variant model

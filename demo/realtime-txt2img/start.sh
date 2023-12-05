@@ -1,4 +1,5 @@
-cd server
-python3 main.py &
-cd ../view
-npm start
+pip install -r requirements.txt
+cd view
+npm start &
+cd ../server
+python3 main.py
