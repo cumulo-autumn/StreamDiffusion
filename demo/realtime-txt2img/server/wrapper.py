@@ -71,7 +71,9 @@ class StreamDiffusionWrapper:
         try:
             from streamdiffusion.acceleration.tensorrt import accelerate_with_tensorrt
             stream = accelerate_with_tensorrt(
-                stream, "engines", max_batch_size=4, engine_build_options={"build_static_batch": False}
+                stream, "engines",
+                max_batch_size=self.batch_size,
+                engine_build_options={"build_static_batch": False}
             )
             print("TensorRT acceleration enabled.")
         except Exception:
