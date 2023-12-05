@@ -1,4 +1,4 @@
-cd server
-python3 main.py &
-cd ../view
-npm start
+cd view
+npm start &
+cd ../server
+python3 main.py
