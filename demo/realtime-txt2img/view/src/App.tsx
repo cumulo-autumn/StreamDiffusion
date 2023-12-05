@@ -66,7 +66,7 @@ function App() {
     if (editDistance >= 2) {
       setInputPrompt(newPrompt);
       setLastPrompt(newPrompt);
-      for (let i = 0; i < 9; i++) {
+      for (let i = 0; i < 25; i++) {
         fetchImage(i);
       }
     }
