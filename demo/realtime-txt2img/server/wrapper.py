@@ -6,7 +6,6 @@ import PIL.Image
 import requests
 import torch
 from diffusers import AutoencoderTiny, StableDiffusionPipeline
-from streamdiffusion.acceleration.tensorrt import accelerate_with_tensorrt
 
 from streamdiffusion import StreamDiffusion
 from streamdiffusion.image_utils import postprocess_image
@@ -32,6 +31,7 @@ class StreamDiffusionWrapper:
         self.device = device
         self.dtype = dtype
         self.prompt = ""
+        self.batch_size = len(t_index_list)
 
         self.stream = self._load_model(
             model_id=model_id,
@@ -67,9 +67,23 @@ class StreamDiffusionWrapper:
         stream.load_lcm_lora(lcm_lora_id)
         stream.fuse_lora()
         stream.vae = AutoencoderTiny.from_pretrained(vae_id).to(device=pipe.device, dtype=pipe.dtype)
-        stream = accelerate_with_tensorrt(
-            stream, "engines", max_batch_size=2, engine_build_options={"build_static_batch": True}
-        )
+
+        try:
+            from streamdiffusion.acceleration.tensorrt import accelerate_with_tensorrt
+            stream = accelerate_with_tensorrt(
+                stream, "engines", max_batch_size=4, engine_build_options={"build_static_batch": False}
+            )
+            print("TensorRT acceleration enabled.")
+        except Exception:
+            print("TensorRT acceleration has failed. Trying to use Stable Fast.")
+            try:
+                from streamdiffusion.acceleration.sfast import accelerate_with_stable_fast
+                stream = accelerate_with_stable_fast(stream)
+                print("StableFast acceleration enabled.")
+            except Exception:
+                print("StableFast acceleration has failed. Using normal mode.")
+                pass
+
 
         stream.prepare(
             "",
@@ -95,7 +109,7 @@ class StreamDiffusionWrapper:
             self.stream.prepare("")
             self.stream.update_prompt(prompt)
             self.prompt = prompt
-            for i in range(3):
+            for i in range(self.batch_size):
                 x_output = self.stream.txt2img()
 
         x_output = self.stream.txt2img()
