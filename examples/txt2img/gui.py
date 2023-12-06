@@ -78,8 +78,8 @@ def image_generation_process(
 
     stream = accelerate_with_tensorrt(
         stream,
-        f"./engines/{model_name}_max_batch_{len(denoising_steps)}",
-        max_batch_size=len(denoising_steps),
+        f"./engines/{model_name}_max_batch_{batch_size}",
+        max_batch_size=batch_size,
     )
 
     stream.prepare(prompt, num_inference_steps=50)
