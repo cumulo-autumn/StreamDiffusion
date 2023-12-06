@@ -238,8 +238,14 @@ class StreamDiffusion:
         x_output = self.decode_image(x_0_pred_out).detach().clone()
         return x_output
 
-    @torch.no_grad()
+
     def txt2img_batch(self, batch_size: int = 1):
-        x_0_pred_out, _ = self.lcm_step(torch.randn((batch_size, 4, self.latent_height, self.latent_width)).to(device=self.device, dtype=self.dtype))
-        x_output = self.decode_image(x_0_pred_out).detach().clone()
-        return x_output
+        x_t_latent = torch.randn((batch_size, 4, self.latent_height, self.latent_width),device=self.device, dtype=self.dtype)
+        model_pred = self.unet(
+            x_t_latent,
+            self.sub_timesteps_tensor,
+            encoder_hidden_states=self.prompt_embeds,
+            return_dict=False,
+        )[0]
+        x_0_pred_out = (x_t_latent - self.beta_prod_t_sqrt * model_pred) / self.alpha_prod_t_sqrt
+        return self.decode_image(x_0_pred_out)

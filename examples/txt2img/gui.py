@@ -89,26 +89,14 @@ def image_generation_process(
 
     stream.prepare(prompt, num_inference_steps=50)
 
-    main_thread_time_cumulative = 0.0
-    lowpass_alpha = 0.1
-
-    start = torch.cuda.Event(enable_timing=True)
-    end = torch.cuda.Event(enable_timing=True)
     while True:
         try:
-            start.record()
+            start_time = time.time()
 
             x_outputs = stream.txt2img_batch(batch_size).cpu()
             queue.put(x_outputs, block=False)
 
-            end.record()
-            torch.cuda.synchronize()
-
-            main_thread_time = start.elapsed_time(end) / 1000
-            main_thread_time_cumulative = (
-                lowpass_alpha * main_thread_time
-                + (1 - lowpass_alpha) * main_thread_time_cumulative
-            )
+            main_thread_time_cumulative = time.time() - start_time
             fps = 1 / main_thread_time_cumulative * batch_size
         except KeyboardInterrupt:
             print(f"fps: {fps}, main_thread_time: {main_thread_time_cumulative}")
@@ -168,7 +156,7 @@ def main() -> None:
     queue = Queue()
     prompt = "cat with a hat, photoreal, 8K"
     model_name = "stabilityai/sd-turbo"
-    batch_size = 10
+    batch_size = 12
     process1 = Process(
         target=image_generation_process, args=(queue, prompt, model_name, batch_size)
     )
