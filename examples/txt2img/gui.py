@@ -38,7 +38,7 @@ def update_image(image_data: Image.Image, labels: List[tk.Label]) -> None:
     label = labels[image_update_counter % len(labels)]
     image_update_counter += 1
 
-    tk_image = ImageTk.PhotoImage(image_data)
+    tk_image = ImageTk.PhotoImage(image_data, size=512)
     label.configure(image=tk_image)
     label.image = tk_image  # keep a reference
 
@@ -91,43 +91,27 @@ def image_generation_process(
     main_thread_time_cumulative = 0.0
     lowpass_alpha = 0.1
 
+    start = torch.cuda.Event(enable_timing=True)
+    end = torch.cuda.Event(enable_timing=True)
     while True:
-        start = torch.cuda.Event(enable_timing=True)
-        end = torch.cuda.Event(enable_timing=True)
-        start.record()
+        try:
+            start.record()
 
-        x_outputs = stream.txt2img_batch(batch_size).cpu()
-        queue.put(x_outputs)
+            x_outputs = stream.txt2img_batch(batch_size).cpu()
+            queue.put(x_outputs, block=False)
 
-        end.record()
-        torch.cuda.synchronize()
-        main_thread_time = start.elapsed_time(end) / 1000
-        main_thread_time_cumulative = (
-            lowpass_alpha * main_thread_time
-            + (1 - lowpass_alpha) * main_thread_time_cumulative
-        )
-        fps = 1 / main_thread_time_cumulative * batch_size
-        print(f"fps: {fps}, main_thread_time: {main_thread_time_cumulative}")
+            end.record()
+            torch.cuda.synchronize()
 
-
-def _receive_images(queue: Queue, labels: List[tk.Label]) -> None:
-    """
-    Continuously receive images from a queue and update the labels.
-
-    Parameters
-    ----------
-    queue : Queue
-        The queue to receive images from.
-    labels : List[tk.Label]
-        The list of labels to update with images.
-    """
-    while True:
-        if not queue.empty():
-            [
-                labels[0].after(0, update_image, image_data, labels)
-                for image_data in postprocess_image(queue.get(), output_type="pil")
-            ]
-        time.sleep(0.0005)
+            main_thread_time = start.elapsed_time(end) / 1000
+            main_thread_time_cumulative = (
+                lowpass_alpha * main_thread_time
+                + (1 - lowpass_alpha) * main_thread_time_cumulative
+            )
+            fps = 1 / main_thread_time_cumulative * batch_size
+            print(f"fps: {fps}, main_thread_time: {main_thread_time_cumulative}")
+        except KeyboardInterrupt:
+            break
 
 
 def receive_images(queue: Queue) -> None:
@@ -147,11 +131,16 @@ def receive_images(queue: Queue) -> None:
     labels[2].grid(row=1, column=0)
     labels[3].grid(row=1, column=1)
 
-    thread = threading.Thread(target=_receive_images, args=(queue, labels))
-    thread.daemon = True
-    thread.start()
-
-    root.mainloop()
+    while True:
+        try:
+            if not queue.empty():
+                [
+                    labels[0].after(0, update_image, image_data, labels)
+                    for image_data in postprocess_image(queue.get(block=False), output_type="pil")
+                ]
+            time.sleep(0.0005)
+        except KeyboardInterrupt:
+            break
 
 
 def main() -> None:
