@@ -110,7 +110,30 @@ def image_generation_process(
                 + (1 - lowpass_alpha) * main_thread_time_cumulative
             )
             fps = 1 / main_thread_time_cumulative * batch_size
+        except KeyboardInterrupt:
             print(f"fps: {fps}, main_thread_time: {main_thread_time_cumulative}")
+            break
+
+
+def _receive_images(queue: Queue, labels: List[tk.Label]) -> None:
+    """
+    Continuously receive images from a queue and update the labels.
+
+    Parameters
+    ----------
+    queue : Queue
+        The queue to receive images from.
+    labels : List[tk.Label]
+        The list of labels to update with images.
+    """
+    while True:
+        try:
+            if not queue.empty():
+                [
+                    labels[0].after(0, update_image, image_data, labels)
+                    for image_data in postprocess_image(queue.get(block=False), output_type="pil")
+                ]
+            time.sleep(0.0005)
         except KeyboardInterrupt:
             break
 
@@ -132,16 +155,10 @@ def receive_images(queue: Queue) -> None:
     labels[2].grid(row=1, column=0)
     labels[3].grid(row=1, column=1)
 
-    while True:
-        try:
-            if not queue.empty():
-                [
-                    labels[0].after(0, update_image, image_data, labels)
-                    for image_data in postprocess_image(queue.get(block=False), output_type="pil")
-                ]
-            time.sleep(0.0005)
-        except KeyboardInterrupt:
-            break
+    thread = threading.Thread(target=_receive_images, args=(queue, labels), daemon=True)
+    thread.start()
+
+    root.mainloop()
 
 
 def main() -> None:
