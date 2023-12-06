@@ -16,6 +16,10 @@ from streamdiffusion import StreamDiffusion
 from streamdiffusion.acceleration.tensorrt import accelerate_with_tensorrt
 from streamdiffusion.image_utils import postprocess_image
 
+torch.set_grad_enabled(False)
+torch.backends.cuda.matmul.allow_tf32 = True
+torch.backends.cudnn.allow_tf32 = True
+
 image_update_counter = 0  # 画像の更新カウンター
 
 
