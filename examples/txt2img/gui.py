@@ -38,7 +38,7 @@ def update_image(image_data: Image.Image, labels: List[tk.Label]) -> None:
     label = labels[image_update_counter % len(labels)]
     image_update_counter += 1
 
-    tk_image = ImageTk.PhotoImage(image_data, size=512)
+    tk_image = ImageTk.PhotoImage(image_data, size=384)
     label.configure(image=tk_image)
     label.image = tk_image  # keep a reference
 
@@ -98,11 +98,10 @@ def image_generation_process(
             x_outputs = stream.txt2img_batch(batch_size).cpu()
             queue.put(x_outputs, block=False)
 
-            main_thread_time_cumulative = time.time() - start_time
-            fps = 1 / main_thread_time_cumulative * batch_size
+            fps = 1 / (time.time() - start_time) * batch_size
             fps_queue.put(fps)
         except KeyboardInterrupt:
-            print(f"fps: {fps}, main_thread_time: {main_thread_time_cumulative}")
+            print(f"fps: {fps}")
             break
 
 
