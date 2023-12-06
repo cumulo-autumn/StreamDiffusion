@@ -123,9 +123,10 @@ def _receive_images(queue: Queue, labels: List[tk.Label]) -> None:
     """
     while True:
         if not queue.empty():
-            images = postprocess_image(queue.get(), output_type="pil")
-            for image_data in images:
+            [
                 labels[0].after(0, update_image, image_data, labels)
+                for image_data in postprocess_image(queue.get(), output_type="pil")
+            ]
         time.sleep(0.005)
 
 
