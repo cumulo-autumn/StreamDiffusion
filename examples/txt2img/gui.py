@@ -76,11 +76,11 @@ def image_generation_process(
         stream.load_lcm_lora()
         stream.fuse_lora()
 
-    # stream = accelerate_with_tensorrt(
-    #     stream,
-    #     f"./engines/{model_name}_max_batch_{len(denoising_steps)}",
-    #     max_batch_size=len(denoising_steps),
-    # )
+    stream = accelerate_with_tensorrt(
+        stream,
+        f"./engines/{model_name}_max_batch_{len(denoising_steps)}",
+        max_batch_size=len(denoising_steps),
+    )
 
     stream.prepare(prompt, num_inference_steps=50)
 
