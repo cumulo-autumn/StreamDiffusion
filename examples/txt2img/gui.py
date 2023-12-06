@@ -137,8 +137,10 @@ def receive_images(queue: Queue) -> None:
     root = tk.Tk()
     root.title("Image Viewer")
     labels = [tk.Label(root) for _ in range(4)]
-    for label in labels:
-        label.pack(side=tk.LEFT)
+    labels[0].grid(row=0, column=0)
+    labels[1].grid(row=0, column=1)
+    labels[2].grid(row=1, column=0)
+    labels[3].grid(row=1, column=1)
 
     thread = threading.Thread(target=_receive_images, args=(queue, labels))
     thread.daemon = True
