@@ -127,7 +127,7 @@ def _receive_images(queue: Queue, labels: List[tk.Label]) -> None:
                 labels[0].after(0, update_image, image_data, labels)
                 for image_data in postprocess_image(queue.get(), output_type="pil")
             ]
-        time.sleep(0.005)
+        time.sleep(0.0005)
 
 
 def receive_images(queue: Queue) -> None:
