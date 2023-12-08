@@ -8,7 +8,6 @@ import torch
 from diffusers import AutoencoderTiny, StableDiffusionPipeline
 
 from streamdiffusion import StreamDiffusion
-from streamdiffusion.image_utils import postprocess_image
 
 
 def main(
@@ -40,7 +39,7 @@ def main(
         outputs.append(image)
         input_image = PIL.Image.open(image).convert("RGB")
         output_x = stream(input_image)
-        output_image = postprocess_image(output_x, output_type="pil")[0]
+        output_image = stream.image_processor.postprocess(output_x, output_type="pil")[0]
         output_image.save(os.path.join(output, f"{i}.png"))
 
     for image in images:
@@ -51,7 +50,7 @@ def main(
             continue
 
         output_x = stream(input_image)
-        output_image = postprocess_image(output_x, output_type="pil")[0]
+        output_image = stream.image_processor.postprocess(output_x, output_type="pil")[0]
 
         name = outputs.pop(0)
         basename = os.path.basename(name)

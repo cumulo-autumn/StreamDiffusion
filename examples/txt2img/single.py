@@ -5,7 +5,6 @@ import torch
 from diffusers import AutoencoderTiny, StableDiffusionPipeline
 
 from streamdiffusion import StreamDiffusion
-from streamdiffusion.image_utils import postprocess_image
 
 
 def main(output: str, prompt: str = "Girl with panda ears wearing a hood", width: int = 512, height: int = 512):
@@ -30,7 +29,7 @@ def main(output: str, prompt: str = "Girl with panda ears wearing a hood", width
         stream.txt2img()
 
     output_x = stream.txt2img()
-    output_image = postprocess_image(output_x, output_type="pil")[0]
+    output_image = stream.image_processor.postprocess(output_x, output_type="pil")[0]
     output_image.save(output)
 
 

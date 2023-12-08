@@ -15,7 +15,6 @@ from socks import UDP, receive_udp_data
 
 from streamdiffusion import StreamDiffusion
 from streamdiffusion.acceleration.tensorrt import accelerate_with_tensorrt
-from streamdiffusion.image_utils import pil2tensor, postprocess_image
 
 
 inputs = []
@@ -32,7 +31,7 @@ def screen(
             img = sct.grab(monitor)
             img = PIL.Image.frombytes("RGB", img.size, img.bgra, "raw", "BGRX")
             img.resize((height, width))
-            inputs.append(pil2tensor(img))
+            inputs.append(img)
 
 
 def result_window(server_ip: str, server_port: int):
@@ -48,10 +47,12 @@ def result_window(server_ip: str, server_port: int):
         plt.pause(0.00001)
 
 
-def run(prompt: str = "Girl with panda ears wearing a hood", 
-        address: str = "127.0.0.1", 
-        port: int = 8080, 
-        frame_buffer_size: int = 3):
+def run(
+    prompt: str = "Girl with panda ears wearing a hood",
+    address: str = "127.0.0.1",
+    port: int = 8080,
+    frame_buffer_size: int = 3,
+):
     pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file("./model.safetensors").to(
         device=torch.device("cuda")
     )
@@ -59,7 +60,7 @@ def run(prompt: str = "Girl with panda ears wearing a hood",
     stream = StreamDiffusion(
         pipe,
         [32, 45],
-        frame_buffer_size = frame_buffer_size,
+        frame_buffer_size=frame_buffer_size,
     )
     stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
     stream.load_lcm_lora()
@@ -93,16 +94,20 @@ def run(prompt: str = "Girl with panda ears wearing a hood",
         end = torch.cuda.Event(enable_timing=True)
 
         start.record()
-        
+
         sampled_inputs = []
         for i in range(frame_buffer_size):
             index = (len(inputs) // frame_buffer_size) * i
-            sampled_inputs.append(inputs[len(inputs)-index-1])
-        
+            sampled_inputs.append(inputs[len(inputs) - index - 1])
+
+        sampled_inputs = [
+            stream.image_processor.preprocess(img, stream.height, stream.width) for img in sampled_inputs
+        ]
+
         input_batch = torch.cat(sampled_inputs)
         inputs.clear()
         x_output = stream(input_batch.to(device=stream.device, dtype=stream.dtype))
-        output_images = postprocess_image(x_output, output_type="pil")
+        output_images = stream.image_processor.postprocess(x_output, output_type="pil")
 
         for output_image in output_images:
             udp.send_udp_data(output_image)

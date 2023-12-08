@@ -9,7 +9,6 @@ from diffusers import AutoencoderTiny, StableDiffusionPipeline
 from tqdm import tqdm
 
 from streamdiffusion import StreamDiffusion
-from streamdiffusion.image_utils import pil2tensor, postprocess_image
 
 
 def download_image(url: str):
@@ -35,6 +34,8 @@ def run(
         pipe,
         [32, 45],
         torch_dtype=torch.float16,
+        width=512,
+        height=512,
     )
 
     if lcm_lora:
@@ -52,7 +53,7 @@ def run(
     elif acceleration == "tensorrt":
         from streamdiffusion.acceleration.tensorrt import accelerate_with_tensorrt
 
-        stream = accelerate_with_tensorrt(stream, "engines", max_batch_size=2, engine_build_options={"build_static_batch": True})
+        stream = accelerate_with_tensorrt(stream, "engines", max_batch_size=2)
     elif acceleration == "sfast":
         from streamdiffusion.acceleration.sfast import accelerate_with_stable_fast
 
@@ -63,12 +64,11 @@ def run(
         num_inference_steps=50,
     )
 
-    image = download_image("https://github.com/ddpn08.png").resize((512, 512))
-    input_tensor = pil2tensor(image)
+    image = download_image("https://github.com/ddpn08.png")
 
     # warmup
     for _ in range(wamup):
-        stream(input_tensor.detach().clone().to(device=stream.device, dtype=stream.dtype))
+        stream(image)
 
     results = []
 
@@ -77,8 +77,8 @@ def run(
         end = torch.cuda.Event(enable_timing=True)
 
         start.record()
-        x_output = stream(input_tensor.detach().clone().to(device=stream.device, dtype=stream.dtype))
-        postprocess_image(x_output, output_type="pil")[0]
+        x_output = stream(image)
+        stream.image_processor.postprocess(x_output, output_type="pil")
         end.record()
 
         torch.cuda.synchronize()

@@ -10,7 +10,6 @@ from tqdm import tqdm
 
 from streamdiffusion import StreamDiffusion
 from streamdiffusion.acceleration.sfast import accelerate_with_stable_fast
-from streamdiffusion.image_utils import pil2tensor, postprocess_image
 
 
 def extract_frames(video_path: str, output_dir: str):
@@ -57,19 +56,12 @@ def main(input: str, output: str, prompt: str = "Girl with panda ears wearing a 
     )
 
     for _ in range(stream.batch_size - 1):
-        stream(
-            pil2tensor(sample_image.resize((width, height)))
-            .detach()
-            .clone()
-            .to(device=stream.device, dtype=stream.dtype)
-        )
+        stream(sample_image)
 
     for image_path in tqdm(images + [images[0]] * (stream.batch_size - 1)):
         pil_image = PIL.Image.open(os.path.join(output, "frames", image_path))
-        pil_image = pil_image.resize((width, height))
-        input_tensor = pil2tensor(pil_image)
-        output_x = stream(input_tensor.detach().clone().to(device=stream.device, dtype=stream.dtype))
-        output_image = postprocess_image(output_x, output_type="pil")[0]
+        output_x = stream(pil_image)
+        output_image = stream.image_processor.postprocess(output_x, output_type="pil")[0]
         output_image.save(os.path.join(output, image_path))
 
     output_video_path = os.path.join(output, "output.mp4")

@@ -7,7 +7,6 @@ import torch
 from diffusers import AutoencoderTiny, StableDiffusionPipeline
 
 from streamdiffusion import StreamDiffusion
-from streamdiffusion.image_utils import pil2tensor, postprocess_image
 
 
 def main(input: str, output: str, prompt: str = "Girl with panda ears wearing a hood", scale: int = 1):
@@ -33,13 +32,12 @@ def main(input: str, output: str, prompt: str = "Girl with panda ears wearing a 
     )
 
     input_image = input_image.resize((width, height))
-    input_tensor = pil2tensor(input_image)
 
     for _ in range(stream.batch_size - 1):
-        stream(input_tensor.detach().clone().to(device=stream.device, dtype=stream.dtype))
+        stream(input_image)
 
-    output_x = stream(input_tensor.detach().clone().to(device=stream.device, dtype=stream.dtype))
-    output_image = postprocess_image(output_x, output_type="pil")[0]
+    output_x = stream(input_image)
+    output_image = stream.image_processor.postprocess(output_x, output_type="pil")[0]
     output_image.save(output)
 
 

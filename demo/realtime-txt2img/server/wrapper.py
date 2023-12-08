@@ -8,7 +8,6 @@ import torch
 from diffusers import AutoencoderTiny, StableDiffusionPipeline
 
 from streamdiffusion import StreamDiffusion
-from streamdiffusion.image_utils import postprocess_image
 
 
 def download_image(url: str):
@@ -71,22 +70,21 @@ class StreamDiffusionWrapper:
 
         try:
             from streamdiffusion.acceleration.tensorrt import accelerate_with_tensorrt
+
             stream = accelerate_with_tensorrt(
-                stream, "engines",
-                max_batch_size=self.batch_size,
-                engine_build_options={"build_static_batch": False}
+                stream, "engines", max_batch_size=self.batch_size, engine_build_options={"build_static_batch": False}
             )
             print("TensorRT acceleration enabled.")
         except Exception:
             print("TensorRT acceleration has failed. Trying to use Stable Fast.")
             try:
                 from streamdiffusion.acceleration.sfast import accelerate_with_stable_fast
+
                 stream = accelerate_with_stable_fast(stream)
                 print("StableFast acceleration enabled.")
             except Exception:
                 print("StableFast acceleration has failed. Using normal mode.")
                 pass
-
 
         stream.prepare(
             "",
@@ -115,8 +113,7 @@ class StreamDiffusionWrapper:
                 x_output = self.stream.txt2img()
 
         x_output = self.stream.txt2img()
-        return postprocess_image(x_output, output_type="pil")[0]
-
+        return self.stream.image_processor.postprocess(x_output, output_type="pil")[0]
 
 
 if __name__ == "__main__":
