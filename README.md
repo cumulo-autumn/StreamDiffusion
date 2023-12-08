@@ -20,11 +20,11 @@ Select the appropriate version for your system.
 
 CUDA 11.1
 ```
-pip3 install torch torchvision xformers --index-url https://download.pytorch.org/whl/cu118
+pip install torch torchvision xformers --index-url https://download.pytorch.org/whl/cu118
 ```
 CUDA 12.1
 ```
-pip3 install torch torchvision xformers --index-url https://download.pytorch.org/whl/cu121
+pip install torch torchvision xformers --index-url https://download.pytorch.org/whl/cu121
 ```
 details: https://pytorch.org/
 
@@ -46,9 +46,10 @@ python -m streamdiffusion.tools.install-tensorrt
 OR [if you are a developer]
 ```
 git clone https://github.com/cumulo-autumn/StreamDiffusion.git
-python setup.py develop easy_install stream-diffusion[tensorrt]
+python setup.py develop easy_install stream-diffusion[dev]
 python -m streamdiffusion.tools.install-tensorrt
 ```
+
 ## Usage
 ```python
 import io
