@@ -37,9 +37,11 @@ def update_image(image_data: Image.Image, labels: List[tk.Label]) -> None:
     global image_update_counter
     label = labels[image_update_counter % len(labels)]
     image_update_counter += 1
-
-    tk_image = ImageTk.PhotoImage(image_data, size=384)
-    label.configure(image=tk_image)
+    
+    width = 320
+    height = 320
+    tk_image = ImageTk.PhotoImage(image_data.resize((width,height)), size=width)
+    label.configure(image=tk_image, width=width, height=height)
     label.image = tk_image  # keep a reference
 
 
@@ -90,7 +92,7 @@ def image_generation_process(
     )
 
     stream.prepare(prompt, num_inference_steps=50)
-
+    
     while True:
         try:
             start_time = time.time()
@@ -168,7 +170,7 @@ def main() -> None:
     """
     queue = Queue()
     fps_queue = Queue()
-    prompt = "cat with a hat, photoreal, 8K"
+    prompt = "cat with sunglasses and a hat, photoreal, 8K"
     model_name = "stabilityai/sd-turbo"
     batch_size = 12
     process1 = Process(
