@@ -8,7 +8,6 @@ from diffusers.image_processor import VaeImageProcessor
 from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import (
     retrieve_latents,
 )
-
 from streamdiffusion.image_filter import SimilarImageFilter
 
 
@@ -59,6 +58,15 @@ class StreamDiffusion:
         **kwargs,
     ):
         self.pipe.load_lora_weights(pretrained_model_name_or_path_or_dict, adapter_name, **kwargs)
+
+    def load_lora(
+        self,
+        pretrained_lora_model_name_or_path_or_dict: Union[str, Dict[str, torch.Tensor]] = "E:/stable-diffusion-webui/models/Lora/Project_sekai/haruka_dadaptation-000008.safetensors",
+        adapter_name=None,
+        lora_scale = 1.0,
+        **kwargs,
+    ):
+        self.pipe.load_lora_weights(pretrained_lora_model_name_or_path_or_dict, adapter_name, lora_scale,**kwargs)
 
     def fuse_lora(
         self,
@@ -219,7 +227,9 @@ class StreamDiffusion:
     def __call__(self, x: Union[torch.FloatTensor, PIL.Image.Image, np.ndarray]):
         assert x.shape[0] == self.frame_bff_size, "Input batch size must be equal to frame buffer size."
         x = self.image_processor.preprocess(x, self.height, self.width).to(device=self.device, dtype=self.dtype)
+        print(x.shape)
         if self.similar_image_filter:
+            print("------------------  ###########  ------------------")
             x = self.similar_filter(x)
             if x is None:
                 return self.prev_image_result
