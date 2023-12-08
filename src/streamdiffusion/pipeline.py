@@ -63,10 +63,9 @@ class StreamDiffusion:
         self,
         pretrained_lora_model_name_or_path_or_dict: Union[str, Dict[str, torch.Tensor]] = "E:/stable-diffusion-webui/models/Lora/Project_sekai/haruka_dadaptation-000008.safetensors",
         adapter_name=None,
-        lora_scale = 1.0,
         **kwargs,
     ):
-        self.pipe.load_lora_weights(pretrained_lora_model_name_or_path_or_dict, adapter_name, lora_scale,**kwargs)
+        self.pipe.load_lora_weights(pretrained_lora_model_name_or_path_or_dict, adapter_name,**kwargs)
 
     def fuse_lora(
         self,
