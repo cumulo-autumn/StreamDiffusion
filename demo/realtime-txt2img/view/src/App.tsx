@@ -16,22 +16,27 @@ function App() {
       matrix[i] = [i];
     }
     for (let i = 0; i <= a.length; i++) {
-      matrix[0][i] = i;
+      matrix[0]![i] = i;
     }
 
     for (let i = 1; i <= b.length; i++) {
       for (let j = 1; j <= a.length; j++) {
         if (b.charAt(i - 1) === a.charAt(j - 1)) {
+          //@ts-ignore
           matrix[i][j] = matrix[i - 1][j - 1];
         } else {
+          //@ts-ignore
           matrix[i][j] = Math.min(
+            //@ts-ignore
             matrix[i - 1][j - 1] + 1,
+            //@ts-ignore
             Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1)
           );
         }
       }
     }
 
+    //@ts-ignore
     return matrix[b.length][a.length];
   };
 
@@ -63,7 +68,7 @@ function App() {
     const newPrompt = event.target.value;
     const editDistance = calculateEditDistance(lastPrompt, newPrompt);
 
-    if (editDistance >= 2) {
+    if (editDistance && editDistance >= 2) {
       setInputPrompt(newPrompt);
       setLastPrompt(newPrompt);
       for (let i = 0; i < 16; i++) {
