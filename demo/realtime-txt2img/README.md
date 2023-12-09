@@ -12,13 +12,3 @@ You can realtimely generate 4x4 images from text, on changing the input prompt.
 ```bash
 chmod +x ./start.sh && ./start.sh
 ```
-
-or
-
-```bash
-pip install -r requirements.txt
-cd view
-npm start &
-cd ../server
-python3 main.py
-```
