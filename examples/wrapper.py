@@ -41,7 +41,6 @@ class StreamDiffusionWrapper:
     ):
         self.device = device
         self.dtype = dtype
-        self.prompt = ""
         self.width = width
         self.height = height
         self.frame_buffer_size = frame_buffer_size
@@ -82,7 +81,6 @@ class StreamDiffusionWrapper:
         num_inference_steps : int, optional
             The number of inference steps to perform, by default 50.
         """
-        self.prompt = prompt
         self.stream.prepare(
             prompt,
             num_inference_steps=num_inference_steps,
