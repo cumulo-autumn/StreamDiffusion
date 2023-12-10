@@ -201,6 +201,39 @@ class StreamDiffusionWrapper:
         use_lcm_lora: bool = True,
         use_tiny_vae: bool = True,
     ):
+        """
+        Loads the model.
+
+        This method does the following:
+
+        1. Loads the model from the model_id.
+        2. Loads and fuses the LCM-LoRA model from the lcm_lora_id if needed.
+        3. Loads the VAE model from the vae_id if needed.
+        4. Enables acceleration if needed.
+        5. Prepares the model for inference.
+        6. Warms up the model.
+
+        Parameters
+        ----------
+        model_id : str
+            The model id to load.
+        t_index_list : List[int]
+            The t_index_list to use for inference.
+        lcm_lora_id : Optional[str], optional
+            The lcm_lora_id to load, by default None.
+        vae_id : Optional[str], optional
+            The vae_id to load, by default None.
+        accerelation : Literal["none", "xfomers", "sfast", "tensorrt"], optional
+            The acceleration method to use, by default "tensorrt".
+        warmup : int, optional
+            The number of warmup steps to perform, by default 10.
+        is_drawing : bool, optional
+            Whether to draw the image or not, by default True.
+        use_lcm_lora : bool, optional
+            Whether to use LCM-LoRA or not, by default True.
+        use_tiny_vae : bool, optional
+            Whether to use TinyVAE or not, by default True.
+        """
         if model_id.endswith(".safetensors"):
             pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file(
                 model_id

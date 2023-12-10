@@ -70,10 +70,10 @@ def accelerate_with_tensorrt(
 
     if mode == "img2img":
         vae_decoder_model = VAE(
-            device=stream.device, max_batch_size=1, min_batch_size=1
+            device=stream.device, max_batch_size=max_batch_size, min_batch_size=1
         )
         vae_encoder_model = VAEEncoder(
-            device=stream.device, max_batch_size=1, min_batch_size=1
+            device=stream.device, max_batch_size=max_batch_size, min_batch_size=1
         )
     elif mode == "txt2img":
         vae_decoder_model = VAE(
