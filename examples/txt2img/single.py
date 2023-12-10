@@ -10,7 +10,7 @@ from wrapper import StreamDiffusionWrapper
 
 
 def main(
-    output: str,
+    output: str = "output.png",
     model_id: str = "KBlueLeaf/kohaku-v2.1",
     prompt: str = "Girl with panda ears wearing a hood",
     width: int = 512,
@@ -26,6 +26,7 @@ def main(
         warmup=10,
         accerelation=acceleration,
         is_drawing=True,
+        mode="txt2img",
     )
 
     stream.prepare(
@@ -34,9 +35,9 @@ def main(
     )
 
     for _ in range(stream.batch_size - 1):
-        stream.txt2img()
+        stream()
 
-    output_image = stream.txt2img()
+    output_image = stream()
     output_image.save(output)
 
 

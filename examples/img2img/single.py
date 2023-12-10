@@ -11,8 +11,8 @@ from wrapper import StreamDiffusionWrapper
 
 def main(
     input: str,
-    output: str,
-    model_id: str,
+    output: str = "output.png",
+    model_id: str = "KBlueLeaf/kohaku-v2.1",
     prompt: str = "Girl with panda ears wearing a hood",
     width: int = 512,
     height: int = 512,
@@ -27,6 +27,7 @@ def main(
         warmup=10,
         accerelation=acceleration,
         is_drawing=True,
+        mode="img2img",
     )
 
     stream.prepare(
@@ -34,10 +35,12 @@ def main(
         num_inference_steps=50,
     )
 
-    for _ in range(stream.batch_size - 1):
-        stream.img2img(input)
+    image_tensor = stream.preprocess_image(input)
 
-    output_image = stream.img2img(input)
+    for _ in range(stream.batch_size - 1):
+        stream(image=image_tensor)
+
+    output_image = stream(image=image_tensor)
     output_image.save(output)
 
 

@@ -12,13 +12,16 @@ from wrapper import StreamDiffusionWrapper
 
 def main(
     input: str,
-    output: str,
-    model_id: str,
+    output: str = "output",
+    model_id: str = "KBlueLeaf/kohaku-v2.1",
     prompt: str = "Girl with panda ears wearing a hood",
     width: int = 512,
     height: int = 512,
     acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
 ):
+    if not os.path.exists(output):
+        os.makedirs(output, exist_ok=True)
+
     stream = StreamDiffusionWrapper(
         model_id=model_id,
         t_index_list=[32, 40, 45],
@@ -28,6 +31,7 @@ def main(
         warmup=10,
         accerelation=acceleration,
         is_drawing=True,
+        mode="img2img",
     )
 
     stream.prepare(
@@ -42,13 +46,13 @@ def main(
     for i in range(stream.batch_size - 1):
         image = images.pop(0)
         outputs.append(image)
-        output_image = stream.img2img(image)
+        output_image = stream(image=image)
         output_image.save(os.path.join(output, f"{i}.png"))
 
     for image in images:
         outputs.append(image)
         try:
-            output_image = stream.img2img(image)
+            output_image = stream(image=image)
         except Exception:
             continue
 

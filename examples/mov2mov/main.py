@@ -25,8 +25,8 @@ def get_frame_rate(video_path: str):
 
 def main(
     input: str,
-    output: str,
-    model_id: str,
+    output: str = "output",
+    model_id: str = "KBlueLeaf/kohaku-v2.1",
     prompt: str = "Girl with panda ears wearing a hood",
     scale: float = 1.0,
     acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
@@ -50,6 +50,7 @@ def main(
         warmup=10,
         accerelation=acceleration,
         is_drawing=False,
+        mode="img2img",
     )
 
     stream.prepare(
@@ -58,10 +59,10 @@ def main(
     )
 
     for _ in range(stream.batch_size - 1):
-        stream.img2img(sample_image)
+        stream(image=sample_image)
 
     for image_path in tqdm(images + [images[0]] * (stream.batch_size - 1)):
-        output_image = stream.img2img(os.path.join(output, "frames", image_path))
+        output_image = stream(image=os.path.join(output, "frames", image_path))
         output_image.save(os.path.join(output, image_path))
 
     output_video_path = os.path.join(output, "output.mp4")

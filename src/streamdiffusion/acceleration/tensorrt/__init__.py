@@ -1,8 +1,11 @@
 import gc
 import os
+from typing import Literal
 
 import torch
-from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import retrieve_latents
+from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import (
+    retrieve_latents,
+)
 from polygraphy import cuda
 
 from ...pipeline import StreamDiffusion
@@ -26,9 +29,13 @@ def accelerate_with_tensorrt(
     max_batch_size: int = 2,
     min_batch_size: int = 1,
     use_cuda_graph: bool = False,
+    mode: Literal["img2img", "txt2img"] = "img2img",
     engine_build_options: dict = {},
 ):
-    if "opt_batch_size" not in engine_build_options or engine_build_options["opt_batch_size"] is None:
+    if (
+        "opt_batch_size" not in engine_build_options
+        or engine_build_options["opt_batch_size"] is None
+    ):
         engine_build_options["opt_batch_size"] = max_batch_size
     text_encoder = stream.text_encoder
     unet = stream.unet
@@ -60,8 +67,29 @@ def accelerate_with_tensorrt(
         embedding_dim=text_encoder.config.hidden_size,
         unet_dim=unet.config.in_channels,
     )
-    vae_decoder_model = VAE(device=stream.device, max_batch_size=max_batch_size, min_batch_size=min_batch_size)
-    vae_encoder_model = VAEEncoder(device=stream.device, max_batch_size=max_batch_size, min_batch_size=min_batch_size)
+
+    if mode == "img2img":
+        vae_decoder_model = VAE(
+            device=stream.device, max_batch_size=1, min_batch_size=1
+        )
+        vae_encoder_model = VAEEncoder(
+            device=stream.device, max_batch_size=1, min_batch_size=1
+        )
+    elif mode == "txt2img":
+        vae_decoder_model = VAE(
+            device=stream.device,
+            max_batch_size=max_batch_size,
+            min_batch_size=min_batch_size,
+        )
+        vae_encoder_model = VAEEncoder(
+            device=stream.device,
+            max_batch_size=max_batch_size,
+            min_batch_size=min_batch_size,
+        )
+    else:
+        raise ValueError(
+            f"mode should be one of ['img2img', 'txt2img'], but got {mode}"
+        )
 
     if not os.path.exists(unet_engine_path):
         unet = unet.to(stream.device, dtype=torch.float16)
@@ -104,7 +132,9 @@ def accelerate_with_tensorrt(
 
     cuda_steram = cuda.Stream()
 
-    stream.unet = UNet2DConditionModelEngine(unet_engine_path, cuda_steram, use_cuda_graph=use_cuda_graph)
+    stream.unet = UNet2DConditionModelEngine(
+        unet_engine_path, cuda_steram, use_cuda_graph=use_cuda_graph
+    )
     stream.vae = AutoencoderKLEngine(
         vae_encoder_engine_path,
         vae_decoder_engine_path,

@@ -74,6 +74,7 @@ def image_generation_process(
         accerelation=acceleration,
         is_drawing=True,
         use_lcm_lora=False,
+        mode="txt2img",
     )
 
     stream.prepare(
@@ -85,7 +86,7 @@ def image_generation_process(
         try:
             start_time = time.time()
 
-            x_outputs = stream.stream.txt2img_batch(batch_size).cpu()
+            x_outputs = stream.stream().cpu()
             queue.put(x_outputs, block=False)
 
             fps = 1 / (time.time() - start_time) * batch_size

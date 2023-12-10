@@ -23,6 +23,7 @@ class StreamDiffusionWrapper:
         self,
         model_id: str,
         t_index_list: List[int],
+        mode: Literal["img2img", "txt2img"] = "img2img",
         lcm_lora_id: Optional[str] = None,
         vae_id: Optional[str] = None,
         device: Literal["cpu", "cuda"] = "cuda",
@@ -43,6 +44,7 @@ class StreamDiffusionWrapper:
         self.dtype = dtype
         self.width = width
         self.height = height
+        self.mode = mode
         self.frame_buffer_size = frame_buffer_size
         self.batch_size = len(t_index_list) * frame_buffer_size
 
@@ -86,6 +88,28 @@ class StreamDiffusionWrapper:
             num_inference_steps=num_inference_steps,
         )
 
+    def __call__(
+        self,
+        image: Optional[Union[str, Image.Image, torch.Tensor]] = None,
+    ) -> Union[Image.Image, List[Image.Image]]:
+        """
+        Performs img2img or txt2img based on the mode.
+
+        Parameters
+        ----------
+        image : Optional[Union[str, Image.Image, torch.Tensor]]
+            The image to generate from.
+
+        Returns
+        -------
+        Union[Image.Image, List[Image.Image]]
+            The generated image.
+        """
+        if self.mode == "img2img":
+            return self.img2img(image)
+        else:
+            return self.txt2img()
+
     def txt2img(self) -> Union[Image.Image, List[Image.Image]]:
         """
         Performs txt2img.
@@ -99,7 +123,7 @@ class StreamDiffusionWrapper:
             image_tensor = self.stream.txt2img_batch(self.batch_size)
         else:
             image_tensor = self.stream.txt2img()
-        return self._postprocess_image(image_tensor)
+        return self.postprocess_image(image_tensor)
 
     def img2img(self, image: Union[str, Image.Image, torch.Tensor]) -> Image.Image:
         """
@@ -115,15 +139,36 @@ class StreamDiffusionWrapper:
         Image.Image
             The generated image.
         """
+        if isinstance(image, str) or isinstance(image, Image.Image):
+            image = self.preprocess_image(image)
+
+        image_tensor = self.stream(image)
+        return self.postprocess_image(image_tensor)
+
+    def preprocess_image(self, image: Union[str, Image.Image]) -> torch.Tensor:
+        """
+        Preprocesses the image.
+
+        Parameters
+        ----------
+        image : Union[str, Image.Image, torch.Tensor]
+            The image to preprocess.
+
+        Returns
+        -------
+        torch.Tensor
+            The preprocessed image.
+        """
         if isinstance(image, str):
             image = Image.open(image).convert("RGB").resize((self.width, self.height))
         if isinstance(image, Image.Image):
             image = image.convert("RGB").resize((self.width, self.height))
 
-        image_tensor = self.stream(image)
-        return self._postprocess_image(image_tensor)
+        return self.stream.image_processor.preprocess(
+            image, self.height, self.width
+        ).to(device=self.device, dtype=self.dtype)
 
-    def _postprocess_image(
+    def postprocess_image(
         self, image_tensor: torch.Tensor
     ) -> Union[Image.Image, List[Image.Image]]:
         """
@@ -162,7 +207,7 @@ class StreamDiffusionWrapper:
             ).to(device=self.device, dtype=self.dtype)
         else:
             pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_pretrained(
-                model_id
+                model_id,
             ).to(device=self.device, dtype=self.dtype)
         stream = StreamDiffusion(
             pipe=pipe,
@@ -207,10 +252,12 @@ class StreamDiffusionWrapper:
                         CURRENT_DIR,
                         "..",
                         "engines",
+                        f"{self.mode}",
                         f"{model_id.replace('/', '_')}_max_batch_{self.batch_size}_min_batch_{self.batch_size}",
                     ),
                     min_batch_size=self.batch_size,
                     max_batch_size=self.batch_size,
+                    mode=self.mode,
                 )
                 print("TensorRT acceleration enabled.")
             if accerelation == "sfast":
@@ -231,7 +278,7 @@ class StreamDiffusionWrapper:
 
         # warmup
         for _ in range(warmup):
-            if self.frame_buffer_size > 1:
+            if self.batch_size > 1:
                 stream.txt2img_batch(self.batch_size)
             else:
                 stream.txt2img()
