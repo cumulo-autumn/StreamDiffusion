@@ -56,12 +56,16 @@ def run(
     address: str = "127.0.0.1",
     port: int = 8080,
     frame_buffer_size: int = 3,
+    width: int = 512,
+    height: int = 512,
     acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
 ):
     stream = StreamDiffusionWrapper(
         model_id=model_id,
         t_index_list=[32, 45],
         frame_buffer_size=frame_buffer_size,
+        width=width,
+        height=height,
         warmup=10,
         accerelation=acceleration,
         is_drawing=False,
@@ -75,7 +79,7 @@ def run(
     )
 
     output_window = mp.Process(target=result_window, args=(address, port))
-    input_screen = threading.Thread(target=screen)
+    input_screen = threading.Thread(target=screen, args=(height, width))
 
     output_window.start()
     print("Waiting for output window to start...")

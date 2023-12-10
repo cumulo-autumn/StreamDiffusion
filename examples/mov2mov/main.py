@@ -25,8 +25,8 @@ def get_frame_rate(video_path: str):
 
 def main(
     input: str,
-    output: str,
-    model_id: str,
+    output: str = "output",
+    model_id: str = "KBlueLeaf/kohaku-v2.1",
     prompt: str = "Girl with panda ears wearing a hood",
     scale: float = 1.0,
     acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",

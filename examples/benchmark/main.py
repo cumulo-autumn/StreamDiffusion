@@ -27,6 +27,8 @@ def run(
     prompt: str = "Girl with panda ears wearing a hood",
     use_lcm_lora: bool = True,
     use_tiny_vae: bool = True,
+    width: int = 512,
+    height: int = 512,
     acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
     device_ids: Optional[List[int]] = None,
 ):
@@ -36,6 +38,8 @@ def run(
         use_tiny_vae=use_tiny_vae,
         t_index_list=[35, 45],
         frame_buffer_size=1,
+        width=width,
+        height=height,
         warmup=warmup,
         accerelation=acceleration,
         is_drawing=True,
@@ -47,20 +51,22 @@ def run(
         num_inference_steps=50,
     )
 
-    image = download_image("https://github.com/ddpn08.png").resize((512, 512))
+    image_tensor = stream.preprocess_image(
+        download_image("https://github.com/ddpn08.png").resize((width, height))
+    )
 
     # warmup
     for _ in range(warmup):
-        stream.img2img(image)
+        stream.img2img(image_tensor)
 
     results = []
 
-    for _ in tqdm(range(iterations)):
-        start = torch.cuda.Event(enable_timing=True)
-        end = torch.cuda.Event(enable_timing=True)
+    start = torch.cuda.Event(enable_timing=True)
+    end = torch.cuda.Event(enable_timing=True)
 
+    for _ in tqdm(range(iterations)):
         start.record()
-        stream.img2img(image)
+        stream.img2img(image_tensor)
         end.record()
 
         torch.cuda.synchronize()

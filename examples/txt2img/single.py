@@ -10,7 +10,7 @@ from wrapper import StreamDiffusionWrapper
 
 
 def main(
-    output: str,
+    output: str = "output.png",
     model_id: str = "KBlueLeaf/kohaku-v2.1",
     prompt: str = "Girl with panda ears wearing a hood",
     width: int = 512,

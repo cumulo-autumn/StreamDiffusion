@@ -12,13 +12,16 @@ from wrapper import StreamDiffusionWrapper
 
 def main(
     input: str,
-    output: str,
-    model_id: str,
+    output: str = "output",
+    model_id: str = "KBlueLeaf/kohaku-v2.1",
     prompt: str = "Girl with panda ears wearing a hood",
     width: int = 512,
     height: int = 512,
     acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
 ):
+    if not os.path.exists(output):
+        os.makedirs(output, exist_ok=True)
+
     stream = StreamDiffusionWrapper(
         model_id=model_id,
         t_index_list=[32, 40, 45],

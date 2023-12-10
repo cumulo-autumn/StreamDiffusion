@@ -99,7 +99,7 @@ class StreamDiffusionWrapper:
             image_tensor = self.stream.txt2img_batch(self.batch_size)
         else:
             image_tensor = self.stream.txt2img()
-        return self._postprocess_image(image_tensor)
+        return self.postprocess_image(image_tensor)
 
     def img2img(self, image: Union[str, Image.Image, torch.Tensor]) -> Image.Image:
         """
@@ -115,15 +115,36 @@ class StreamDiffusionWrapper:
         Image.Image
             The generated image.
         """
+        if isinstance(image, str) or isinstance(image, Image.Image):
+            image = self.preprocess_image(image)
+
+        image_tensor = self.stream(image)
+        return self.postprocess_image(image_tensor)
+
+    def preprocess_image(self, image: Union[str, Image.Image]) -> torch.Tensor:
+        """
+        Preprocesses the image.
+
+        Parameters
+        ----------
+        image : Union[str, Image.Image, torch.Tensor]
+            The image to preprocess.
+
+        Returns
+        -------
+        torch.Tensor
+            The preprocessed image.
+        """
         if isinstance(image, str):
             image = Image.open(image).convert("RGB").resize((self.width, self.height))
         if isinstance(image, Image.Image):
             image = image.convert("RGB").resize((self.width, self.height))
 
-        image_tensor = self.stream(image)
-        return self._postprocess_image(image_tensor)
+        return self.stream.image_processor.preprocess(
+            image, self.height, self.width
+        ).to(device=self.device, dtype=self.dtype)
 
-    def _postprocess_image(
+    def postprocess_image(
         self, image_tensor: torch.Tensor
     ) -> Union[Image.Image, List[Image.Image]]:
         """
