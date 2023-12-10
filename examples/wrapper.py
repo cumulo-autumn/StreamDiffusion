@@ -231,7 +231,10 @@ class StreamDiffusionWrapper:
 
         # warmup
         for _ in range(warmup):
-            self.txt2img()
+            if self.frame_buffer_size > 1:
+                self.stream.txt2img_batch(self.batch_size)
+            else:
+                self.stream.txt2img()
             torch.cuda.synchronize()
 
         return stream
