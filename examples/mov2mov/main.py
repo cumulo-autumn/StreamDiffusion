@@ -48,7 +48,7 @@ def main(
         height=height,
         warmup=10,
         accerelation="tensorrt",
-        is_drawing=True,
+        is_drawing=False,
     )
 
     stream.prepare(

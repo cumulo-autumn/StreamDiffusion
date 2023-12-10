@@ -174,12 +174,15 @@ class StreamDiffusionWrapper:
             height=self.height,
             is_drawing=is_drawing,
         )
-        if use_lcm_lora:
-            if lcm_lora_id is not None:
-                stream.load_lcm_lora(pretrained_model_name_or_path_or_dict=lcm_lora_id)
-            else:
-                stream.load_lcm_lora()
-            stream.fuse_lora()
+        if "turbo" not in model_id:
+            if use_lcm_lora:
+                if lcm_lora_id is not None:
+                    stream.load_lcm_lora(
+                        pretrained_model_name_or_path_or_dict=lcm_lora_id
+                    )
+                else:
+                    stream.load_lcm_lora()
+                stream.fuse_lora()
 
         if use_tiny_vae:
             if vae_id is not None:
