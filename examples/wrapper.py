@@ -183,7 +183,7 @@ class StreamDiffusionWrapper:
             ).to(device=self.device, dtype=self.dtype)
         else:
             pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_pretrained(
-                model_id
+                model_id,
             ).to(device=self.device, dtype=self.dtype)
         stream = StreamDiffusion(
             pipe=pipe,
@@ -252,7 +252,7 @@ class StreamDiffusionWrapper:
 
         # warmup
         for _ in range(warmup):
-            if self.frame_buffer_size > 1:
+            if self.batch_size > 1:
                 stream.txt2img_batch(self.batch_size)
             else:
                 stream.txt2img()
