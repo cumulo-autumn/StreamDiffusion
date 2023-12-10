@@ -171,6 +171,7 @@ class StreamDiffusionWrapper:
             width=self.width,
             height=self.height,
             is_drawing=is_drawing,
+            frame_buffer_size=self.frame_buffer_size,
         )
         if "turbo" not in model_id:
             if use_lcm_lora:
@@ -212,7 +213,7 @@ class StreamDiffusionWrapper:
                     max_batch_size=self.batch_size,
                 )
                 print("TensorRT acceleration enabled.")
-            elif accerelation == "sfast":
+            if accerelation == "sfast":
                 from streamdiffusion.acceleration.sfast import (
                     accelerate_with_stable_fast,
                 )
