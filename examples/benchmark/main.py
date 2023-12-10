@@ -7,11 +7,7 @@ import fire
 import PIL.Image
 import requests
 import torch
-from diffusers import AutoencoderTiny, StableDiffusionPipeline
 from tqdm import tqdm
-
-from streamdiffusion import StreamDiffusion
-from streamdiffusion.image_utils import pil2tensor, postprocess_image
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
