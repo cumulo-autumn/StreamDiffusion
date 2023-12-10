@@ -130,17 +130,6 @@ class StreamDiffusion:
             generator=generator,
         ).to(device=self.device, dtype=self.dtype)
 
-        c_skip_list = []
-        c_out_list = []
-        for timestep in self.sub_timesteps:
-            c_skip, c_out = self.scheduler.get_scalings_for_boundary_condition_discrete(timestep)
-            c_skip_list.append(c_skip)
-            c_out_list.append(c_out)
-        c_skip = torch.stack(c_skip_list).view(len(self.t_list), 1, 1, 1).to(dtype=self.dtype, device=self.device)
-        c_out = torch.stack(c_out_list).view(len(self.t_list), 1, 1, 1).to(dtype=self.dtype, device=self.device)
-        self.c_skip = torch.repeat_interleave(c_skip, repeats=self.frame_bff_size, dim=0)
-        self.c_out = torch.repeat_interleave(c_out, repeats=self.frame_bff_size, dim=0)
-
         alpha_prod_t_sqrt_list = []
         beta_prod_t_sqrt_list = []
         for timestep in self.sub_timesteps:
@@ -168,8 +157,7 @@ class StreamDiffusion:
         return noisy_samples
 
     def scheduler_step_batch(self, model_pred_batch, x_t_latent_batch):
-        F_theta = (x_t_latent_batch - self.beta_prod_t_sqrt * model_pred_batch) / self.alpha_prod_t_sqrt
-        denoised_batch = self.c_out * F_theta + self.c_skip * x_t_latent_batch
+        denoised_batch = (x_t_latent_batch - self.beta_prod_t_sqrt * model_pred_batch) / self.alpha_prod_t_sqrt
         return denoised_batch
 
     def lcm_step(
@@ -224,11 +212,9 @@ class StreamDiffusion:
 
     @torch.no_grad()
     def __call__(self, x: Union[torch.FloatTensor, PIL.Image.Image, np.ndarray]):
-        assert x.shape[0] == self.frame_bff_size, "Input batch size must be equal to frame buffer size."
         x = self.image_processor.preprocess(x, self.height, self.width).to(device=self.device, dtype=self.dtype)
-        print(x.shape)
+        assert x.shape[0] == self.frame_bff_size, "Input batch size must be equal to frame buffer size."
         if self.similar_image_filter:
-            print("------------------  ###########  ------------------")
             x = self.similar_filter(x)
             if x is None:
                 return self.prev_image_result
