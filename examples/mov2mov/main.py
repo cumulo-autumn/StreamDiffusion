@@ -1,6 +1,6 @@
 import sys
 import os
-from typing import *
+from typing import Literal
 
 import ffmpeg
 import fire
@@ -29,6 +29,7 @@ def main(
     model_id: str,
     prompt: str = "Girl with panda ears wearing a hood",
     scale: float = 1.0,
+    acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
 ):
     if os.path.isdir(output):
         raise ValueError("Output directory already exists")
@@ -47,7 +48,7 @@ def main(
         width=width,
         height=height,
         warmup=10,
-        accerelation="tensorrt",
+        accerelation=acceleration,
         is_drawing=False,
     )
 

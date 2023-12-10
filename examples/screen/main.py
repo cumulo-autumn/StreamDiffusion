@@ -56,13 +56,14 @@ def run(
     address: str = "127.0.0.1",
     port: int = 8080,
     frame_buffer_size: int = 3,
+    acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
 ):
     stream = StreamDiffusionWrapper(
         model_id=model_id,
         t_index_list=[32, 45],
         frame_buffer_size=frame_buffer_size,
         warmup=10,
-        accerelation="tensorrt",
+        accerelation=acceleration,
         is_drawing=False,
         enable_similar_image_filter=True,
         similar_image_filter_threshold=0.95,

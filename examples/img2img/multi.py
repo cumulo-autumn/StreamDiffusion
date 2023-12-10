@@ -1,7 +1,7 @@
 import glob
 import os
 import sys
-from typing import *
+from typing import Literal
 
 import fire
 
@@ -17,6 +17,7 @@ def main(
     prompt: str = "Girl with panda ears wearing a hood",
     width: int = 512,
     height: int = 512,
+    acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
 ):
     stream = StreamDiffusionWrapper(
         model_id=model_id,
@@ -25,7 +26,7 @@ def main(
         width=width,
         height=height,
         warmup=10,
-        accerelation="tensorrt",
+        accerelation=acceleration,
         is_drawing=True,
     )
 

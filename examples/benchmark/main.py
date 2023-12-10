@@ -1,7 +1,7 @@
 import os
 import sys
 import io
-from typing import *
+from typing import Literal, List, Optional
 
 import fire
 import PIL.Image
@@ -27,7 +27,7 @@ def run(
     prompt: str = "Girl with panda ears wearing a hood",
     use_lcm_lora: bool = True,
     use_tiny_vae: bool = True,
-    acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "none",
+    acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
     device_ids: Optional[List[int]] = None,
 ):
     stream = StreamDiffusionWrapper(

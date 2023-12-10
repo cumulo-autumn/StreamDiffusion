@@ -4,9 +4,10 @@ import threading
 import time
 import tkinter as tk
 from multiprocessing import Process, Queue
-from typing import List
+from typing import List, Literal
 
 from PIL import Image, ImageTk
+import fire
 
 from streamdiffusion.image_utils import postprocess_image
 
@@ -40,7 +41,12 @@ def update_image(image_data: Image.Image, labels: List[tk.Label]) -> None:
 
 
 def image_generation_process(
-    queue: Queue, fps_queue: Queue, prompt: str, model_name: str, batch_size: int = 10
+    queue: Queue,
+    fps_queue: Queue,
+    prompt: str,
+    model_name: str,
+    batch_size: int = 10,
+    acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "tensorrt",
 ) -> None:
     """
     Process for generating images based on a prompt using a specified model.
@@ -57,13 +63,15 @@ def image_generation_process(
         The name of the model to use for image generation.
     batch_size : int
         The batch size to use for image generation.
+    acceleration : Literal["none", "xformers", "sfast", "tensorrt"]
+        The type of acceleration to use for image generation.
     """
     stream = StreamDiffusionWrapper(
         model_id=model_name,
         t_index_list=[0],
         frame_buffer_size=batch_size,
         warmup=10,
-        accerelation="tensorrt",
+        accerelation=acceleration,
         is_drawing=True,
         use_lcm_lora=False,
     )
@@ -150,18 +158,20 @@ def receive_images(queue: Queue, fps_queue: Queue) -> None:
     root.mainloop()
 
 
-def main() -> None:
+def main(
+    prompt: str = "cat with sunglasses and a hat, photoreal, 8K",
+    model_name: str = "stabilityai/sd-turbo",
+    batch_size: int = 12,
+    acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "tensorrt",
+) -> None:
     """
     Main function to start the image generation and viewer processes.
     """
     queue = Queue()
     fps_queue = Queue()
-    prompt = "cat with sunglasses and a hat, photoreal, 8K"
-    model_name = "stabilityai/sd-turbo"
-    batch_size = 12
     process1 = Process(
         target=image_generation_process,
-        args=(queue, fps_queue, prompt, model_name, batch_size),
+        args=(queue, fps_queue, prompt, model_name, batch_size, acceleration),
     )
     process1.start()
 
