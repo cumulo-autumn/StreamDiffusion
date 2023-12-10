@@ -1,5 +1,6 @@
 import glob
 import os
+import sys
 from typing import *
 
 import fire
@@ -10,24 +11,26 @@ from diffusers import AutoencoderTiny, StableDiffusionPipeline
 from streamdiffusion import StreamDiffusion
 from streamdiffusion.image_utils import postprocess_image
 
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+
+from wrapper import StreamDiffusionWrapper
 
 def main(
     input: str, output: str, prompt: str = "Girl with panda ears wearing a hood", width: int = 512, height: int = 512
 ):
-    pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file("../../model.safetensors").to(
-        device=torch.device("cuda"),
-        dtype=torch.float16,
+    stream = StreamDiffusionWrapper(
+        model_id="../../model.safetensors",
+        t_index_list=[32, 40, 45],
+        frame_buffer_size=1,
+        width=width,
+        height=height,
+        warmup=10,
+        accerelation="tensorrt",
+        is_drawing=True,
     )
-    pipe.enable_xformers_memory_efficient_attention()
 
-    stream = StreamDiffusion(
-        pipe, [32, 40, 45], torch_dtype=torch.float16, width=width, height=height, is_drawing=True
-    )
-    stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
-    stream.load_lcm_lora()
-    stream.fuse_lora()
     stream.prepare(
-        prompt,
+        prompt=prompt,
         num_inference_steps=50,
     )
 
@@ -38,20 +41,15 @@ def main(
     for i in range(stream.batch_size - 1):
         image = images.pop(0)
         outputs.append(image)
-        input_image = PIL.Image.open(image).convert("RGB")
-        output_x = stream(input_image)
-        output_image = postprocess_image(output_x, output_type="pil")[0]
+        output_image = stream.img2img(image)
         output_image.save(os.path.join(output, f"{i}.png"))
 
     for image in images:
         outputs.append(image)
         try:
-            input_image = PIL.Image.open(image).convert("RGB")
+            output_image = stream.img2img(image)
         except Exception:
             continue
-
-        output_x = stream(input_image)
-        output_image = postprocess_image(output_x, output_type="pil")[0]
 
         name = outputs.pop(0)
         basename = os.path.basename(name)

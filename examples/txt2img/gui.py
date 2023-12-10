@@ -1,3 +1,4 @@
+import os
 import threading
 import time
 import tkinter as tk
@@ -22,6 +23,8 @@ torch.backends.cudnn.allow_tf32 = True
 
 image_update_counter = 0
 
+current_dir = os.path.dirname(os.path.realpath(__file__))
+
 
 def update_image(image_data: Image.Image, labels: List[tk.Label]) -> None:
     """
@@ -37,10 +40,10 @@ def update_image(image_data: Image.Image, labels: List[tk.Label]) -> None:
     global image_update_counter
     label = labels[image_update_counter % len(labels)]
     image_update_counter += 1
-    
+
     width = 320
     height = 320
-    tk_image = ImageTk.PhotoImage(image_data.resize((width,height)), size=width)
+    tk_image = ImageTk.PhotoImage(image_data.resize((width, height)), size=width)
     label.configure(image=tk_image, width=width, height=height)
     label.image = tk_image  # keep a reference
 
@@ -86,13 +89,19 @@ def image_generation_process(
 
     stream = accelerate_with_tensorrt(
         stream,
-        f"./engines/{model_name}_max_batch_{batch_size}_min_batch_{batch_size}",
+        os.path.join(
+            current_dir,
+            "..",
+            "..",
+            "engines",
+            f"{model_name}_max_batch_{batch_size}_min_batch_{batch_size}",
+        ),
         max_batch_size=batch_size,
         min_batch_size=batch_size,
     )
 
     stream.prepare(prompt, num_inference_steps=50)
-    
+
     while True:
         try:
             start_time = time.time()
