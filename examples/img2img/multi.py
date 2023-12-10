@@ -31,6 +31,7 @@ def main(
         warmup=10,
         accerelation=acceleration,
         is_drawing=True,
+        mode="img2img",
     )
 
     stream.prepare(
@@ -45,13 +46,13 @@ def main(
     for i in range(stream.batch_size - 1):
         image = images.pop(0)
         outputs.append(image)
-        output_image = stream.img2img(image)
+        output_image = stream(image=image)
         output_image.save(os.path.join(output, f"{i}.png"))
 
     for image in images:
         outputs.append(image)
         try:
-            output_image = stream.img2img(image)
+            output_image = stream(image=image)
         except Exception:
             continue
 

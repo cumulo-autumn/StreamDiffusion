@@ -71,6 +71,7 @@ def run(
         is_drawing=False,
         enable_similar_image_filter=True,
         similar_image_filter_threshold=0.95,
+        mode="img2img",
     )
 
     stream.prepare(
@@ -108,8 +109,8 @@ def run(
 
         input_batch = torch.cat(sampled_inputs)
         inputs.clear()
-        output_images = stream.img2img(
-            input_batch.to(device=stream.device, dtype=stream.dtype)
+        output_images = stream(
+            image=input_batch.to(device=stream.device, dtype=stream.dtype)
         )
 
         for output_image in output_images:

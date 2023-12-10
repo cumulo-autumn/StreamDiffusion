@@ -23,6 +23,7 @@ class StreamDiffusionWrapper:
         self,
         model_id: str,
         t_index_list: List[int],
+        mode: Literal["img2img", "txt2img"] = "img2img",
         lcm_lora_id: Optional[str] = None,
         vae_id: Optional[str] = None,
         device: Literal["cpu", "cuda"] = "cuda",
@@ -43,6 +44,7 @@ class StreamDiffusionWrapper:
         self.dtype = dtype
         self.width = width
         self.height = height
+        self.mode = mode
         self.frame_buffer_size = frame_buffer_size
         self.batch_size = len(t_index_list) * frame_buffer_size
 
@@ -85,6 +87,28 @@ class StreamDiffusionWrapper:
             prompt,
             num_inference_steps=num_inference_steps,
         )
+
+    def __call__(
+        self,
+        image: Optional[Union[str, Image.Image, torch.Tensor]] = None,
+    ) -> Union[Image.Image, List[Image.Image]]:
+        """
+        Performs img2img or txt2img based on the mode.
+
+        Parameters
+        ----------
+        image : Optional[Union[str, Image.Image, torch.Tensor]]
+            The image to generate from.
+
+        Returns
+        -------
+        Union[Image.Image, List[Image.Image]]
+            The generated image.
+        """
+        if self.mode == "img2img":
+            return self.img2img(image)
+        else:
+            return self.txt2img()
 
     def txt2img(self) -> Union[Image.Image, List[Image.Image]]:
         """
@@ -228,6 +252,7 @@ class StreamDiffusionWrapper:
                         CURRENT_DIR,
                         "..",
                         "engines",
+                        f"{self.mode}",
                         f"{model_id.replace('/', '_')}_max_batch_{self.batch_size}_min_batch_{self.batch_size}",
                     ),
                     min_batch_size=self.batch_size,

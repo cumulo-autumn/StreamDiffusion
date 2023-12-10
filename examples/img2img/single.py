@@ -27,6 +27,7 @@ def main(
         warmup=10,
         accerelation=acceleration,
         is_drawing=True,
+        mode="img2img",
     )
 
     stream.prepare(
@@ -37,9 +38,9 @@ def main(
     image_tensor = stream.preprocess_image(input)
 
     for _ in range(stream.batch_size - 1):
-        stream.img2img(image_tensor)
+        stream(image=image_tensor)
 
-    output_image = stream.img2img(image_tensor)
+    output_image = stream(image=image_tensor)
     output_image.save(output)
 
 

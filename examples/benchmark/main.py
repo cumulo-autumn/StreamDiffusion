@@ -44,6 +44,7 @@ def run(
         accerelation=acceleration,
         is_drawing=True,
         device_ids=device_ids,
+        mode="img2img",
     )
 
     stream.prepare(
@@ -57,7 +58,7 @@ def run(
 
     # warmup
     for _ in range(warmup):
-        stream.img2img(image_tensor)
+        stream(image=image_tensor)
 
     results = []
 
@@ -66,7 +67,7 @@ def run(
 
     for _ in tqdm(range(iterations)):
         start.record()
-        stream.img2img(image_tensor)
+        stream(image=image_tensor)
         end.record()
 
         torch.cuda.synchronize()
