@@ -1,4 +1,6 @@
 import io
+import os
+import sys
 import multiprocessing as mp
 import threading
 import time
@@ -9,14 +11,14 @@ import fire
 import mss
 import PIL.Image
 import torch
-from diffusers import AutoencoderTiny, StableDiffusionPipeline
 from matplotlib import pyplot as plt
 from socks import UDP, receive_udp_data
 
-from streamdiffusion import StreamDiffusion
-from streamdiffusion.acceleration.tensorrt import accelerate_with_tensorrt
-from streamdiffusion.image_utils import pil2tensor, postprocess_image
+from streamdiffusion.image_utils import pil2tensor
 
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+
+from wrapper import StreamDiffusionWrapper
 
 inputs = []
 
@@ -48,26 +50,26 @@ def result_window(server_ip: str, server_port: int):
         plt.pause(0.00001)
 
 
-def run(prompt: str = "Girl with panda ears wearing a hood", 
-        address: str = "127.0.0.1", 
-        port: int = 8080, 
-        frame_buffer_size: int = 3):
-    pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file("./model.safetensors").to(
-        device=torch.device("cuda")
+def run(
+    model_id: str,
+    prompt: str = "Girl with panda ears wearing a hood",
+    address: str = "127.0.0.1",
+    port: int = 8080,
+    frame_buffer_size: int = 3,
+):
+    stream = StreamDiffusionWrapper(
+        model_id=model_id,
+        t_index_list=[32, 45],
+        frame_buffer_size=frame_buffer_size,
+        warmup=10,
+        accerelation="tensorrt",
+        is_drawing=False,
+        enable_similar_image_filter=True,
+        similar_image_filter_threshold=0.95,
     )
 
-    stream = StreamDiffusion(
-        pipe,
-        [32, 45],
-        frame_buffer_size = frame_buffer_size,
-    )
-    stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
-    stream.load_lcm_lora()
-    stream.fuse_lora()
-    stream.enable_similar_image_filter(0.95)
-    stream = accelerate_with_tensorrt(stream, "./engines", max_batch_size=6)
     stream.prepare(
-        prompt,
+        prompt=prompt,
         num_inference_steps=50,
     )
 
@@ -93,16 +95,17 @@ def run(prompt: str = "Girl with panda ears wearing a hood",
         end = torch.cuda.Event(enable_timing=True)
 
         start.record()
-        
+
         sampled_inputs = []
         for i in range(frame_buffer_size):
             index = (len(inputs) // frame_buffer_size) * i
-            sampled_inputs.append(inputs[len(inputs)-index-1])
-        
+            sampled_inputs.append(inputs[len(inputs) - index - 1])
+
         input_batch = torch.cat(sampled_inputs)
         inputs.clear()
-        x_output = stream(input_batch.to(device=stream.device, dtype=stream.dtype))
-        output_images = postprocess_image(x_output, output_type="pil")
+        output_images = stream.img2img(
+            input_batch.to(device=stream.device, dtype=stream.dtype)
+        )
 
         for output_image in output_images:
             udp.send_udp_data(output_image)
@@ -110,7 +113,8 @@ def run(prompt: str = "Girl with panda ears wearing a hood",
         torch.cuda.synchronize()
         main_thread_time = start.elapsed_time(end) / (1000 * frame_buffer_size)
         main_thread_time_cumulative = (
-            lowpass_alpha * main_thread_time + (1 - lowpass_alpha) * main_thread_time_cumulative
+            lowpass_alpha * main_thread_time
+            + (1 - lowpass_alpha) * main_thread_time_cumulative
         )
         fps = 1 / main_thread_time_cumulative
         print(f"fps: {fps}, main_thread_time: {main_thread_time_cumulative}")

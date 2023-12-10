@@ -1,3 +1,5 @@
+import os
+import sys
 import io
 from typing import *
 
@@ -11,6 +13,10 @@ from tqdm import tqdm
 from streamdiffusion import StreamDiffusion
 from streamdiffusion.image_utils import pil2tensor, postprocess_image
 
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+
+from wrapper import StreamDiffusionWrapper
+
 
 def download_image(url: str):
     response = requests.get(url)
@@ -19,44 +25,26 @@ def download_image(url: str):
 
 
 def run(
-    wamup: int = 10,
-    iterations: int = 50,
+    warmup: int = 10,
+    iterations: int = 100,
+    model_id: str = "KBlueLeaf/kohaku-v2.1",
     prompt: str = "Girl with panda ears wearing a hood",
-    lcm_lora: bool = True,
-    tiny_vae: bool = True,
-    acceleration: Optional[Literal["xformers", "sfast", "tensorrt"]] = None,
+    use_lcm_lora: bool = True,
+    use_tiny_vae: bool = True,
+    acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "none",
     device_ids: Optional[List[int]] = None,
 ):
-    pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file("./model.safetensors").to(
-        device=torch.device("cuda"),
-        dtype=torch.float16,
+    stream = StreamDiffusionWrapper(
+        model_id=model_id,
+        use_lcm_lora=use_lcm_lora,
+        use_tiny_vae=use_tiny_vae,
+        t_index_list=[35, 45],
+        frame_buffer_size=1,
+        warmup=warmup,
+        accerelation=acceleration,
+        is_drawing=True,
+        device_ids=device_ids,
     )
-    stream = StreamDiffusion(
-        pipe,
-        [32, 45],
-        torch_dtype=torch.float16,
-    )
-
-    if lcm_lora:
-        stream.load_lcm_lora()
-        stream.fuse_lora()
-
-    if tiny_vae:
-        stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
-
-    if device_ids is not None:
-        stream.unet = torch.nn.DataParallel(stream.unet, device_ids=device_ids)
-
-    if acceleration == "xformers":
-        pipe.enable_xformers_memory_efficient_attention()
-    elif acceleration == "tensorrt":
-        from streamdiffusion.acceleration.tensorrt import accelerate_with_tensorrt
-
-        stream = accelerate_with_tensorrt(stream, "engines", max_batch_size=2, engine_build_options={"build_static_batch": True})
-    elif acceleration == "sfast":
-        from streamdiffusion.acceleration.sfast import accelerate_with_stable_fast
-
-        stream = accelerate_with_stable_fast(stream)
 
     stream.prepare(
         prompt,
@@ -64,11 +52,10 @@ def run(
     )
 
     image = download_image("https://github.com/ddpn08.png").resize((512, 512))
-    input_tensor = pil2tensor(image)
 
     # warmup
-    for _ in range(wamup):
-        stream(input_tensor.detach().clone().to(device=stream.device, dtype=stream.dtype))
+    for _ in range(warmup):
+        stream.img2img(image)
 
     results = []
 
@@ -77,8 +64,7 @@ def run(
         end = torch.cuda.Event(enable_timing=True)
 
         start.record()
-        x_output = stream(input_tensor.detach().clone().to(device=stream.device, dtype=stream.dtype))
-        postprocess_image(x_output, output_type="pil")[0]
+        stream.img2img(image)
         end.record()
 
         torch.cuda.synchronize()

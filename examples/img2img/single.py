@@ -1,45 +1,41 @@
 import os
-from typing import *
+import sys
 
 import fire
-import PIL.Image
-import torch
-from diffusers import AutoencoderTiny, StableDiffusionPipeline
 
-from streamdiffusion import StreamDiffusion
-from streamdiffusion.image_utils import pil2tensor, postprocess_image
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+
+from wrapper import StreamDiffusionWrapper
 
 
-def main(input: str, output: str, prompt: str = "Girl with panda ears wearing a hood", scale: int = 1):
-    pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file("./model.safetensors").to(
-        device=torch.device("cuda"),
-        dtype=torch.float16,
+def main(
+    input: str,
+    output: str,
+    model_id: str,
+    prompt: str = "Girl with panda ears wearing a hood",
+    width: int = 512,
+    height: int = 512,
+):
+    stream = StreamDiffusionWrapper(
+        model_id=model_id,
+        t_index_list=[32, 40, 45],
+        frame_buffer_size=1,
+        width=width,
+        height=height,
+        warmup=10,
+        accerelation="tensorrt",
+        is_drawing=True,
     )
-    pipe.enable_xformers_memory_efficient_attention()
 
-    input_image = PIL.Image.open(os.path.join(input))
-    width = int(input_image.width * scale)
-    height = int(input_image.height * scale)
-
-    stream = StreamDiffusion(
-        pipe, [32, 40, 45], torch_dtype=torch.float16, width=width, height=height, is_drawing=True
-    )
-    stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
-    stream.load_lcm_lora()
-    stream.fuse_lora()
     stream.prepare(
-        prompt,
+        prompt=prompt,
         num_inference_steps=50,
     )
 
-    input_image = input_image.resize((width, height))
-    input_tensor = pil2tensor(input_image)
-
     for _ in range(stream.batch_size - 1):
-        stream(input_tensor.detach().clone().to(device=stream.device, dtype=stream.dtype))
+        stream.img2img(input)
 
-    output_x = stream(input_tensor.detach().clone().to(device=stream.device, dtype=stream.dtype))
-    output_image = postprocess_image(output_x, output_type="pil")[0]
+    output_image = stream.img2img(input)
     output_image.save(output)
 
 

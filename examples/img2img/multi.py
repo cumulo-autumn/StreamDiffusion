@@ -4,22 +4,22 @@ import sys
 from typing import *
 
 import fire
-import PIL.Image
-import torch
-from diffusers import AutoencoderTiny, StableDiffusionPipeline
-
-from streamdiffusion import StreamDiffusion
-from streamdiffusion.image_utils import postprocess_image
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from wrapper import StreamDiffusionWrapper
 
+
 def main(
-    input: str, output: str, prompt: str = "Girl with panda ears wearing a hood", width: int = 512, height: int = 512
+    input: str,
+    output: str,
+    model_id: str,
+    prompt: str = "Girl with panda ears wearing a hood",
+    width: int = 512,
+    height: int = 512,
 ):
     stream = StreamDiffusionWrapper(
-        model_id="../../model.safetensors",
+        model_id=model_id,
         t_index_list=[32, 40, 45],
         frame_buffer_size=1,
         width=width,

@@ -1,20 +1,22 @@
 import os
-from typing import List, Literal, Optional
+from typing import List, Literal, Optional, Union
 
 import torch
 from diffusers import (
     AutoencoderTiny,
-    AutoPipelineForText2Image,
     StableDiffusionPipeline,
 )
 from PIL import Image
 
 from streamdiffusion import StreamDiffusion
-from streamdiffusion.image_utils import pil2tensor, postprocess_image
+from streamdiffusion.image_utils import postprocess_image
 
 torch.set_grad_enabled(False)
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
+
+CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
+
 
 class StreamDiffusionWrapper:
     def __init__(
@@ -29,14 +31,20 @@ class StreamDiffusionWrapper:
         width: int = 512,
         height: int = 512,
         warmup: int = 10,
-        accerelation: Literal["none", "sfast", "tensorrt"] = "tensorrt",
+        accerelation: Literal["none", "xformers", "sfast", "tensorrt"] = "tensorrt",
         is_drawing: bool = True,
+        device_ids: Optional[List[int]] = None,
+        use_lcm_lora: bool = True,
+        use_tiny_vae: bool = True,
+        enable_similar_image_filter: bool = False,
+        similar_image_filter_threshold: float = 0.95,
     ):
         self.device = device
         self.dtype = dtype
         self.prompt = ""
         self.width = width
         self.height = height
+        self.frame_buffer_size = frame_buffer_size
         self.batch_size = len(t_index_list) * frame_buffer_size
 
         self.stream = self._load_model(
@@ -47,7 +55,17 @@ class StreamDiffusionWrapper:
             accerelation=accerelation,
             warmup=warmup,
             is_drawing=is_drawing,
+            use_lcm_lora=use_lcm_lora,
+            use_tiny_vae=use_tiny_vae,
         )
+
+        if device_ids is not None:
+            self.stream.unet = torch.nn.DataParallel(
+                self.stream.unet, device_ids=device_ids
+            )
+
+        if enable_similar_image_filter:
+            self.stream.enable_similar_image_filter(similar_image_filter_threshold)
 
     def prepare(
         self,
@@ -70,13 +88,28 @@ class StreamDiffusionWrapper:
             num_inference_steps=num_inference_steps,
         )
 
-    def img2img(self, image_path: str) -> Image.Image:
+    def txt2img(self) -> Union[Image.Image, List[Image.Image]]:
+        """
+        Performs txt2img.
+
+        Returns
+        -------
+        Union[Image.Image, List[Image.Image]]
+            The generated image.
+        """
+        if self.frame_buffer_size > 1:
+            image_tensor = self.stream.txt2img_batch(self.batch_size)
+        else:
+            image_tensor = self.stream.txt2img()
+        return self._postprocess_image(image_tensor)
+
+    def img2img(self, image: Union[str, Image.Image, torch.Tensor]) -> Image.Image:
         """
         Performs img2img.
 
         Parameters
         ----------
-        image_path : str
+        image : Union[str, Image.Image, torch.Tensor]
             The image to generate from.
 
         Returns
@@ -84,10 +117,17 @@ class StreamDiffusionWrapper:
         Image.Image
             The generated image.
         """
-        image_tensor = self.stream(Image.open(image_path).convert("RGB").resize((self.width, self.height)))
+        if isinstance(image, str):
+            image = Image.open(image).convert("RGB").resize((self.width, self.height))
+        if isinstance(image, Image.Image):
+            image = image.convert("RGB").resize((self.width, self.height))
+
+        image_tensor = self.stream(image)
         return self._postprocess_image(image_tensor)
 
-    def _postprocess_image(self, image_tensor: torch.Tensor) -> Image.Image:
+    def _postprocess_image(
+        self, image_tensor: torch.Tensor
+    ) -> Union[Image.Image, List[Image.Image]]:
         """
         Postprocesses the image.
 
@@ -98,10 +138,13 @@ class StreamDiffusionWrapper:
 
         Returns
         -------
-        Image.Image
+        Union[Image.Image, List[Image.Image]]
             The postprocessed image.
         """
-        return postprocess_image(image_tensor.cpu(), output_type="pil")[0]
+        if self.frame_buffer_size > 1:
+            return postprocess_image(image_tensor.cpu(), output_type="pil")
+        else:
+            return postprocess_image(image_tensor.cpu(), output_type="pil")[0]
 
     def _load_model(
         self,
@@ -112,16 +155,17 @@ class StreamDiffusionWrapper:
         accerelation: Literal["none", "sfast", "tensorrt"] = "tensorrt",
         warmup: int = 10,
         is_drawing: bool = True,
+        use_lcm_lora: bool = True,
+        use_tiny_vae: bool = True,
     ):
         if model_id.endswith(".safetensors"):
-            pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file(model_id).to(
-                device=self.device, dtype=self.dtype
-            )
+            pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file(
+                model_id
+            ).to(device=self.device, dtype=self.dtype)
         else:
-            pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_pretrained(model_id).to(
-                device=self.device, dtype=self.dtype
-            )
-        pipe.enable_xformers_memory_efficient_attention()
+            pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_pretrained(
+                model_id
+            ).to(device=self.device, dtype=self.dtype)
         stream = StreamDiffusion(
             pipe=pipe,
             t_index_list=t_index_list,
@@ -130,29 +174,49 @@ class StreamDiffusionWrapper:
             height=self.height,
             is_drawing=is_drawing,
         )
-        if lcm_lora_id is not None:
-            stream.load_lcm_lora(pretrained_model_name_or_path_or_dict=lcm_lora_id)
-        else:
-            stream.load_lcm_lora()
+        if use_lcm_lora:
+            if lcm_lora_id is not None:
+                stream.load_lcm_lora(pretrained_model_name_or_path_or_dict=lcm_lora_id)
+            else:
+                stream.load_lcm_lora()
+            stream.fuse_lora()
 
-        stream.fuse_lora()
-        if vae_id is not None:
-            stream.vae = AutoencoderTiny.from_pretrained(vae_id).to(device=pipe.device, dtype=pipe.dtype)
-        else:
-            stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
+        if use_tiny_vae:
+            if vae_id is not None:
+                stream.vae = AutoencoderTiny.from_pretrained(vae_id).to(
+                    device=pipe.device, dtype=pipe.dtype
+                )
+            else:
+                stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(
+                    device=pipe.device, dtype=pipe.dtype
+                )
 
         try:
+            if accerelation == "xformers":
+                stream.pipe.enable_xformers_memory_efficient_attention()
             if accerelation == "tensorrt":
-                from streamdiffusion.acceleration.tensorrt import accelerate_with_tensorrt
+                from streamdiffusion.acceleration.tensorrt import (
+                    accelerate_with_tensorrt,
+                )
+
                 stream = accelerate_with_tensorrt(
-                    stream, "engines",
+                    stream,
+                    os.path.join(
+                        CURRENT_DIR,
+                        "..",
+                        "engines",
+                        f"{model_id.replace('/', '_')}_max_batch_{self.batch_size}_min_batch_{self.batch_size}",
+                    ),
                     min_batch_size=self.batch_size,
                     max_batch_size=self.batch_size,
-                    engine_build_options={"build_static_batch": False}
+                    engine_build_options={"build_static_batch": False},
                 )
                 print("TensorRT acceleration enabled.")
             elif accerelation == "sfast":
-                from streamdiffusion.acceleration.sfast import accelerate_with_stable_fast
+                from streamdiffusion.acceleration.sfast import (
+                    accelerate_with_stable_fast,
+                )
+
                 stream = accelerate_with_stable_fast(stream)
                 print("StableFast acceleration enabled.")
         except Exception:

@@ -1,16 +1,15 @@
+import sys
 import os
 from typing import *
 
 import ffmpeg
 import fire
 import PIL.Image
-import torch
-from diffusers import AutoencoderTiny, StableDiffusionPipeline
 from tqdm import tqdm
 
-from streamdiffusion import StreamDiffusion
-from streamdiffusion.acceleration.sfast import accelerate_with_stable_fast
-from streamdiffusion.image_utils import pil2tensor, postprocess_image
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+
+from wrapper import StreamDiffusionWrapper
 
 
 def extract_frames(video_path: str, output_dir: str):
@@ -24,52 +23,44 @@ def get_frame_rate(video_path: str):
     return int(video_info["r_frame_rate"].split("/")[0])
 
 
-def main(input: str, output: str, prompt: str = "Girl with panda ears wearing a hood", scale: int = 1):
+def main(
+    input: str,
+    output: str,
+    model_id: str,
+    prompt: str = "Girl with panda ears wearing a hood",
+    scale: float = 1.0,
+):
     if os.path.isdir(output):
         raise ValueError("Output directory already exists")
     frame_rate = get_frame_rate(input)
     extract_frames(input, os.path.join(output, "frames"))
     images = sorted(os.listdir(os.path.join(output, "frames")))
 
-    pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file("./model.safetensors").to(
-        device=torch.device("cuda"),
-        dtype=torch.float16,
-    )
-
     sample_image = PIL.Image.open(os.path.join(output, "frames", images[0]))
     width = int(sample_image.width * scale)
     height = int(sample_image.height * scale)
 
-    stream = StreamDiffusion(
-        pipe,
-        [35, 45],
-        torch_dtype=torch.float16,
+    stream = StreamDiffusionWrapper(
+        model_id=model_id,
+        t_index_list=[35, 45],
+        frame_buffer_size=1,
         width=width,
         height=height,
+        warmup=10,
+        accerelation="tensorrt",
+        is_drawing=True,
     )
-    stream.load_lcm_lora()
-    stream.fuse_lora()
-    stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
-    stream = accelerate_with_stable_fast(stream)
+
     stream.prepare(
-        prompt,
+        prompt=prompt,
         num_inference_steps=50,
     )
 
     for _ in range(stream.batch_size - 1):
-        stream(
-            pil2tensor(sample_image.resize((width, height)))
-            .detach()
-            .clone()
-            .to(device=stream.device, dtype=stream.dtype)
-        )
+        stream.img2img(sample_image)
 
     for image_path in tqdm(images + [images[0]] * (stream.batch_size - 1)):
-        pil_image = PIL.Image.open(os.path.join(output, "frames", image_path))
-        pil_image = pil_image.resize((width, height))
-        input_tensor = pil2tensor(pil_image)
-        output_x = stream(input_tensor.detach().clone().to(device=stream.device, dtype=stream.dtype))
-        output_image = postprocess_image(output_x, output_type="pil")[0]
+        output_image = stream.img2img(os.path.join(output, "frames", image_path))
         output_image.save(os.path.join(output, image_path))
 
     output_video_path = os.path.join(output, "output.mp4")
