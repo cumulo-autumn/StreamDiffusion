@@ -8,7 +8,6 @@ from diffusers.image_processor import VaeImageProcessor
 from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import (
     retrieve_latents,
 )
-
 from streamdiffusion.image_filter import SimilarImageFilter
 
 
@@ -59,6 +58,14 @@ class StreamDiffusion:
         **kwargs,
     ):
         self.pipe.load_lora_weights(pretrained_model_name_or_path_or_dict, adapter_name, **kwargs)
+
+    def load_lora(
+        self,
+        pretrained_lora_model_name_or_path_or_dict: Union[str, Dict[str, torch.Tensor]] = "<path/to/LoRA/>",
+        adapter_name=None,
+        **kwargs,
+    ):
+        self.pipe.load_lora_weights(pretrained_lora_model_name_or_path_or_dict, adapter_name,**kwargs)
 
     def fuse_lora(
         self,
@@ -219,7 +226,9 @@ class StreamDiffusion:
     def __call__(self, x: Union[torch.FloatTensor, PIL.Image.Image, np.ndarray]):
         assert x.shape[0] == self.frame_bff_size, "Input batch size must be equal to frame buffer size."
         x = self.image_processor.preprocess(x, self.height, self.width).to(device=self.device, dtype=self.dtype)
+        print(x.shape)
         if self.similar_image_filter:
+            print("------------------  ###########  ------------------")
             x = self.similar_filter(x)
             if x is None:
                 return self.prev_image_result
@@ -237,3 +246,15 @@ class StreamDiffusion:
         x_0_pred_out = self.predict_x0_batch(torch.randn((1, 4, self.latent_height, self.latent_width)).to(device=self.device, dtype=self.dtype))
         x_output = self.decode_image(x_0_pred_out).detach().clone()
         return x_output
+
+
+    def txt2img_batch(self, batch_size: int = 1):
+        x_t_latent = torch.randn((batch_size, 4, self.latent_height, self.latent_width),device=self.device, dtype=self.dtype)
+        model_pred = self.unet(
+            x_t_latent,
+            self.sub_timesteps_tensor,
+            encoder_hidden_states=self.prompt_embeds,
+            return_dict=False,
+        )[0]
+        x_0_pred_out = (x_t_latent - self.beta_prod_t_sqrt * model_pred) / self.alpha_prod_t_sqrt
+        return self.decode_image(x_0_pred_out)

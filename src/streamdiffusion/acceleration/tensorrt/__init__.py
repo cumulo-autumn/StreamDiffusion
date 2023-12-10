@@ -24,6 +24,7 @@ def accelerate_with_tensorrt(
     stream: StreamDiffusion,
     engine_dir: str,
     max_batch_size: int = 2,
+    min_batch_size: int = 1,
     use_cuda_graph: bool = False,
     engine_build_options: dict = {},
 ):
@@ -55,11 +56,12 @@ def accelerate_with_tensorrt(
         fp16=True,
         device=stream.device,
         max_batch_size=max_batch_size,
+        min_batch_size=min_batch_size,
         embedding_dim=text_encoder.config.hidden_size,
         unet_dim=unet.config.in_channels,
     )
-    vae_decoder_model = VAE(device=stream.device, max_batch_size=max_batch_size)
-    vae_encoder_model = VAEEncoder(device=stream.device, max_batch_size=max_batch_size)
+    vae_decoder_model = VAE(device=stream.device, max_batch_size=max_batch_size, min_batch_size=min_batch_size)
+    vae_encoder_model = VAEEncoder(device=stream.device, max_batch_size=max_batch_size, min_batch_size=min_batch_size)
 
     if not os.path.exists(unet_engine_path):
         unet = unet.to(stream.device, dtype=torch.float16)
