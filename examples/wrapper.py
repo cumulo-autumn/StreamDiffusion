@@ -231,7 +231,7 @@ class StreamDiffusionWrapper:
 
         # warmup
         for _ in range(warmup):
-            stream.txt2img()
+            self.txt2img()
             torch.cuda.synchronize()
 
         return stream
