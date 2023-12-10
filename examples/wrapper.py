@@ -257,6 +257,7 @@ class StreamDiffusionWrapper:
                     ),
                     min_batch_size=self.batch_size,
                     max_batch_size=self.batch_size,
+                    mode=self.mode,
                 )
                 print("TensorRT acceleration enabled.")
             if accerelation == "sfast":
