@@ -19,8 +19,6 @@ torch.set_grad_enabled(False)
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
 
-CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
-
 
 class StreamDiffusionWrapper:
     def __init__(
@@ -291,9 +289,9 @@ class StreamDiffusionWrapper:
                     max_batch_size: int,
                     min_batch_size: int,
                 ):
-                    return f"max_batch-{max_batch_size}--min_batch-{min_batch_size}--mode-{self.mode}"
+                    return f"{model_id}--lcm_lora-{use_tiny_vae}--tiny_vae-{use_lcm_lora}--max_batch-{max_batch_size}--min_batch-{min_batch_size}--mode-{self.mode}"
 
-                engine_dir = os.path.join(CURRENT_DIR, "engines")
+                engine_dir = os.path.join("engines")
                 unet_path = os.path.join(
                     engine_dir,
                     create_prefix(self.batch_size, self.batch_size),
@@ -301,12 +299,18 @@ class StreamDiffusionWrapper:
                 )
                 vae_encoder_path = os.path.join(
                     engine_dir,
-                    create_prefix(self.batch_size, self.batch_size if self.mode == "txt2img" else 1),
+                    create_prefix(
+                        self.batch_size if self.mode == "txt2img" else 1,
+                        self.batch_size if self.mode == "txt2img" else 1,
+                    ),
                     "vae_encoder.engine",
                 )
                 vae_decoder_path = os.path.join(
                     engine_dir,
-                    create_prefix(self.batch_size, self.batch_size if self.mode == "txt2img" else 1),
+                    create_prefix(
+                        self.batch_size if self.mode == "txt2img" else 1,
+                        self.batch_size if self.mode == "txt2img" else 1,
+                    ),
                     "vae_decoder.engine",
                 )
 
