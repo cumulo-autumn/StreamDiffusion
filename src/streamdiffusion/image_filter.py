@@ -1,4 +1,5 @@
 import torch
+import random
 
 class SimilarImageFilter:
     def __init__(self, threshold: float = 0.95, threshold_scale: float = 7):
@@ -16,6 +17,9 @@ class SimilarImageFilter:
             output = ((output + 1) / 2) ** self.threshold_scale
             self.prev_tensor = x.detach().clone()
             if output.item() > self.threshold:
+                sample = abs(random.gauss(0, 1))
+                if (1 - (1 - output.item()) / (1 - self.threshold)) < sample:
+                    return x
                 return None
             else:
                 return x
