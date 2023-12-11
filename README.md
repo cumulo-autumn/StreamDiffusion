@@ -18,13 +18,13 @@ python -m venv .venv
 ### Step1: Install Torch
 Select the appropriate version for your system.
 
-CUDA 11.1
+CUDA 11.8
 ```
-pip3 install torch torchvision xformers --index-url https://download.pytorch.org/whl/cu118
+pip3 install torch==2.1.0 torchvision==0.16.0 xformers --index-url https://download.pytorch.org/whl/cu118
 ```
 CUDA 12.1
 ```
-pip3 install torch torchvision xformers --index-url https://download.pytorch.org/whl/cu121
+pip3 install torch==2.1.0 torchvision==0.16.0 xformers --index-url https://download.pytorch.org/whl/cu121
 ```
 details: https://pytorch.org/
 
