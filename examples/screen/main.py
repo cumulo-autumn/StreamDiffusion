@@ -1,7 +1,7 @@
 import io
+import multiprocessing as mp
 import os
 import sys
-import multiprocessing as mp
 import threading
 import time
 from time import sleep
@@ -16,9 +16,11 @@ from socks import UDP, receive_udp_data
 
 from streamdiffusion.image_utils import pil2tensor
 
+
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from wrapper import StreamDiffusionWrapper
+
 
 inputs = []
 
@@ -67,7 +69,7 @@ def run(
         width=width,
         height=height,
         warmup=10,
-        accerelation=acceleration,
+        acceleration=acceleration,
         is_drawing=False,
         enable_similar_image_filter=True,
         similar_image_filter_threshold=0.95,
@@ -109,9 +111,7 @@ def run(
 
         input_batch = torch.cat(sampled_inputs)
         inputs.clear()
-        output_images = stream(
-            image=input_batch.to(device=stream.device, dtype=stream.dtype)
-        )
+        output_images = stream(image=input_batch.to(device=stream.device, dtype=stream.dtype))
 
         for output_image in output_images:
             udp.send_udp_data(output_image)
@@ -119,8 +119,7 @@ def run(
         torch.cuda.synchronize()
         main_thread_time = start.elapsed_time(end) / (1000 * frame_buffer_size)
         main_thread_time_cumulative = (
-            lowpass_alpha * main_thread_time
-            + (1 - lowpass_alpha) * main_thread_time_cumulative
+            lowpass_alpha * main_thread_time + (1 - lowpass_alpha) * main_thread_time_cumulative
         )
         fps = 1 / main_thread_time_cumulative
         print(f"fps: {fps}, main_thread_time: {main_thread_time_cumulative}")

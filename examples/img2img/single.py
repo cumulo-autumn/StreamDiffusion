@@ -4,6 +4,7 @@ from typing import Literal
 
 import fire
 
+
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from wrapper import StreamDiffusionWrapper
@@ -25,7 +26,7 @@ def main(
         width=width,
         height=height,
         warmup=10,
-        accerelation=acceleration,
+        acceleration=acceleration,
         is_drawing=True,
         mode="img2img",
     )

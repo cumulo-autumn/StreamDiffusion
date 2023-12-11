@@ -6,14 +6,16 @@ import tkinter as tk
 from multiprocessing import Process, Queue
 from typing import List, Literal
 
-from PIL import Image, ImageTk
 import fire
+from PIL import Image, ImageTk
 
 from streamdiffusion.image_utils import postprocess_image
+
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from wrapper import StreamDiffusionWrapper
+
 
 image_update_counter = 0
 
@@ -71,7 +73,7 @@ def image_generation_process(
         t_index_list=[0],
         frame_buffer_size=batch_size,
         warmup=10,
-        accerelation=acceleration,
+        acceleration=acceleration,
         is_drawing=True,
         use_lcm_lora=False,
         mode="txt2img",
@@ -96,9 +98,7 @@ def image_generation_process(
             break
 
 
-def _receive_images(
-    queue: Queue, fps_queue: Queue, labels: List[tk.Label], fps_label: tk.Label
-) -> None:
+def _receive_images(queue: Queue, fps_queue: Queue, labels: List[tk.Label], fps_label: tk.Label) -> None:
     """
     Continuously receive images from a queue and update the labels.
 
@@ -118,9 +118,7 @@ def _receive_images(
             if not queue.empty():
                 [
                     labels[0].after(0, update_image, image_data, labels)
-                    for image_data in postprocess_image(
-                        queue.get(block=False), output_type="pil"
-                    )
+                    for image_data in postprocess_image(queue.get(block=False), output_type="pil")
                 ]
             if not fps_queue.empty():
                 fps_label.config(text=f"FPS: {fps_queue.get(block=False):.2f}")
@@ -151,9 +149,7 @@ def receive_images(queue: Queue, fps_queue: Queue) -> None:
     fps_label = tk.Label(root, text="FPS: 0")
     fps_label.grid(rows=2, columnspan=2)
 
-    thread = threading.Thread(
-        target=_receive_images, args=(queue, fps_queue, labels, fps_label), daemon=True
-    )
+    thread = threading.Thread(target=_receive_images, args=(queue, fps_queue, labels, fps_label), daemon=True)
     thread.start()
 
     root.mainloop()

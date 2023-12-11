@@ -1,13 +1,14 @@
+import io
 import os
 import sys
-import io
-from typing import Literal, List, Optional
+from typing import List, Literal, Optional
 
 import fire
 import PIL.Image
 import requests
 import torch
 from tqdm import tqdm
+
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
@@ -41,7 +42,7 @@ def run(
         width=width,
         height=height,
         warmup=warmup,
-        accerelation=acceleration,
+        acceleration=acceleration,
         is_drawing=True,
         device_ids=device_ids,
         mode="img2img",
@@ -52,9 +53,7 @@ def run(
         num_inference_steps=50,
     )
 
-    image_tensor = stream.preprocess_image(
-        download_image("https://github.com/ddpn08.png").resize((width, height))
-    )
+    image_tensor = stream.preprocess_image(download_image("https://github.com/ddpn08.png").resize((width, height)))
 
     # warmup
     for _ in range(warmup):

@@ -1,11 +1,12 @@
-import sys
 import os
+import sys
 from typing import Literal
 
 import ffmpeg
 import fire
 import PIL.Image
 from tqdm import tqdm
+
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
@@ -48,7 +49,7 @@ def main(
         width=width,
         height=height,
         warmup=10,
-        accerelation=acceleration,
+        acceleration=acceleration,
         is_drawing=False,
         mode="img2img",
     )
