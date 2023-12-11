@@ -53,11 +53,11 @@ def result_window(server_ip: str, server_port: int):
 
 
 def run(
-    model_id: str,
+    model_id: str = "KBlueLeaf/kohaku-v2.1",
     prompt: str = "Girl with panda ears wearing a hood",
     address: str = "127.0.0.1",
     port: int = 8080,
-    frame_buffer_size: int = 3,
+    frame_buffer_size: int = 1,
     width: int = 512,
     height: int = 512,
     acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
@@ -113,6 +113,8 @@ def run(
         inputs.clear()
         output_images = stream(image=input_batch.to(device=stream.device, dtype=stream.dtype))
 
+        if frame_buffer_size == 1:
+            output_images = [output_images]
         for output_image in output_images:
             udp.send_udp_data(output_image)
         end.record()

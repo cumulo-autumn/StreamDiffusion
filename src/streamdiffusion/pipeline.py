@@ -9,6 +9,7 @@ from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img impo
     retrieve_latents,
 )
 from streamdiffusion.image_filter import SimilarImageFilter
+import time
 
 
 class StreamDiffusion:
@@ -50,6 +51,8 @@ class StreamDiffusion:
         self.text_encoder = pipe.text_encoder
         self.unet = pipe.unet
         self.vae = pipe.vae
+
+        self.inference_time = 0
 
     def load_lcm_lora(
         self,
@@ -217,14 +220,15 @@ class StreamDiffusion:
         if self.similar_image_filter:
             x = self.similar_filter(x)
             if x is None:
+                time.sleep(self.inference_time)
                 return self.prev_image_result
-
+        start_time = time.time()
         x_t_latent = self.encode_image(x)
         x_0_pred_out = self.predict_x0_batch(x_t_latent)
         x_output = self.decode_image(x_0_pred_out).detach().clone()
 
         self.prev_image_result = x_output
-
+        self.inference_time = time.time() - start_time
         return x_output
 
     @torch.no_grad()
