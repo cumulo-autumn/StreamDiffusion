@@ -291,7 +291,7 @@ class StreamDiffusionWrapper:
                     max_batch_size: int,
                     min_batch_size: int,
                 ):
-                    return f"max_batch-{max_batch_size}--min_batch-{min_batch_size}"
+                    return f"max_batch-{max_batch_size}--min_batch-{min_batch_size}--mode-{self.mode}"
 
                 engine_dir = os.path.join(CURRENT_DIR, "engines")
                 unet_path = os.path.join(
