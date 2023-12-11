@@ -338,7 +338,7 @@ class StreamDiffusionWrapper:
                     stream.vae.forward = stream.vae.decode
                     vae_decoder_model = VAE(
                         device=stream.device,
-                        max_batch_size=self.batch_size,
+                        max_batch_size=self.batch_size if self.mode == "txt2img" else 1,
                         min_batch_size=self.batch_size if self.mode == "txt2img" else 1,
                     )
                     compile_vae_decoder(
@@ -347,7 +347,7 @@ class StreamDiffusionWrapper:
                         vae_decoder_path + ".onnx",
                         vae_decoder_path + ".opt.onnx",
                         vae_decoder_path,
-                        opt_batch_size=self.batch_size,
+                        opt_batch_size=self.batch_size if self.mode == "txt2img" else 1,
                     )
                     delattr(stream.vae, "forward")
 
@@ -356,7 +356,7 @@ class StreamDiffusionWrapper:
                     vae_encoder = TorchVAEEncoder(stream.vae).to(torch.device("cuda"))
                     vae_encoder_model = VAEEncoder(
                         device=stream.device,
-                        max_batch_size=self.batch_size,
+                        max_batch_size=self.batch_size if self.mode == "txt2img" else 1,
                         min_batch_size=self.batch_size if self.mode == "txt2img" else 1,
                     )
                     compile_vae_encoder(
@@ -365,7 +365,7 @@ class StreamDiffusionWrapper:
                         vae_encoder_path + ".onnx",
                         vae_encoder_path + ".opt.onnx",
                         vae_encoder_path,
-                        opt_batch_size=self.batch_size,
+                        opt_batch_size=self.batch_size if self.mode == "txt2img" else 1,
                     )
 
                 cuda_steram = cuda.Stream()
@@ -404,13 +404,5 @@ class StreamDiffusionWrapper:
             num_inference_steps=50,
             generator=torch.manual_seed(2),
         )
-
-        # warmup
-        for _ in range(warmup):
-            if self.batch_size > 1:
-                stream.txt2img_batch(self.batch_size)
-            else:
-                stream.txt2img()
-            torch.cuda.synchronize()
 
         return stream
