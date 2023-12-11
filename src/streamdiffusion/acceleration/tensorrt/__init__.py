@@ -15,12 +15,12 @@ from .models import VAE, BaseModel, UNet, VAEEncoder
 
 
 class TorchVAEEncoder(torch.nn.Module):
-    def __init__(self, vae):
+    def __init__(self, vae: AutoencoderKL):
         super().__init__()
         self.vae = vae
 
-    def forward(self, x):
-        return retrieve_latents(self.vae.encode(x), torch.Generator())
+    def forward(self, x: torch.Tensor):
+        return retrieve_latents(self.vae.encode(x))
 
 
 def compile_vae_encoder(
