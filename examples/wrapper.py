@@ -39,6 +39,7 @@ class StreamDiffusionWrapper:
         use_tiny_vae: bool = True,
         enable_similar_image_filter: bool = False,
         similar_image_filter_threshold: float = 0.90,
+        use_denoising_batch: bool = True,
     ):
         self.device = device
         self.dtype = dtype
@@ -48,6 +49,8 @@ class StreamDiffusionWrapper:
         self.output_type = output_type
         self.frame_buffer_size = frame_buffer_size
         self.batch_size = len(t_index_list) * frame_buffer_size
+
+        self.use_denoising_batch = use_denoising_batch
 
         self.stream = self._load_model(
             model_id=model_id,
@@ -252,6 +255,7 @@ class StreamDiffusionWrapper:
             height=self.height,
             is_drawing=is_drawing,
             frame_buffer_size=self.frame_buffer_size,
+            use_denoising_batch = self.use_denoising_batch,
         )
         if "turbo" not in model_id:
             if use_lcm_lora:

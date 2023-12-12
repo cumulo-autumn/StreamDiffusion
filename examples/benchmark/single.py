@@ -32,6 +32,7 @@ def run(
     height: int = 512,
     acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
     device_ids: Optional[List[int]] = None,
+    use_denoising_batch: bool = True,
 ):
     stream = StreamDiffusionWrapper(
         model_id=model_id,
@@ -46,6 +47,7 @@ def run(
         is_drawing=True,
         device_ids=device_ids,
         mode="img2img",
+        use_denoising_batch = use_denoising_batch,
     )
 
     stream.prepare(
@@ -74,6 +76,11 @@ def run(
 
     print(f"Average time: {sum(results) / len(results)}ms")
     print(f"Average FPS: {1000 / (sum(results) / len(results))}")
+    import numpy as np
+    fps_arr = 1000/np.array(results)
+    print(f"Max FPS: {np.max(fps_arr)}")
+    print(f"Min FPS: {np.min(fps_arr)}")
+    print(f"Std: {np.std(fps_arr)}")
 
 
 if __name__ == "__main__":

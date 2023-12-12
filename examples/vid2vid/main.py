@@ -31,6 +31,7 @@ def main(
     prompt: str = "Girl with panda ears wearing a hood",
     scale: float = 1.0,
     acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
+    use_denoising_batch: bool = True,
 ):
     video_info = read_video(input)
     video = video_info[0] / 255
@@ -51,6 +52,7 @@ def main(
         output_type="pt",
         enable_similar_image_filter=True,
         similar_image_filter_threshold=0.90,
+        use_denoising_batch = use_denoising_batch,
     )
 
     stream.prepare(

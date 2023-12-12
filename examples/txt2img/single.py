@@ -17,6 +17,7 @@ def main(
     width: int = 512,
     height: int = 512,
     acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
+    use_denoising_batch: bool = True,
 ):
     stream = StreamDiffusionWrapper(
         model_id=model_id,
@@ -28,6 +29,7 @@ def main(
         acceleration=acceleration,
         is_drawing=True,
         mode="txt2img",
+        use_denoising_batch = use_denoising_batch,
     )
 
     stream.prepare(
