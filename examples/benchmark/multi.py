@@ -1,6 +1,8 @@
 import io
 import os
 import sys
+import time
+from multiprocessing import Process, Queue
 from typing import List, Literal, Optional
 
 import fire
@@ -9,11 +11,22 @@ import requests
 import torch
 from tqdm import tqdm
 
+from streamdiffusion.image_utils import postprocess_image
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from wrapper import StreamDiffusionWrapper
 
+import uuid
+def _postprocess_image(queue: Queue) -> None:
+    while True:
+        try:
+            if not queue.empty():
+                output = postprocess_image(queue.get(block=False), output_type="pil")[0]
+                output.save(f"{str(uuid.uuid4())}.png")
+            time.sleep(0.0005)
+        except KeyboardInterrupt:
+            break
 
 def download_image(url: str):
     response = requests.get(url)
@@ -53,20 +66,26 @@ def run(
         num_inference_steps=50,
     )
 
-    image_tensor = stream.preprocess_image(download_image("https://github.com/ddpn08.png").resize((width, height)))
+    image_tensor = stream.preprocess_image(
+        download_image("https://github.com/ddpn08.png").resize((width, height))
+    )
 
     # warmup
     for _ in range(warmup):
-        stream(image=image_tensor)
+        stream.stream(image_tensor)
+
+    queue = Queue()
+    p = Process(target=_postprocess_image, args=(queue,))
+    p.start()
 
     results = []
 
     start = torch.cuda.Event(enable_timing=True)
     end = torch.cuda.Event(enable_timing=True)
-
     for _ in tqdm(range(iterations)):
         start.record()
-        stream(image=image_tensor)
+        out_tensor = stream.stream(image_tensor)
+        queue.put(out_tensor)
         end.record()
 
         torch.cuda.synchronize()
