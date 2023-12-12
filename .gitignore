@@ -2,6 +2,8 @@
 
 .vscode/
 engines/
+output/
+*.mp4
 *.safetensors
 *.ckpt
 
