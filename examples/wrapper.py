@@ -231,12 +231,19 @@ class StreamDiffusionWrapper:
         use_tiny_vae : bool, optional
             Whether to use TinyVAE or not, by default True.
         """
-        if model_id.endswith(".safetensors"):
-            pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file(model_id).to(device=self.device, dtype=self.dtype)
-        else:
+
+        try:  # Load from local directory
             pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_pretrained(
                 model_id,
             ).to(device=self.device, dtype=self.dtype)
+
+        except ValueError:  # Load from huggingface
+            pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file(model_id).to(device=self.device, dtype=self.dtype)
+        except Exception:  # No model found
+            traceback.print_exc()
+            print("Model load has failed. Doesn't exist.")
+            exit()
+
         stream = StreamDiffusion(
             pipe=pipe,
             t_index_list=t_index_list,
@@ -264,9 +271,13 @@ class StreamDiffusionWrapper:
             if acceleration == "xformers":
                 stream.pipe.enable_xformers_memory_efficient_attention()
             if acceleration == "tensorrt":
-                from streamdiffusion.acceleration.tensorrt import TorchVAEEncoder, compile_unet, compile_vae_decoder, compile_vae_encoder
-                from streamdiffusion.acceleration.tensorrt.engine import AutoencoderKLEngine, UNet2DConditionModelEngine
-                from streamdiffusion.acceleration.tensorrt.models import VAE, UNet, VAEEncoder
+                from streamdiffusion.acceleration.tensorrt import (
+                    TorchVAEEncoder, compile_unet, compile_vae_decoder,
+                    compile_vae_encoder)
+                from streamdiffusion.acceleration.tensorrt.engine import (
+                    AutoencoderKLEngine, UNet2DConditionModelEngine)
+                from streamdiffusion.acceleration.tensorrt.models import (
+                    VAE, UNet, VAEEncoder)
 
                 def create_prefix(
                     max_batch_size: int,
@@ -372,7 +383,8 @@ class StreamDiffusionWrapper:
 
                 print("TensorRT acceleration enabled.")
             if acceleration == "sfast":
-                from streamdiffusion.acceleration.sfast import accelerate_with_stable_fast
+                from streamdiffusion.acceleration.sfast import \
+                    accelerate_with_stable_fast
 
                 stream = accelerate_with_stable_fast(stream)
                 print("StableFast acceleration enabled.")
