@@ -4,16 +4,12 @@ import traceback
 from typing import List, Literal, Optional, Union
 
 import torch
-from diffusers import (
-    AutoencoderTiny,
-    StableDiffusionPipeline,
-)
+from diffusers import AutoencoderTiny, StableDiffusionPipeline
 from PIL import Image
 from polygraphy import cuda
 
 from streamdiffusion import StreamDiffusion
 from streamdiffusion.image_utils import postprocess_image
-
 
 torch.set_grad_enabled(False)
 torch.backends.cuda.matmul.allow_tf32 = True
@@ -142,8 +138,8 @@ class StreamDiffusionWrapper:
         if isinstance(image, str) or isinstance(image, Image.Image):
             image = self.preprocess_image(image)
 
-        image_tensor = self.stream(image)
-        return self.postprocess_image(image_tensor)
+        image_tensor, skip_prob = self.stream(image)
+        return self.postprocess_image(image_tensor), skip_prob
 
     def preprocess_image(self, image: Union[str, Image.Image]) -> torch.Tensor:
         """
@@ -164,9 +160,7 @@ class StreamDiffusionWrapper:
         if isinstance(image, Image.Image):
             image = image.convert("RGB").resize((self.width, self.height))
 
-        return self.stream.image_processor.preprocess(image, self.height, self.width).to(
-            device=self.device, dtype=self.dtype
-        )
+        return self.stream.image_processor.preprocess(image, self.height, self.width).to(device=self.device, dtype=self.dtype)
 
     def postprocess_image(self, image_tensor: torch.Tensor) -> Union[Image.Image, List[Image.Image]]:
         """
@@ -233,9 +227,7 @@ class StreamDiffusionWrapper:
             Whether to use TinyVAE or not, by default True.
         """
         if model_id.endswith(".safetensors"):
-            pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file(model_id).to(
-                device=self.device, dtype=self.dtype
-            )
+            pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file(model_id).to(device=self.device, dtype=self.dtype)
         else:
             pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_pretrained(
                 model_id,
@@ -261,29 +253,15 @@ class StreamDiffusionWrapper:
             if vae_id is not None:
                 stream.vae = AutoencoderTiny.from_pretrained(vae_id).to(device=pipe.device, dtype=pipe.dtype)
             else:
-                stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(
-                    device=pipe.device, dtype=pipe.dtype
-                )
+                stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
 
         try:
             if acceleration == "xformers":
                 stream.pipe.enable_xformers_memory_efficient_attention()
             if acceleration == "tensorrt":
-                from streamdiffusion.acceleration.tensorrt import (
-                    TorchVAEEncoder,
-                    compile_unet,
-                    compile_vae_decoder,
-                    compile_vae_encoder,
-                )
-                from streamdiffusion.acceleration.tensorrt.engine import (
-                    AutoencoderKLEngine,
-                    UNet2DConditionModelEngine,
-                )
-                from streamdiffusion.acceleration.tensorrt.models import (
-                    VAE,
-                    UNet,
-                    VAEEncoder,
-                )
+                from streamdiffusion.acceleration.tensorrt import TorchVAEEncoder, compile_unet, compile_vae_decoder, compile_vae_encoder
+                from streamdiffusion.acceleration.tensorrt.engine import AutoencoderKLEngine, UNet2DConditionModelEngine
+                from streamdiffusion.acceleration.tensorrt.models import VAE, UNet, VAEEncoder
 
                 def create_prefix(
                     max_batch_size: int,
@@ -389,9 +367,7 @@ class StreamDiffusionWrapper:
 
                 print("TensorRT acceleration enabled.")
             if acceleration == "sfast":
-                from streamdiffusion.acceleration.sfast import (
-                    accelerate_with_stable_fast,
-                )
+                from streamdiffusion.acceleration.sfast import accelerate_with_stable_fast
 
                 stream = accelerate_with_stable_fast(stream)
                 print("StableFast acceleration enabled.")

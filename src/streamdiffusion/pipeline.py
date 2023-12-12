@@ -1,3 +1,4 @@
+import time
 from typing import *
 
 import numpy as np
@@ -5,11 +6,9 @@ import PIL.Image
 import torch
 from diffusers import LCMScheduler, StableDiffusionPipeline
 from diffusers.image_processor import VaeImageProcessor
-from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import (
-    retrieve_latents,
-)
+from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import retrieve_latents
+
 from streamdiffusion.image_filter import SimilarImageFilter
-import time
 
 
 class StreamDiffusion:
@@ -68,7 +67,7 @@ class StreamDiffusion:
         adapter_name=None,
         **kwargs,
     ):
-        self.pipe.load_lora_weights(pretrained_lora_model_name_or_path_or_dict, adapter_name,**kwargs)
+        self.pipe.load_lora_weights(pretrained_lora_model_name_or_path_or_dict, adapter_name, **kwargs)
 
     def fuse_lora(
         self,
@@ -237,9 +236,8 @@ class StreamDiffusion:
         x_output = self.decode_image(x_0_pred_out).detach().clone()
         return x_output
 
-
     def txt2img_batch(self, batch_size: int = 1):
-        x_t_latent = torch.randn((batch_size, 4, self.latent_height, self.latent_width),device=self.device, dtype=self.dtype)
+        x_t_latent = torch.randn((batch_size, 4, self.latent_height, self.latent_width), device=self.device, dtype=self.dtype)
         model_pred = self.unet(
             x_t_latent,
             self.sub_timesteps_tensor,

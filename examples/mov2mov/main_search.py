@@ -61,45 +61,21 @@ def main(
         num_inference_steps=50,
     )
 
+    stream.stream.enable_similar_image_filter(threshold=0.95)
+
     for _ in range(stream.batch_size - 1):
         stream(image=sample_image)
 
     utilization_rec = []
     skip_probs = []
 
-    output_1 = os.path.join(output, "1")
-    os.makedirs(output_1, exist_ok=True)
-
     for image_path in tqdm(images + [images[0]] * (stream.batch_size - 1)):
         output_image, skip_prob = stream(os.path.join(output, "frames", image_path))
-        output_image.save(os.path.join(output_1, image_path))
 
         utilization_rec.append(torch.cuda.utilization())
         skip_probs.append(skip_prob)
 
-    output_video_path = os.path.join(output_1, "output.mp4")
-
-    ffmpeg.input(os.path.join(output_1, "%04d.png"), framerate=frame_rate).output(
-        output_video_path, crf=17, pix_fmt="yuv420p", vcodec="libx264"
-    ).run()
-
-    stream = StreamDiffusionWrapper(
-        model_id=model_id,
-        t_index_list=[35, 45],
-        frame_buffer_size=1,
-        width=width,
-        height=height,
-        warmup=10,
-        acceleration=acceleration,
-        is_drawing=False,
-        mode="img2img",
-        enable_similar_image_filter=False,
-    )
-
-    stream.prepare(
-        prompt=prompt,
-        num_inference_steps=50,
-    )
+    stream.stream.disable_similar_image_filter()
 
     for _ in range(stream.batch_size - 1):
         stream(image=sample_image)
@@ -111,15 +87,8 @@ def main(
 
     for image_path in tqdm(images + [images[0]] * (stream.batch_size - 1)):
         output_image, skip_prob = stream(os.path.join(output, "frames", image_path))
-        output_image.save(os.path.join(output_2, image_path))
 
         utilization_rec2.append(torch.cuda.utilization())
-
-    output_video_path = os.path.join(output_2, "output.mp4")
-
-    ffmpeg.input(os.path.join(output_2, "%04d.png"), framerate=frame_rate).output(
-        output_video_path, crf=17, pix_fmt="yuv420p", vcodec="libx264"
-    ).run()
 
     # save fig of gpu usage
     import matplotlib.pyplot as plt
@@ -147,7 +116,7 @@ def main(
     fig.tight_layout()  # Adjust the layout
 
     # Save the figure to a file
-    plt.savefig(os.path.join(output, "gpu_utilization.png"))
+    plt.savefig(os.path.join("gpu_utilization.png"))
 
 
 if __name__ == "__main__":
