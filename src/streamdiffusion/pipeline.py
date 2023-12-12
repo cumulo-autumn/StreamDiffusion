@@ -1,3 +1,4 @@
+import time
 from typing import *
 
 import numpy as np
@@ -5,11 +6,9 @@ import PIL.Image
 import torch
 from diffusers import LCMScheduler, StableDiffusionPipeline
 from diffusers.image_processor import VaeImageProcessor
-from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import (
-    retrieve_latents,
-)
+from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import retrieve_latents
+
 from streamdiffusion.image_filter import SimilarImageFilter
-import time
 
 
 class StreamDiffusion:
@@ -70,7 +69,7 @@ class StreamDiffusion:
         adapter_name=None,
         **kwargs,
     ):
-        self.pipe.load_lora_weights(pretrained_lora_model_name_or_path_or_dict, adapter_name,**kwargs)
+        self.pipe.load_lora_weights(pretrained_lora_model_name_or_path_or_dict, adapter_name, **kwargs)
 
     def fuse_lora(
         self,
@@ -86,7 +85,7 @@ class StreamDiffusion:
             safe_fusing=safe_fusing,
         )
 
-    def enable_similar_image_filter(self, threshold: float = 0.95):
+    def enable_similar_image_filter(self, threshold: float = 0.99):
         self.similar_image_filter = True
         self.similar_filter.set_threshold(threshold)
 
@@ -146,7 +145,7 @@ class StreamDiffusion:
             c_out_list.append(c_out)
         self.c_skip = torch.stack(c_skip_list).view(self.batch_size, 1, 1, 1).to(dtype=self.dtype, device=self.device)
         self.c_out = torch.stack(c_out_list).view(self.batch_size, 1, 1, 1).to(dtype=self.dtype, device=self.device)
-        
+
         alpha_prod_t_sqrt_list = []
         beta_prod_t_sqrt_list = []
         for timestep in self.sub_timesteps:
@@ -174,7 +173,7 @@ class StreamDiffusion:
         return noisy_samples
 
     def scheduler_step_batch(self, model_pred_batch, x_t_latent_batch, idx):
-        #TODO: use t_list to select beta_prod_t_sqrt
+        # TODO: use t_list to select beta_prod_t_sqrt
         if idx is None:
             F_theta = (x_t_latent_batch - self.beta_prod_t_sqrt * model_pred_batch) / self.alpha_prod_t_sqrt
             denoised_batch = self.c_out * F_theta + self.c_skip * x_t_latent_batch
@@ -184,13 +183,7 @@ class StreamDiffusion:
 
         return denoised_batch
 
-    def unet_step(
-        self,
-        x_t_latent: torch.FloatTensor,
-        t_list: list,
-        idx = None
-    ):
-
+    def unet_step(self, x_t_latent: torch.FloatTensor, t_list: list, idx=None):
         model_pred = self.unet(
             x_t_latent,
             t_list,
@@ -203,7 +196,7 @@ class StreamDiffusion:
         else:
             # denoised_batch = self.scheduler.step(model_pred, t_list[0], x_t_latent).denoised
             denoised_batch = self.scheduler_step_batch(model_pred, x_t_latent, idx)
-            
+
         return denoised_batch, model_pred
 
     def encode_image(self, image_tensors: torch.Tensor):
@@ -232,9 +225,7 @@ class StreamDiffusion:
             if self.batch_size > 1:
                 x_0_pred_out = x_0_pred_batch[-1].unsqueeze(0)
                 if self.is_drawing:
-                    self.x_t_latent_buffer = (
-                        self.alpha_prod_t_sqrt[1:] * x_0_pred_batch[:-1] + self.beta_prod_t_sqrt[1:] * self.init_noise[1:]
-                    )
+                    self.x_t_latent_buffer = self.alpha_prod_t_sqrt[1:] * x_0_pred_batch[:-1] + self.beta_prod_t_sqrt[1:] * self.init_noise[1:]
                 else:
                     self.x_t_latent_buffer = self.alpha_prod_t_sqrt[1:] * x_0_pred_batch[:-1]
             else:
@@ -242,13 +233,15 @@ class StreamDiffusion:
                 self.x_t_latent_buffer = None
         else:
             for idx, t in enumerate(self.sub_timesteps_tensor):
-                t = t.view(1,)
+                t = t.view(
+                    1,
+                )
                 x_0_pred, model_pred = self.unet_step(x_t_latent, t, idx)
                 if idx < len(self.sub_timesteps_tensor) - 1:
                     if self.is_drawing:
-                        x_t_latent = self.alpha_prod_t_sqrt[idx+1] * x_0_pred + self.beta_prod_t_sqrt[idx+1] * self.init_noise[idx+1]
+                        x_t_latent = self.alpha_prod_t_sqrt[idx + 1] * x_0_pred + self.beta_prod_t_sqrt[idx + 1] * self.init_noise[idx + 1]
                     else:
-                        x_t_latent = self.alpha_prod_t_sqrt[idx+1] * x_0_pred
+                        x_t_latent = self.alpha_prod_t_sqrt[idx + 1] * x_0_pred
             x_0_pred_out = x_0_pred
 
         return x_0_pred_out
@@ -265,7 +258,7 @@ class StreamDiffusion:
             x_t_latent = self.encode_image(x)
             start_time = time.time()
         else:
-            #TODO: check the dimension of x_t_latent
+            # TODO: check the dimension of x_t_latent
             x_t_latent = torch.randn((1, 4, self.latent_height, self.latent_width)).to(device=self.device, dtype=self.dtype)
         x_0_pred_out = self.predict_x0_batch(x_t_latent)
         x_output = self.decode_image(x_0_pred_out).detach().clone()
@@ -280,9 +273,8 @@ class StreamDiffusion:
         x_output = self.decode_image(x_0_pred_out).detach().clone()
         return x_output
 
-
     def txt2img_batch(self, batch_size: int = 1):
-        x_t_latent = torch.randn((batch_size, 4, self.latent_height, self.latent_width),device=self.device, dtype=self.dtype)
+        x_t_latent = torch.randn((batch_size, 4, self.latent_height, self.latent_width), device=self.device, dtype=self.dtype)
         model_pred = self.unet(
             x_t_latent,
             self.sub_timesteps_tensor,

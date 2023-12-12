@@ -38,7 +38,7 @@ class StreamDiffusionWrapper:
         use_lcm_lora: bool = True,
         use_tiny_vae: bool = True,
         enable_similar_image_filter: bool = False,
-        similar_image_filter_threshold: float = 0.90,
+        similar_image_filter_threshold: float = 0.99,
         use_denoising_batch: bool = True,
     ):
         self.device = device
