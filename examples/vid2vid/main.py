@@ -2,7 +2,6 @@ import os
 import sys
 from typing import Literal
 
-import ffmpeg
 import fire
 import torch
 from torchvision.io import read_video, write_video
@@ -11,17 +10,6 @@ from tqdm import tqdm
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from wrapper import StreamDiffusionWrapper
-
-
-def extract_frames(video_path: str, output_dir: str):
-    os.makedirs(output_dir, exist_ok=True)
-    ffmpeg.input(video_path).output(f"{output_dir}/%04d.png").run()
-
-
-def get_frame_rate(video_path: str):
-    probe = ffmpeg.probe(video_path)
-    video_info = next(s for s in probe["streams"] if s["codec_type"] == "video")
-    return int(video_info["r_frame_rate"].split("/")[0])
 
 
 def main(
