@@ -12,7 +12,6 @@ _deps = [
     "accelerate",
     "fire",
     "omegaconf",
-    "pywin32",
     "cuda-python",
     "onnx==1.15.0",
     "onnxruntime==1.16.3",
@@ -30,7 +29,7 @@ def deps_list(*pkgs):
 extras = {}
 extras["xformers"] = deps_list("xformers")
 extras["torch"] = deps_list("torch", "accelerate")
-extras["tensorrt"] = deps_list("protobuf", "cuda-python", "onnx", "onnxruntime", "colored")
+extras["tensorrt"] = deps_list("cuda-python", "onnx", "onnxruntime", "colored")
 
 extras["dev"] = extras["xformers"] + extras["torch"] + extras["tensorrt"]
 

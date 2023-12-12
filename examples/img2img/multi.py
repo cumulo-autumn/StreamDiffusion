@@ -19,6 +19,7 @@ def main(
     width: int = 512,
     height: int = 512,
     acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
+    use_denoising_batch: bool = True,
 ):
     if not os.path.exists(output):
         os.makedirs(output, exist_ok=True)
@@ -33,6 +34,7 @@ def main(
         acceleration=acceleration,
         is_drawing=True,
         mode="img2img",
+        use_denoising_batch = use_denoising_batch,
     )
 
     stream.prepare(
