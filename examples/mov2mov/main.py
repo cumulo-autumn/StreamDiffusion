@@ -31,6 +31,7 @@ def main(
     prompt: str = "Girl with panda ears wearing a hood",
     scale: float = 1.0,
     acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
+    use_denoising_batch: bool = True,
 ):
     if os.path.isdir(output):
         raise ValueError("Output directory already exists")
@@ -52,6 +53,7 @@ def main(
         acceleration=acceleration,
         is_drawing=False,
         mode="img2img",
+        use_denoising_batch = use_denoising_batch,
     )
 
     stream.prepare(

@@ -51,6 +51,8 @@ class StreamDiffusionWrapper:
         self.frame_buffer_size = frame_buffer_size
         self.batch_size = len(t_index_list) * frame_buffer_size
 
+        self.use_denoising_batch = use_denoising_batch
+
         self.stream = self._load_model(
             model_id=model_id,
             lcm_lora_id=lcm_lora_id,
@@ -68,8 +70,6 @@ class StreamDiffusionWrapper:
 
         if enable_similar_image_filter:
             self.stream.enable_similar_image_filter(similar_image_filter_threshold)
-
-        self.use_denoising_batch = use_denoising_batch
 
     def prepare(
         self,
