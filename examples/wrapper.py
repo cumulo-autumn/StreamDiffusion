@@ -232,14 +232,21 @@ class StreamDiffusionWrapper:
         use_tiny_vae : bool, optional
             Whether to use TinyVAE or not, by default True.
         """
-        if model_id.endswith(".safetensors"):
-            pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file(model_id).to(
-                device=self.device, dtype=self.dtype
-            )
-        else:
+
+        try : # Load from local directory
             pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_pretrained(
                 model_id,
             ).to(device=self.device, dtype=self.dtype)
+
+        except ValueError: # Load from huggingface
+            pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file(model_id).to(
+                device=self.device, dtype=self.dtype
+            )
+        except Exception: # No model found
+            traceback.print_exc()
+            print("Model load has failed. Doesn't exist.")
+            exit()
+
         stream = StreamDiffusion(
             pipe=pipe,
             t_index_list=t_index_list,
