@@ -74,6 +74,11 @@ def run(
 
     print(f"Average time: {sum(results) / len(results)}ms")
     print(f"Average FPS: {1000 / (sum(results) / len(results))}")
+    import numpy as np
+    fps_arr = 1000/np.array(results)
+    print(f"Max FPS: {np.max(fps_arr)}")
+    print(f"Min FPS: {np.min(fps_arr)}")
+    print(f"Std: {np.std(fps_arr)}")
 
 
 if __name__ == "__main__":

@@ -21,6 +21,7 @@ class StreamDiffusion:
         width: int = 512,
         height: int = 512,
         is_drawing: bool = False,
+        use_denoising_batch: bool = True,
         frame_buffer_size: int = 1,
     ):
         self.device = pipe.device
@@ -39,6 +40,7 @@ class StreamDiffusion:
         self.t_list = t_index_list
 
         self.is_drawing = is_drawing
+        self.use_denoising_batch = use_denoising_batch
 
         self.similar_image_filter = False
         self.similar_filter = SimilarImageFilter()
@@ -115,7 +117,10 @@ class StreamDiffusion:
             num_images_per_prompt=1,
             do_classifier_free_guidance=False,
         )
-        self.prompt_embeds = encoder_output[0].repeat(self.batch_size, 1, 1)
+        if self.use_denoising_batch:
+            self.prompt_embeds = encoder_output[0].repeat(self.batch_size, 1, 1)
+        else:
+            self.prompt_embeds = encoder_output[0]
 
         self.scheduler.set_timesteps(num_inference_steps, self.device)
         self.timesteps = self.scheduler.timesteps.to(self.device)
@@ -133,6 +138,15 @@ class StreamDiffusion:
             generator=generator,
         ).to(device=self.device, dtype=self.dtype)
 
+        c_skip_list = []
+        c_out_list = []
+        for timestep in self.sub_timesteps:
+            c_skip, c_out = self.scheduler.get_scalings_for_boundary_condition_discrete(timestep)
+            c_skip_list.append(c_skip)
+            c_out_list.append(c_out)
+        self.c_skip = torch.stack(c_skip_list).view(self.batch_size, 1, 1, 1).to(dtype=self.dtype, device=self.device)
+        self.c_out = torch.stack(c_out_list).view(self.batch_size, 1, 1, 1).to(dtype=self.dtype, device=self.device)
+        
         alpha_prod_t_sqrt_list = []
         beta_prod_t_sqrt_list = []
         for timestep in self.sub_timesteps:
@@ -159,24 +173,37 @@ class StreamDiffusion:
         noisy_samples = self.alpha_prod_t_sqrt[t_index] * original_samples + self.beta_prod_t_sqrt[t_index] * noise
         return noisy_samples
 
-    def scheduler_step_batch(self, model_pred_batch, x_t_latent_batch):
-        denoised_batch = (x_t_latent_batch - self.beta_prod_t_sqrt * model_pred_batch) / self.alpha_prod_t_sqrt
+    def scheduler_step_batch(self, model_pred_batch, x_t_latent_batch, idx):
+        #TODO: use t_list to select beta_prod_t_sqrt
+        if idx is None:
+            F_theta = (x_t_latent_batch - self.beta_prod_t_sqrt * model_pred_batch) / self.alpha_prod_t_sqrt
+            denoised_batch = self.c_out * F_theta + self.c_skip * x_t_latent_batch
+        else:
+            F_theta = (x_t_latent_batch - self.beta_prod_t_sqrt[idx] * model_pred_batch) / self.alpha_prod_t_sqrt[idx]
+            denoised_batch = self.c_out[idx] * F_theta + self.c_skip[idx] * x_t_latent_batch
+
         return denoised_batch
 
-    def lcm_step(
+    def unet_step(
         self,
         x_t_latent: torch.FloatTensor,
+        t_list: list,
+        idx = None
     ):
+
         model_pred = self.unet(
             x_t_latent,
-            self.sub_timesteps_tensor,
+            t_list,
             encoder_hidden_states=self.prompt_embeds,
             return_dict=False,
         )[0]
-
         # compute the previous noisy sample x_t -> x_t-1
-        denoised_batch = self.scheduler_step_batch(model_pred, x_t_latent)
-
+        if self.use_denoising_batch:
+            denoised_batch = self.scheduler_step_batch(model_pred, x_t_latent, idx)
+        else:
+            # denoised_batch = self.scheduler.step(model_pred, t_list[0], x_t_latent).denoised
+            denoised_batch = self.scheduler_step_batch(model_pred, x_t_latent, idx)
+            
         return denoised_batch, model_pred
 
     def encode_image(self, image_tensors: torch.Tensor):
@@ -195,35 +222,51 @@ class StreamDiffusion:
 
     def predict_x0_batch(self, x_t_latent):
         prev_latent_batch = self.x_t_latent_buffer
-        if self.batch_size > 1:
-            x_t_latent = torch.cat((x_t_latent, prev_latent_batch), dim=0)
 
-        x_0_pred_batch, model_pred = self.lcm_step(x_t_latent)
-        if prev_latent_batch is not None:
-            x_0_pred_out = x_0_pred_batch[-self.frame_bff_size :]
-            if self.is_drawing:
-                self.x_t_latent_buffer = (
-                    self.alpha_prod_t_sqrt[self.frame_bff_size :] * x_0_pred_batch[: -self.frame_bff_size]
-                    + self.beta_prod_t_sqrt[self.frame_bff_size :] * self.init_noise[self.frame_bff_size :]
-                )
+        if self.use_denoising_batch:
+            t_list = self.sub_timesteps_tensor
+            if self.batch_size > 1:
+                x_t_latent = torch.cat((x_t_latent, prev_latent_batch), dim=0)
+            x_0_pred_batch, model_pred = self.unet_step(x_t_latent, t_list)
+
+            if self.batch_size > 1:
+                x_0_pred_out = x_0_pred_batch[-1].unsqueeze(0)
+                if self.is_drawing:
+                    self.x_t_latent_buffer = (
+                        self.alpha_prod_t_sqrt[1:] * x_0_pred_batch[:-1] + self.beta_prod_t_sqrt[1:] * self.init_noise[1:]
+                    )
+                else:
+                    self.x_t_latent_buffer = self.alpha_prod_t_sqrt[1:] * x_0_pred_batch[:-1]
             else:
-                self.x_t_latent_buffer = self.alpha_prod_t_sqrt[self.frame_bff_size :] * x_0_pred_batch[: -self.frame_bff_size]
+                x_0_pred_out = x_0_pred_batch
+                self.x_t_latent_buffer = None
         else:
-            x_0_pred_out = x_0_pred_batch
-            self.x_t_latent_buffer = None
+            for idx, t in enumerate(self.sub_timesteps_tensor):
+                t = t.view(1,)
+                x_0_pred, model_pred = self.unet_step(x_t_latent, t, idx)
+                if idx < len(self.sub_timesteps_tensor) - 1:
+                    if self.is_drawing:
+                        x_t_latent = self.alpha_prod_t_sqrt[idx+1] * x_0_pred + self.beta_prod_t_sqrt[idx+1] * self.init_noise[idx+1]
+                    else:
+                        x_t_latent = self.alpha_prod_t_sqrt[idx+1] * x_0_pred
+            x_0_pred_out = x_0_pred
+
         return x_0_pred_out
 
     @torch.no_grad()
-    def __call__(self, x: Union[torch.FloatTensor, PIL.Image.Image, np.ndarray]):
-        x = self.image_processor.preprocess(x, self.height, self.width).to(device=self.device, dtype=self.dtype)
-        assert x.shape[0] == self.frame_bff_size, "Input batch size must be equal to frame buffer size."
-        if self.similar_image_filter:
-            x = self.similar_filter(x)
-            if x is None:
-                time.sleep(self.inference_time)
-                return self.prev_image_result
+    def __call__(self, x: Union[torch.FloatTensor, PIL.Image.Image, np.ndarray] = None):
         start_time = time.time()
-        x_t_latent = self.encode_image(x)
+        if x is not None:
+            x = self.image_processor.preprocess(x, self.height, self.width).to(device=self.device, dtype=self.dtype)
+            if self.similar_image_filter:
+                x = self.similar_filter(x)
+                if x is None:
+                    return self.prev_image_result
+            x_t_latent = self.encode_image(x)
+            start_time = time.time()
+        else:
+            #TODO: check the dimension of x_t_latent
+            x_t_latent = torch.randn((1, 4, self.latent_height, self.latent_width)).to(device=self.device, dtype=self.dtype)
         x_0_pred_out = self.predict_x0_batch(x_t_latent)
         x_output = self.decode_image(x_0_pred_out).detach().clone()
 

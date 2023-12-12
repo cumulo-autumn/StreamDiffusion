@@ -41,6 +41,7 @@ class StreamDiffusionWrapper:
         use_tiny_vae: bool = True,
         enable_similar_image_filter: bool = False,
         similar_image_filter_threshold: float = 0.95,
+        use_denoising_batch: bool = True,
     ):
         self.device = device
         self.dtype = dtype
@@ -67,6 +68,8 @@ class StreamDiffusionWrapper:
 
         if enable_similar_image_filter:
             self.stream.enable_similar_image_filter(similar_image_filter_threshold)
+
+        self.use_denoising_batch = use_denoising_batch
 
     def prepare(
         self,
@@ -248,6 +251,7 @@ class StreamDiffusionWrapper:
             height=self.height,
             is_drawing=is_drawing,
             frame_buffer_size=self.frame_buffer_size,
+            use_denoising_batch = self.use_denoising_batch,
         )
         if "turbo" not in model_id:
             if use_lcm_lora:

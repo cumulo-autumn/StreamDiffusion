@@ -3,7 +3,9 @@
 .vscode/
 engines/
 *.safetensors
-*.ckpt
+result_lcm.png
+model.ckpt
+*.png
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
