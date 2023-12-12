@@ -1,3 +1,4 @@
+import time
 from typing import *
 
 import numpy as np
@@ -5,11 +6,9 @@ import PIL.Image
 import torch
 from diffusers import LCMScheduler, StableDiffusionPipeline
 from diffusers.image_processor import VaeImageProcessor
-from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import (
-    retrieve_latents,
-)
+from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import retrieve_latents
+
 from streamdiffusion.image_filter import SimilarImageFilter
-import time
 
 
 class StreamDiffusion:
@@ -68,7 +67,7 @@ class StreamDiffusion:
         adapter_name=None,
         **kwargs,
     ):
-        self.pipe.load_lora_weights(pretrained_lora_model_name_or_path_or_dict, adapter_name,**kwargs)
+        self.pipe.load_lora_weights(pretrained_lora_model_name_or_path_or_dict, adapter_name, **kwargs)
 
     def fuse_lora(
         self,
@@ -217,11 +216,12 @@ class StreamDiffusion:
     def __call__(self, x: Union[torch.FloatTensor, PIL.Image.Image, np.ndarray]):
         x = self.image_processor.preprocess(x, self.height, self.width).to(device=self.device, dtype=self.dtype)
         assert x.shape[0] == self.frame_bff_size, "Input batch size must be equal to frame buffer size."
+        skip_prob = 0
         if self.similar_image_filter:
-            x = self.similar_filter(x)
+            x, skip_prob = self.similar_filter(x)
             if x is None:
                 time.sleep(self.inference_time)
-                return self.prev_image_result
+                return self.prev_image_result, skip_prob
         start_time = time.time()
         x_t_latent = self.encode_image(x)
         x_0_pred_out = self.predict_x0_batch(x_t_latent)
@@ -229,7 +229,7 @@ class StreamDiffusion:
 
         self.prev_image_result = x_output
         self.inference_time = time.time() - start_time
-        return x_output
+        return x_output, skip_prob
 
     @torch.no_grad()
     def txt2img(self):
@@ -237,9 +237,8 @@ class StreamDiffusion:
         x_output = self.decode_image(x_0_pred_out).detach().clone()
         return x_output
 
-
     def txt2img_batch(self, batch_size: int = 1):
-        x_t_latent = torch.randn((batch_size, 4, self.latent_height, self.latent_width),device=self.device, dtype=self.dtype)
+        x_t_latent = torch.randn((batch_size, 4, self.latent_height, self.latent_width), device=self.device, dtype=self.dtype)
         model_pred = self.unet(
             x_t_latent,
             self.sub_timesteps_tensor,

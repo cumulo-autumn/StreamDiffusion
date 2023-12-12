@@ -141,8 +141,8 @@ class StreamDiffusionWrapper:
         if isinstance(image, str) or isinstance(image, Image.Image):
             image = self.preprocess_image(image)
 
-        image_tensor = self.stream(image)
-        return self.postprocess_image(image_tensor, output_type=self.output_type)
+        image_tensor, skip_prob = self.stream(image)
+        return self.postprocess_image(image_tensor, output_type=self.output_type), skip_prob
 
     def preprocess_image(self, image: Union[str, Image.Image]) -> torch.Tensor:
         """
@@ -271,13 +271,9 @@ class StreamDiffusionWrapper:
             if acceleration == "xformers":
                 stream.pipe.enable_xformers_memory_efficient_attention()
             if acceleration == "tensorrt":
-                from streamdiffusion.acceleration.tensorrt import (
-                    TorchVAEEncoder, compile_unet, compile_vae_decoder,
-                    compile_vae_encoder)
-                from streamdiffusion.acceleration.tensorrt.engine import (
-                    AutoencoderKLEngine, UNet2DConditionModelEngine)
-                from streamdiffusion.acceleration.tensorrt.models import (
-                    VAE, UNet, VAEEncoder)
+                from streamdiffusion.acceleration.tensorrt import TorchVAEEncoder, compile_unet, compile_vae_decoder, compile_vae_encoder
+                from streamdiffusion.acceleration.tensorrt.engine import AutoencoderKLEngine, UNet2DConditionModelEngine
+                from streamdiffusion.acceleration.tensorrt.models import VAE, UNet, VAEEncoder
 
                 def create_prefix(
                     max_batch_size: int,
@@ -383,8 +379,7 @@ class StreamDiffusionWrapper:
 
                 print("TensorRT acceleration enabled.")
             if acceleration == "sfast":
-                from streamdiffusion.acceleration.sfast import \
-                    accelerate_with_stable_fast
+                from streamdiffusion.acceleration.sfast import accelerate_with_stable_fast
 
                 stream = accelerate_with_stable_fast(stream)
                 print("StableFast acceleration enabled.")
