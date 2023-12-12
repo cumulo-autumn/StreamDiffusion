@@ -17,6 +17,7 @@ _deps = [
     "onnxruntime==1.16.3",
     "protobuf==3.20.2",
     "colored",
+    "pywin32"
 ]
 
 deps = {b: a for a, b in (re.findall(r"^(([^!=<>~]+)(?:[!=<>~].*)?$)", x)[0] for x in _deps)}
