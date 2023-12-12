@@ -4,9 +4,9 @@ from typing import Literal
 
 import ffmpeg
 import fire
-import PIL.Image
+import torch
+from torchvision.io import read_video, write_video
 from tqdm import tqdm
-
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
@@ -32,15 +32,11 @@ def main(
     scale: float = 1.0,
     acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
 ):
-    if os.path.isdir(output):
-        raise ValueError("Output directory already exists")
-    frame_rate = get_frame_rate(input)
-    extract_frames(input, os.path.join(output, "frames"))
-    images = sorted(os.listdir(os.path.join(output, "frames")))
-
-    sample_image = PIL.Image.open(os.path.join(output, "frames", images[0]))
-    width = int(sample_image.width * scale)
-    height = int(sample_image.height * scale)
+    video_info = read_video(input)
+    video = video_info[0] / 255
+    fps = video_info[2]["video_fps"]
+    width = int(video.shape[1] * scale)
+    height = int(video.shape[2] * scale)
 
     stream = StreamDiffusionWrapper(
         model_id=model_id,
@@ -52,6 +48,9 @@ def main(
         acceleration=acceleration,
         is_drawing=False,
         mode="img2img",
+        output_type="pt",
+        enable_similar_image_filter=True,
+        similar_image_filter_threshold=0.90,
     )
 
     stream.prepare(
@@ -59,18 +58,17 @@ def main(
         num_inference_steps=50,
     )
 
+    video_result = torch.zeros(video.shape[0], width, height, 3)
+
     for _ in range(stream.batch_size - 1):
-        stream(image=sample_image)
+        stream(image=video[0].permute(2, 0, 1))
 
-    for image_path in tqdm(images + [images[0]] * (stream.batch_size - 1)):
-        output_image = stream(image=os.path.join(output, "frames", image_path))
-        output_image.save(os.path.join(output, image_path))
+    for i in tqdm(range(video.shape[0])):
+        output_image = stream(video[i].permute(2, 0, 1))
+        video_result[i] = output_image.permute(1, 2, 0)
 
-    output_video_path = os.path.join(output, "output.mp4")
-
-    ffmpeg.input(os.path.join(output, "%04d.png"), framerate=frame_rate).output(
-        output_video_path, crf=17, pix_fmt="yuv420p", vcodec="libx264"
-    ).run()
+    video_result = video_result * 255
+    write_video(f"{output}.mp4", video_result, fps=fps)
 
 
 if __name__ == "__main__":

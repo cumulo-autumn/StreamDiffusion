@@ -3,17 +3,14 @@ import os
 import traceback
 from typing import List, Literal, Optional, Union
 
+import numpy as np
 import torch
-from diffusers import (
-    AutoencoderTiny,
-    StableDiffusionPipeline,
-)
+from diffusers import AutoencoderTiny, StableDiffusionPipeline
 from PIL import Image
 from polygraphy import cuda
 
 from streamdiffusion import StreamDiffusion
 from streamdiffusion.image_utils import postprocess_image
-
 
 torch.set_grad_enabled(False)
 torch.backends.cuda.matmul.allow_tf32 = True
@@ -26,6 +23,7 @@ class StreamDiffusionWrapper:
         model_id: str,
         t_index_list: List[int],
         mode: Literal["img2img", "txt2img"] = "img2img",
+        output_type: Literal["pil", "pt", "np", "latent"] = "pil",
         lcm_lora_id: Optional[str] = None,
         vae_id: Optional[str] = None,
         device: Literal["cpu", "cuda"] = "cuda",
@@ -40,13 +38,14 @@ class StreamDiffusionWrapper:
         use_lcm_lora: bool = True,
         use_tiny_vae: bool = True,
         enable_similar_image_filter: bool = False,
-        similar_image_filter_threshold: float = 0.95,
+        similar_image_filter_threshold: float = 0.90,
     ):
         self.device = device
         self.dtype = dtype
         self.width = width
         self.height = height
         self.mode = mode
+        self.output_type = output_type
         self.frame_buffer_size = frame_buffer_size
         self.batch_size = len(t_index_list) * frame_buffer_size
 
@@ -110,7 +109,7 @@ class StreamDiffusionWrapper:
         else:
             return self.txt2img()
 
-    def txt2img(self) -> Union[Image.Image, List[Image.Image]]:
+    def txt2img(self) -> Union[Image.Image, List[Image.Image], torch.Tensor, np.ndarray]:
         """
         Performs txt2img.
 
@@ -123,9 +122,9 @@ class StreamDiffusionWrapper:
             image_tensor = self.stream.txt2img_batch(self.batch_size)
         else:
             image_tensor = self.stream.txt2img()
-        return self.postprocess_image(image_tensor)
+        return self.postprocess_image(image_tensor, output_type=self.output_type)
 
-    def img2img(self, image: Union[str, Image.Image, torch.Tensor]) -> Image.Image:
+    def img2img(self, image: Union[str, Image.Image, torch.Tensor]) -> Union[Image.Image, List[Image.Image], torch.Tensor, np.ndarray]:
         """
         Performs img2img.
 
@@ -143,7 +142,7 @@ class StreamDiffusionWrapper:
             image = self.preprocess_image(image)
 
         image_tensor = self.stream(image)
-        return self.postprocess_image(image_tensor)
+        return self.postprocess_image(image_tensor, output_type=self.output_type)
 
     def preprocess_image(self, image: Union[str, Image.Image]) -> torch.Tensor:
         """
@@ -164,11 +163,11 @@ class StreamDiffusionWrapper:
         if isinstance(image, Image.Image):
             image = image.convert("RGB").resize((self.width, self.height))
 
-        return self.stream.image_processor.preprocess(image, self.height, self.width).to(
-            device=self.device, dtype=self.dtype
-        )
+        return self.stream.image_processor.preprocess(image, self.height, self.width).to(device=self.device, dtype=self.dtype)
 
-    def postprocess_image(self, image_tensor: torch.Tensor) -> Union[Image.Image, List[Image.Image]]:
+    def postprocess_image(
+        self, image_tensor: torch.Tensor, output_type: str = "pil"
+    ) -> Union[Image.Image, List[Image.Image], torch.Tensor, np.ndarray]:
         """
         Postprocesses the image.
 
@@ -183,9 +182,9 @@ class StreamDiffusionWrapper:
             The postprocessed image.
         """
         if self.frame_buffer_size > 1:
-            return postprocess_image(image_tensor.cpu(), output_type="pil")
+            return postprocess_image(image_tensor.cpu(), output_type=output_type)
         else:
-            return postprocess_image(image_tensor.cpu(), output_type="pil")[0]
+            return postprocess_image(image_tensor.cpu(), output_type=output_type)[0]
 
     def _load_model(
         self,
@@ -233,9 +232,7 @@ class StreamDiffusionWrapper:
             Whether to use TinyVAE or not, by default True.
         """
         if model_id.endswith(".safetensors"):
-            pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file(model_id).to(
-                device=self.device, dtype=self.dtype
-            )
+            pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file(model_id).to(device=self.device, dtype=self.dtype)
         else:
             pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_pretrained(
                 model_id,
@@ -261,29 +258,15 @@ class StreamDiffusionWrapper:
             if vae_id is not None:
                 stream.vae = AutoencoderTiny.from_pretrained(vae_id).to(device=pipe.device, dtype=pipe.dtype)
             else:
-                stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(
-                    device=pipe.device, dtype=pipe.dtype
-                )
+                stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
 
         try:
             if acceleration == "xformers":
                 stream.pipe.enable_xformers_memory_efficient_attention()
             if acceleration == "tensorrt":
-                from streamdiffusion.acceleration.tensorrt import (
-                    TorchVAEEncoder,
-                    compile_unet,
-                    compile_vae_decoder,
-                    compile_vae_encoder,
-                )
-                from streamdiffusion.acceleration.tensorrt.engine import (
-                    AutoencoderKLEngine,
-                    UNet2DConditionModelEngine,
-                )
-                from streamdiffusion.acceleration.tensorrt.models import (
-                    VAE,
-                    UNet,
-                    VAEEncoder,
-                )
+                from streamdiffusion.acceleration.tensorrt import TorchVAEEncoder, compile_unet, compile_vae_decoder, compile_vae_encoder
+                from streamdiffusion.acceleration.tensorrt.engine import AutoencoderKLEngine, UNet2DConditionModelEngine
+                from streamdiffusion.acceleration.tensorrt.models import VAE, UNet, VAEEncoder
 
                 def create_prefix(
                     max_batch_size: int,
@@ -389,9 +372,7 @@ class StreamDiffusionWrapper:
 
                 print("TensorRT acceleration enabled.")
             if acceleration == "sfast":
-                from streamdiffusion.acceleration.sfast import (
-                    accelerate_with_stable_fast,
-                )
+                from streamdiffusion.acceleration.sfast import accelerate_with_stable_fast
 
                 stream = accelerate_with_stable_fast(stream)
                 print("StableFast acceleration enabled.")
