@@ -28,7 +28,8 @@ class Config:
     # Model configuration
     ####################################################################
     # SD1.x variant model
-    model_id: str = "./model.safetensors"
+    model_id: str = "SimianLuo/LCM_Dreamshaper_v7"
+
     # LCM-LORA model
     lcm_lora_id: str = "latent-consistency/lcm-lora-sdv1-5"
     # TinyVAE model
