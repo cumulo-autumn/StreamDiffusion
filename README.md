@@ -13,6 +13,10 @@ conda activate stream-diffusion
 OR
 ```
 python -m venv .venv
+# Windows
+.\.venv\Scripts\activate
+# Linux
+source .venv/bin/activate
 ```
 
 ### Step1: Install Torch
