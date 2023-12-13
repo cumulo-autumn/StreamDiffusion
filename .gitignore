@@ -3,6 +3,7 @@
 .vscode/
 engines/
 output/
+*.csv
 *.mp4
 *.safetensors
 result_lcm.png
