@@ -38,7 +38,7 @@ def run(
         model_id=model_id,
         use_lcm_lora=use_lcm_lora,
         use_tiny_vae=use_tiny_vae,
-        t_index_list=[35, 45],
+        t_index_list=[32, 45],
         frame_buffer_size=1,
         width=width,
         height=height,
@@ -55,10 +55,11 @@ def run(
         num_inference_steps=50,
     )
 
-    image_tensor = stream.preprocess_image(download_image("https://github.com/ddpn08.png").resize((width, height)))
-
+    downloaded_image = download_image("https://github.com/ddpn08.png").resize((width, height))
+    
     # warmup
     for _ in range(warmup):
+        image_tensor = stream.preprocess_image(downloaded_image)
         stream(image=image_tensor)
 
     results = []
@@ -68,6 +69,7 @@ def run(
 
     for _ in tqdm(range(iterations)):
         start.record()
+        image_tensor = stream.preprocess_image(downloaded_image)
         stream(image=image_tensor)
         end.record()
 

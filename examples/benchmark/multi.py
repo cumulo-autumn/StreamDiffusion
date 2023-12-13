@@ -51,7 +51,7 @@ def run(
         model_id=model_id,
         use_lcm_lora=use_lcm_lora,
         use_tiny_vae=use_tiny_vae,
-        t_index_list=[35, 45],
+        t_index_list=[32, 45],
         frame_buffer_size=1,
         width=width,
         height=height,
@@ -86,7 +86,8 @@ def run(
     end = torch.cuda.Event(enable_timing=True)
     for _ in tqdm(range(iterations)):
         start.record()
-        out_tensor = stream.stream(image_tensor)
+        # out_tensor = stream.stream(image_tensor) # for text2img
+        out_tensor = stream.stream.txt2img() # for img2img
         queue.put(out_tensor)
         end.record()
 
