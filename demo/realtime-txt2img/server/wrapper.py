@@ -28,6 +28,7 @@ class StreamDiffusionWrapper:
         dtype: str,
         t_index_list: List[int],
         warmup: int,
+        safety_checker: bool,
     ):
         self.device = device
         self.dtype = dtype
@@ -40,6 +41,16 @@ class StreamDiffusionWrapper:
             t_index_list=t_index_list,
             warmup=warmup,
         )
+        self.safety_checker = None
+        if safety_checker:
+            from transformers import CLIPFeatureExtractor
+            from diffusers.pipelines.stable_diffusion.safety_checker import StableDiffusionSafetyChecker
+            self.safety_checker = StableDiffusionSafetyChecker.from_pretrained(
+                "CompVis/stable-diffusion-safety-checker").to(self.device)
+            self.feature_extractor = CLIPFeatureExtractor.from_pretrained(
+                "openai/clip-vit-base-patch32")
+            self.nsfw_fallback_img = PIL.Image.new(
+                "RGB", (512, 512), (0, 0, 0))
 
     def _load_model(
         self,
@@ -104,7 +115,16 @@ class StreamDiffusionWrapper:
 
             x_output = self.stream.txt2img()
             if i >= 3:
-                images.append(postprocess_image(x_output, output_type="pil")[0])
+                image = postprocess_image(x_output, output_type="pil")[0]
+                if self.safety_checker:
+                    safety_checker_input = self.feature_extractor(
+                        image, return_tensors="pt").to(self.device)
+                    _, has_nsfw_concept = self.safety_checker(
+                        images=x_output, clip_input=safety_checker_input.pixel_values.to(
+                            self.dtype)
+                    )
+                    image = self.nsfw_fallback_img if has_nsfw_concept[0] else image
+                images.append(image)
             end.record()
 
             torch.cuda.synchronize()

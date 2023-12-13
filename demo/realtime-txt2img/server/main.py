@@ -62,6 +62,7 @@ class Api:
             dtype=config.dtype,
             t_index_list=config.t_index_list,
             warmup=config.warmup,
+            safety_checker=config.safety_checker,
         )
         self.app = FastAPI()
         self.app.add_api_route(

@@ -2,6 +2,9 @@ from dataclasses import dataclass, field
 from typing import List
 
 import torch
+import os
+
+SAFETY_CHECKER = os.environ.get("SAFETY_CHECKER", "False") == "True"
 
 
 @dataclass
@@ -46,3 +49,4 @@ class Config:
     t_index_list: List[int] = field(default_factory=lambda: [0, 16, 32, 45])
     # Number of warmup steps
     warmup: int = 10
+    safety_checker: bool = SAFETY_CHECKER
