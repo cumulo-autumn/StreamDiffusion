@@ -137,6 +137,8 @@ class StreamDiffusion:
             generator=generator,
         ).to(device=self.device, dtype=self.dtype)
 
+        self.stock_noise = torch.zeros_like(self.init_noise)
+
         c_skip_list = []
         c_out_list = []
         for timestep in self.sub_timesteps:
@@ -190,9 +192,24 @@ class StreamDiffusion:
             encoder_hidden_states=self.prompt_embeds,
             return_dict=False,
         )[0]
+
+        noise_pred_text = model_pred
+        noise_pred_uncond = self.stock_noise
+        model_pred = noise_pred_uncond + 1.20 * (noise_pred_text - noise_pred_uncond)
+
         # compute the previous noisy sample x_t -> x_t-1
         if self.use_denoising_batch:
             denoised_batch = self.scheduler_step_batch(model_pred, x_t_latent, idx)
+
+            scaled_noise = self.beta_prod_t_sqrt * self.stock_noise
+            delta_x = self.scheduler_step_batch(model_pred, scaled_noise, idx)
+            alpha_next = torch.concat([self.alpha_prod_t_sqrt[1:], torch.ones_like(self.alpha_prod_t_sqrt[0:1])],dim=0)
+            delta_x = alpha_next * delta_x
+            beta_next = torch.concat([self.beta_prod_t_sqrt[1:], torch.ones_like(self.beta_prod_t_sqrt[0:1])],dim=0)
+            delta_x = delta_x / beta_next
+            init_noise = torch.concat([self.init_noise[1:], self.init_noise[0:1]],dim=0)
+            self.stock_noise = init_noise + delta_x
+
         else:
             # denoised_batch = self.scheduler.step(model_pred, t_list[0], x_t_latent).denoised
             denoised_batch = self.scheduler_step_batch(model_pred, x_t_latent, idx)
@@ -220,6 +237,8 @@ class StreamDiffusion:
             t_list = self.sub_timesteps_tensor
             if self.batch_size > 1:
                 x_t_latent = torch.cat((x_t_latent, prev_latent_batch), dim=0)
+                self.stock_noise = torch.cat((self.init_noise[0].reshape((1,)+self.stock_noise.size()[1:]), self.stock_noise), dim=0)
+                self.stock_noise = self.stock_noise[:-1]
             x_0_pred_batch, model_pred = self.unet_step(x_t_latent, t_list)
 
             if self.batch_size > 1:
