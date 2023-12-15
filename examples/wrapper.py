@@ -197,6 +197,7 @@ class StreamDiffusionWrapper:
         vae_id: Optional[str] = None,
         acceleration: Literal["none", "sfast", "tensorrt"] = "tensorrt",
         is_drawing: bool = True,
+        warmup: int = 10,
         use_lcm_lora: bool = True,
         use_tiny_vae: bool = True,
     ):
