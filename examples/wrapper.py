@@ -73,7 +73,10 @@ class StreamDiffusionWrapper:
     def prepare(
         self,
         prompt: str,
+        negative_prompt: str,
         num_inference_steps: int = 50,
+        guidance_scale: float = 1.2,
+        cfg_type: Literal["none", "full", "self_uncond", "first_uncond"] = "first_uncond",
     ) -> None:
         """
         Prepares the model for inference.
@@ -87,7 +90,10 @@ class StreamDiffusionWrapper:
         """
         self.stream.prepare(
             prompt,
+            negative_prompt,
             num_inference_steps=num_inference_steps,
+            guidance_scale=guidance_scale,
+            cfg_type=cfg_type,
         )
 
     def __call__(
@@ -398,7 +404,9 @@ class StreamDiffusionWrapper:
 
         stream.prepare(
             "",
+            "",
             num_inference_steps=50,
+            guidance_scale=1.0,
             generator=torch.manual_seed(2),
         )
 

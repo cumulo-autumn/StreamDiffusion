@@ -96,7 +96,10 @@ class StreamDiffusion:
     def prepare(
         self,
         prompt: str,
+        negative_prompt: str = "",
         num_inference_steps: int = 50,
+        guidance_scale: float = 1.2,
+        cfg_type: Literal["none", "full", "self_uncond", "first_uncond"] = "first_uncond",
         generator: Optional[torch.Generator] = torch.Generator(),
     ):
         self.generator = generator
@@ -110,16 +113,35 @@ class StreamDiffusion:
         else:
             self.x_t_latent_buffer = None
 
+        self.guidance_scale = guidance_scale
+
+        self.cfg_type = cfg_type
+
+        do_classifier_free_guidance = False
+        if self.guidance_scale > 1.0:
+            do_classifier_free_guidance = True
+        else:
+            self.cfg_type = "none"
+
         encoder_output = self.pipe.encode_prompt(
             prompt=prompt,
             device=self.device,
             num_images_per_prompt=1,
-            do_classifier_free_guidance=False,
+            do_classifier_free_guidance=do_classifier_free_guidance,
+            negative_prompt=negative_prompt,
         )
         if self.use_denoising_batch:
             self.prompt_embeds = encoder_output[0].repeat(self.batch_size, 1, 1)
         else:
             self.prompt_embeds = encoder_output[0]
+            
+        if self.use_denoising_batch and self.cfg_type == "full":
+            uncond_prompt_embeds = encoder_output[1].repeat(self.batch_size, 1, 1)
+        else:
+            uncond_prompt_embeds = encoder_output[1]
+
+        if self.guidance_scale > 1.0 and (self.cfg_type == "first_uncond" or self.cfg_type == "full"):
+            self.prompt_embeds = torch.cat([uncond_prompt_embeds, self.prompt_embeds], dim=0)
 
         self.scheduler.set_timesteps(num_inference_steps, self.device)
         self.timesteps = self.scheduler.timesteps.to(self.device)
@@ -186,29 +208,47 @@ class StreamDiffusion:
         return denoised_batch
 
     def unet_step(self, x_t_latent: torch.FloatTensor, t_list: list, idx=None):
+        if self.guidance_scale > 1.0 and (self.cfg_type == "first_uncond"):
+            x_t_latent_plus_uc = torch.concat([x_t_latent[0:1],x_t_latent], dim=0)
+            t_list = torch.concat([t_list[0:1],t_list], dim=0)
+        elif self.guidance_scale > 1.0 and (self.cfg_type == "full"):
+            x_t_latent_plus_uc = torch.concat([x_t_latent,x_t_latent], dim=0)
+            t_list = torch.concat([t_list,t_list], dim=0)
+        else:
+            x_t_latent_plus_uc = x_t_latent
         model_pred = self.unet(
-            x_t_latent,
+            x_t_latent_plus_uc,
             t_list,
             encoder_hidden_states=self.prompt_embeds,
             return_dict=False,
         )[0]
 
-        noise_pred_text = model_pred
-        noise_pred_uncond = self.stock_noise
-        model_pred = noise_pred_uncond + 1.20 * (noise_pred_text - noise_pred_uncond)
+        if self.guidance_scale > 1.0 and (self.cfg_type == "first_uncond"):
+            noise_pred_text = model_pred[1:]
+            self.stock_noise = torch.concat([model_pred[0:1], self.stock_noise[1:]], dim=0)# ここコメントアウトでself out cfg
+        elif self.guidance_scale > 1.0 and (self.cfg_type == "full"):
+            noise_pred_uncond, noise_pred_text = model_pred.chunk(2)
+        else:
+            noise_pred_text = model_pred
+        if self.guidance_scale > 1.0 and (self.cfg_type == "self_uncond" or self.cfg_type == "first_uncond"):
+            noise_pred_uncond = self.stock_noise
+        if self.guidance_scale > 1.0:
+            model_pred = noise_pred_uncond + self.guidance_scale * (noise_pred_text - noise_pred_uncond)
+        else:
+            model_pred = noise_pred_text
 
         # compute the previous noisy sample x_t -> x_t-1
         if self.use_denoising_batch:
             denoised_batch = self.scheduler_step_batch(model_pred, x_t_latent, idx)
-
-            scaled_noise = self.beta_prod_t_sqrt * self.stock_noise
-            delta_x = self.scheduler_step_batch(model_pred, scaled_noise, idx)
-            alpha_next = torch.concat([self.alpha_prod_t_sqrt[1:], torch.ones_like(self.alpha_prod_t_sqrt[0:1])],dim=0)
-            delta_x = alpha_next * delta_x
-            beta_next = torch.concat([self.beta_prod_t_sqrt[1:], torch.ones_like(self.beta_prod_t_sqrt[0:1])],dim=0)
-            delta_x = delta_x / beta_next
-            init_noise = torch.concat([self.init_noise[1:], self.init_noise[0:1]],dim=0)
-            self.stock_noise = init_noise + delta_x
+            if self.cfg_type == "self_uncond" or self.cfg_type == "first_uncond":
+                scaled_noise = self.beta_prod_t_sqrt * self.stock_noise
+                delta_x = self.scheduler_step_batch(model_pred, scaled_noise, idx)
+                alpha_next = torch.concat([self.alpha_prod_t_sqrt[1:], torch.ones_like(self.alpha_prod_t_sqrt[0:1])],dim=0)
+                delta_x = alpha_next * delta_x
+                beta_next = torch.concat([self.beta_prod_t_sqrt[1:], torch.ones_like(self.beta_prod_t_sqrt[0:1])],dim=0)
+                delta_x = delta_x / beta_next
+                init_noise = torch.concat([self.init_noise[1:], self.init_noise[0:1]],dim=0)
+                self.stock_noise = init_noise + delta_x
 
         else:
             # denoised_batch = self.scheduler.step(model_pred, t_list[0], x_t_latent).denoised
