@@ -70,6 +70,7 @@ class BaseModel:
         device="cuda",
         verbose=True,
         max_batch_size=16,
+        min_batch_size=1,
         embedding_dim=768,
         text_maxlen=77,
     ):
@@ -78,7 +79,7 @@ class BaseModel:
         self.device = device
         self.verbose = verbose
 
-        self.min_batch = 1
+        self.min_batch = min_batch_size
         self.max_batch = max_batch_size
         self.min_image_shape = 256  # min image resolution: 256x256
         self.max_image_shape = 1024  # max image resolution: 1024x1024
@@ -159,10 +160,11 @@ class BaseModel:
 
 
 class CLIP(BaseModel):
-    def __init__(self, device, max_batch_size, embedding_dim):
+    def __init__(self, device, max_batch_size, embedding_dim, min_batch_size=1):
         super(CLIP, self).__init__(
             device=device,
             max_batch_size=max_batch_size,
+            min_batch_size=min_batch_size,
             embedding_dim=embedding_dim,
         )
         self.name = "CLIP"
@@ -223,6 +225,7 @@ class UNet(BaseModel):
         fp16=False,
         device="cuda",
         max_batch_size=16,
+        min_batch_size=1,
         embedding_dim=768,
         text_maxlen=77,
         unet_dim=4,
@@ -231,6 +234,7 @@ class UNet(BaseModel):
             fp16=fp16,
             device=device,
             max_batch_size=max_batch_size,
+            min_batch_size=min_batch_size,
             embedding_dim=embedding_dim,
             text_maxlen=text_maxlen,
         )
@@ -301,10 +305,11 @@ class UNet(BaseModel):
 
 
 class VAE(BaseModel):
-    def __init__(self, device, max_batch_size):
+    def __init__(self, device, max_batch_size, min_batch_size=1):
         super(VAE, self).__init__(
             device=device,
             max_batch_size=max_batch_size,
+            min_batch_size=min_batch_size,
             embedding_dim=None,
         )
         self.name = "VAE decoder"
@@ -363,10 +368,11 @@ class VAE(BaseModel):
 
 
 class VAEEncoder(BaseModel):
-    def __init__(self, device, max_batch_size):
+    def __init__(self, device, max_batch_size, min_batch_size=1):
         super(VAEEncoder, self).__init__(
             device=device,
             max_batch_size=max_batch_size,
+            min_batch_size=min_batch_size,
             embedding_dim=None,
         )
         self.name = "VAE encoder"

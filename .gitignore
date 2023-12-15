@@ -2,8 +2,8 @@
 
 .vscode/
 engines/
-model.safetensors
-model.ckpt
+*.safetensors
+*.ckpt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -197,3 +197,4 @@ __pycache__/
 *$py.class
 
 models/RealESR*
+*.safetensors

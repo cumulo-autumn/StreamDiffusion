@@ -34,7 +34,6 @@ def install(cu: Optional[Literal["11", "12"]] = get_cuda_version_from_torch()):
     if not is_installed("polygraphy"):
         run_pip("install polygraphy==0.47.1 --extra-index-url https://pypi.ngc.nvidia.com")
     if not is_installed("onnx_graphsurgeon"):
-        run_pip("install protobuf==3.20.2")
         run_pip("install onnx-graphsurgeon==0.3.26 --extra-index-url https://pypi.ngc.nvidia.com")
 
     pass

@@ -5,9 +5,14 @@
 
 ## Installation
 
-### Step0: Make conda environment
+### Step0: Make environment
 ```
 conda create -n stream-diffusion python=3.10
+conda activate stream-diffusion
+```
+OR
+```
+python -m venv .venv
 ```
 
 ### Step1: Install Torch
@@ -15,11 +20,11 @@ Select the appropriate version for your system.
 
 CUDA 11.1
 ```
-pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+pip3 install torch torchvision xformers --index-url https://download.pytorch.org/whl/cu118
 ```
 CUDA 12.1
 ```
-pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+pip3 install torch torchvision xformers --index-url https://download.pytorch.org/whl/cu121
 ```
 details: https://pytorch.org/
 
@@ -32,13 +37,18 @@ OR
 git clone https://github.com/cumulo-autumn/StreamDiffusion.git
 python -m pip install .
 ```
-OR (if you want to use tensorrt)
+OR [if you want to use tensorrt]
 ```
 git clone https://github.com/cumulo-autumn/StreamDiffusion.git
 pip install .[tensorrt]
 python -m streamdiffusion.tools.install-tensorrt
 ```
-
+OR [if you are a developer]
+```
+git clone https://github.com/cumulo-autumn/StreamDiffusion.git
+python setup.py develop easy_install stream-diffusion[tensorrt]
+python -m streamdiffusion.tools.install-tensorrt
+```
 ## Usage
 ```python
 import io
@@ -48,7 +58,7 @@ import fire
 import PIL.Image
 import requests
 import torch
-from diffusers import AutoencoderTiny, LCMScheduler, StableDiffusionPipeline
+from diffusers import AutoencoderTiny, StableDiffusionPipeline
 from tqdm import tqdm
 
 from streamdiffusion import StreamDiffusion
@@ -61,27 +71,47 @@ def download_image(url: str):
     return image
 
 
-def run(wamup: int = 10, iterations: int = 50):
-    pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file("./models/model.safetensors").to(
+def run(
+    wamup: int = 10,
+    iterations: int = 50,
+    prompt: str = "Girl with panda ears wearing a hood",
+    lcm_lora: bool = True,
+    tiny_vae: bool = True,
+    acceleration: Optional[Literal["xformers", "sfast", "tensorrt"]] = None,
+):
+    pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file("./model.safetensors").to(
         device=torch.device("cuda"),
         dtype=torch.float16,
     )
-    pipe.scheduler = LCMScheduler.from_config(pipe.scheduler.config)
-    pipe.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
-    pipe.load_lora_weights("latent-consistency/lcm-lora-sdv1-5")
-    pipe.fuse_lora()
-    pipe.enable_xformers_memory_efficient_attention()
-
     stream = StreamDiffusion(
         pipe,
         [32, 45],
         torch_dtype=torch.float16,
     )
 
+    if lcm_lora:
+        stream.load_lcm_lora()
+        stream.fuse_lora()
+
+    if tiny_vae:
+        stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
+
+    if acceleration == "xformers":
+        pipe.enable_xformers_memory_efficient_attention()
+    elif acceleration == "tensorrt":
+        from streamdiffusion.acceleration.tensorrt import accelerate_with_tensorrt
+
+        stream = accelerate_with_tensorrt(
+            stream, "engines", max_batch_size=2, engine_build_options={"build_static_batch": True}
+        )
+    elif acceleration == "sfast":
+        from streamdiffusion.acceleration.sfast import accelerate_with_stable_fast
+
+        stream = accelerate_with_stable_fast(stream)
+
     stream.prepare(
-        "Girl with panda ears wearing a hood",
+        prompt,
         num_inference_steps=50,
-        generator=torch.manual_seed(2),
     )
 
     image = download_image("https://github.com/ddpn08.png").resize((512, 512))
@@ -111,4 +141,5 @@ def run(wamup: int = 10, iterations: int = 50):
 
 if __name__ == "__main__":
     fire.Fire(run)
+
 ``````

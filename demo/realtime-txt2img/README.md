@@ -5,6 +5,7 @@
 </p>
 
 This example provides a simple implementation of the use of StreamDiffusion to generate images from text.
+You can realtimely generate 4x4 images from text, on changing the input prompt.
 
 ## Usage
 
@@ -15,10 +16,11 @@ chmod +x ./start.sh && ./start.sh
 or
 
 ```bash
-cd server
-python3 main.py &
-cd ../view
-npm start
+pip install -r requirements.txt
+cd view
+npm start &
+cd ../server
+python3 main.py
 ```
 
 ## Docker

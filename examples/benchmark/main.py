@@ -25,6 +25,7 @@ def run(
     lcm_lora: bool = True,
     tiny_vae: bool = True,
     acceleration: Optional[Literal["xformers", "sfast", "tensorrt"]] = None,
+    device_ids: Optional[List[int]] = None,
 ):
     pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file("./model.safetensors").to(
         device=torch.device("cuda"),
@@ -43,12 +44,15 @@ def run(
     if tiny_vae:
         stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
 
+    if device_ids is not None:
+        stream.unet = torch.nn.DataParallel(stream.unet, device_ids=device_ids)
+
     if acceleration == "xformers":
         pipe.enable_xformers_memory_efficient_attention()
     elif acceleration == "tensorrt":
         from streamdiffusion.acceleration.tensorrt import accelerate_with_tensorrt
 
-        stream = accelerate_with_tensorrt(stream, "engines", max_batch_size=2)
+        stream = accelerate_with_tensorrt(stream, "engines", max_batch_size=2, engine_build_options={"build_static_batch": True})
     elif acceleration == "sfast":
         from streamdiffusion.acceleration.sfast import accelerate_with_stable_fast
 

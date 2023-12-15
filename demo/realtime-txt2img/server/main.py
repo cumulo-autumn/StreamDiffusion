@@ -32,7 +32,7 @@ class PredictResponseModel(BaseModel):
     The response model for the /predict endpoint.
     """
 
-    base64_images: list[str]
+    base64_image: str
 
 
 class UpdatePromptResponseModel(BaseModel):
@@ -86,7 +86,6 @@ class Api:
         self._update_prompt_lock = asyncio.Lock()
 
         self.last_prompt: str = ""
-        self.last_images: list[str] = [""]
 
     async def _predict(self, inp: PredictInputModel) -> PredictResponseModel:
         """
@@ -103,15 +102,7 @@ class Api:
             The prediction result.
         """
         async with self._predict_lock:
-            if (
-                self._calc_levenstein_distance(inp.prompt, self.last_prompt)
-                < self.config.levenstein_distance_threshold
-            ):
-                logger.info("Using cached images")
-                return PredictResponseModel(base64_images=self.last_images)
-            self.last_prompt = inp.prompt
-            self.last_images = [self._pil_to_base64(image) for image in self.stream_diffusion(inp.prompt)]
-            return PredictResponseModel(base64_images=self.last_images)
+            return PredictResponseModel(base64_image=self._pil_to_base64(self.stream_diffusion(inp.prompt)))
 
     def _pil_to_base64(self, image: Image.Image, format: str = "JPEG") -> bytes:
         """
@@ -151,52 +142,6 @@ class Api:
         if "base64," in base64_image:
             base64_image = base64_image.split("base64,")[1]
         return Image.open(BytesIO(base64.b64decode(base64_image))).convert("RGB")
-
-    def _calc_levenstein_distance(self, a: str, b: str) -> int:
-        """
-        Calculate the Levenstein distance between two strings.
-
-        Parameters
-        ----------
-        a : str
-            The first string.
-
-        b : str
-            The second string.
-
-        Returns
-        -------
-        int
-            The Levenstein distance.
-        """
-        if a == b:
-            return 0
-        a_k = len(a)
-        b_k = len(b)
-        if a == "":
-            return b_k
-        if b == "":
-            return a_k
-        matrix = [[] for i in range(a_k + 1)]
-        for i in range(a_k + 1):
-            matrix[i] = [0 for j in range(b_k + 1)]
-        for i in range(a_k + 1):
-            matrix[i][0] = i
-        for j in range(b_k + 1):
-            matrix[0][j] = j
-        for i in range(1, a_k + 1):
-            ac = a[i - 1]
-            for j in range(1, b_k + 1):
-                bc = b[j - 1]
-                cost = 0 if (ac == bc) else 1
-                matrix[i][j] = min(
-                    [
-                        matrix[i - 1][j] + 1,
-                        matrix[i][j - 1] + 1,
-                        matrix[i - 1][j - 1] + cost,
-                    ]
-                )
-        return matrix[a_k][b_k]
 
 
 if __name__ == "__main__":

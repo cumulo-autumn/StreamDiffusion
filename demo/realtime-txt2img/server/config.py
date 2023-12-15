@@ -22,17 +22,10 @@ class Config:
     workers: int = 1
 
     ####################################################################
-    # Generation configuration
-    ####################################################################
-    # The threshold for the Levenstein distance.
-    levenstein_distance_threshold: int = 3
-
-    ####################################################################
     # Model configuration
     ####################################################################
     # SD1.x variant model
-    model_id: str = "SimianLuo/LCM_Dreamshaper_v7"
-
+    model_id: str = "KBlueLeaf/kohaku-v2.1"
     # LCM-LORA model
     lcm_lora_id: str = "latent-consistency/lcm-lora-sdv1-5"
     # TinyVAE model
