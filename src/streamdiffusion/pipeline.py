@@ -123,7 +123,10 @@ class StreamDiffusion:
         else:
             self.x_t_latent_buffer = None
 
-        self.guidance_scale = guidance_scale
+        if self.cfg_type == "none":
+            self.guidance_scale = 1.0
+        else:
+            self.guidance_scale = guidance_scale
         self.delta  = delta
 
         do_classifier_free_guidance = False
