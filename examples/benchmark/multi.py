@@ -23,7 +23,6 @@ def _postprocess_image(queue: Queue) -> None:
         try:
             if not queue.empty():
                 output = postprocess_image(queue.get(block=False), output_type="pil")[0]
-                output.save(f"{str(uuid.uuid4())}.png")
             time.sleep(0.0005)
         except KeyboardInterrupt:
             break
@@ -38,7 +37,7 @@ def run(
     warmup: int = 10,
     iterations: int = 100,
     model_id: str = "KBlueLeaf/kohaku-v2.1",
-    prompt: str = "Girl with panda ears wearing a hood",
+    prompt: str = "Girl with brown dog ears,thick frame glasses",
     use_lcm_lora: bool = True,
     use_tiny_vae: bool = True,
     width: int = 512,
@@ -59,18 +58,22 @@ def run(
         acceleration=acceleration,
         is_drawing=True,
         device_ids=device_ids,
+        enable_similar_image_filter=False,
+        similar_image_filter_threshold=0.99,
         mode="img2img",
         use_denoising_batch=use_denoising_batch,
+        cfg_type="self",  #initialize, full, self
     )
 
     stream.prepare(
         prompt,
         num_inference_steps=50,
+        guidance_scale=1.2,
+        delta=0.5,
     )
 
-    image_tensor = stream.preprocess_image(
-        download_image("https://github.com/ddpn08.png").resize((width, height))
-    )
+    image = download_image("https://github.com/ddpn08.png").resize((width, height))
+    image_tensor = stream.preprocess_image(image)
 
     # warmup
     for _ in range(warmup):
@@ -86,8 +89,7 @@ def run(
     end = torch.cuda.Event(enable_timing=True)
     for _ in tqdm(range(iterations)):
         start.record()
-        # out_tensor = stream.stream(image_tensor) # for text2img
-        out_tensor = stream.stream.txt2img() # for img2img
+        out_tensor = stream.stream(image_tensor).cpu()
         queue.put(out_tensor)
         end.record()
 

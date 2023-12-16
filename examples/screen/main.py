@@ -52,7 +52,7 @@ def result_window(server_ip: str, server_port: int):
 
 def run(
     model_id: str = "KBlueLeaf/kohaku-v2.1",
-    prompt: str = "Girl with panda ears wearing a hood",
+    prompt: str = "Girl with brown dog ears,thick frame glasses",
     address: str = "127.0.0.1",
     port: int = 8080,
     frame_buffer_size: int = 1,
@@ -70,15 +70,18 @@ def run(
         warmup=10,
         acceleration=acceleration,
         is_drawing=False,
-        enable_similar_image_filter=True,
+        enable_similar_image_filter=False,
         similar_image_filter_threshold=0.99,
         mode="img2img",
         use_denoising_batch=use_denoising_batch,
+        cfg_type="self",  #initialize, full, self
     )
 
     stream.prepare(
-        prompt=prompt,
+        prompt,
         num_inference_steps=50,
+        guidance_scale=1.4,
+        delta=0.5,
     )
 
     output_window = mp.Process(target=result_window, args=(address, port))

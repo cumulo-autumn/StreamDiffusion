@@ -15,11 +15,17 @@ def main(
     output: str = "output.png",
     model_id: str = "KBlueLeaf/kohaku-v2.1",
     prompt: str = "Girl with panda ears wearing a hood",
+    negative_prompt: str = "",
     width: int = 512,
     height: int = 512,
     acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
     use_denoising_batch: bool = True,
+    guidance_scale: float = 1.2,
+    cfg_type: Literal["none", "full", "self", "initialize"] = "initialize",
 ):
+    if guidance_scale <= 1.0:
+        cfg_type = "none"
+
     stream = StreamDiffusionWrapper(
         model_id=model_id,
         t_index_list=[32, 40, 45],
@@ -31,11 +37,14 @@ def main(
         is_drawing=True,
         mode="img2img",
         use_denoising_batch = use_denoising_batch,
+        cfg_type = cfg_type,
     )
 
     stream.prepare(
         prompt=prompt,
+        negative_prompt=negative_prompt,
         num_inference_steps=50,
+        guidance_scale = guidance_scale,
     )
 
     image_tensor = stream.preprocess_image(input)

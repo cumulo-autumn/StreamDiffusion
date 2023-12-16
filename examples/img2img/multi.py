@@ -20,9 +20,14 @@ def main(
     height: int = 512,
     acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
     use_denoising_batch: bool = True,
+    guidance_scale: float = 1.2,
+    cfg_type: Literal["none", "full", "self", "initialize"] = "initialize",
 ):
     if not os.path.exists(output):
         os.makedirs(output, exist_ok=True)
+
+    if guidance_scale <= 1.0:
+        cfg_type = "none"
 
     stream = StreamDiffusionWrapper(
         model_id=model_id,
@@ -35,11 +40,14 @@ def main(
         is_drawing=True,
         mode="img2img",
         use_denoising_batch = use_denoising_batch,
+        cfg_type = cfg_type,
     )
 
     stream.prepare(
         prompt=prompt,
         num_inference_steps=50,
+        guidance_scale=guidance_scale,
+        cfg_type="self",
     )
 
     images = glob.glob(os.path.join(input, "*"))
