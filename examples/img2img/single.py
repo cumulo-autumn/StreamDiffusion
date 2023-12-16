@@ -21,7 +21,7 @@ def main(
     acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
     use_denoising_batch: bool = True,
     guidance_scale: float = 1.2,
-    cfg_type: Literal["none", "full", "self_uncond", "first_uncond"] = "first_uncond",
+    cfg_type: Literal["none", "full", "self", "initialize"] = "initialize",
 ):
     stream = StreamDiffusionWrapper(
         model_id=model_id,

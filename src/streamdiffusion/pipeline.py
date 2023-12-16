@@ -22,7 +22,7 @@ class StreamDiffusion:
         is_drawing: bool = False,
         use_denoising_batch: bool = True,
         frame_buffer_size: int = 1,
-        cfg_type: Literal["none", "full", "self_uncond", "first_uncond"] = "self_uncond",
+        cfg_type: Literal["none", "full", "self", "initialize"] = "self",
     ):
         self.device = pipe.device
         self.dtype = torch_dtype
@@ -40,7 +40,7 @@ class StreamDiffusion:
 
         self.cfg_type = cfg_type
 
-        if self.cfg_type == "first_uncond":
+        if self.cfg_type == "initialize":
             self.trt_unet_batch_size = (self.denoising_steps_num + 1)*self.frame_bff_size
         elif self.cfg_type == "full":
             self.trt_unet_batch_size = 2*self.denoising_steps_num*self.frame_bff_size
@@ -144,10 +144,10 @@ class StreamDiffusion:
             
         if self.use_denoising_batch and self.cfg_type == "full":
             uncond_prompt_embeds = encoder_output[1].repeat(self.batch_size, 1, 1)
-        elif self.cfg_type == "first_uncond":
+        elif self.cfg_type == "initialize":
             uncond_prompt_embeds = encoder_output[1].repeat(self.frame_bff_size, 1, 1)
 
-        if self.guidance_scale > 1.0 and (self.cfg_type == "first_uncond" or self.cfg_type == "full"):
+        if self.guidance_scale > 1.0 and (self.cfg_type == "initialize" or self.cfg_type == "full"):
             self.prompt_embeds = torch.cat([uncond_prompt_embeds, self.prompt_embeds], dim=0)
 
         self.scheduler.set_timesteps(num_inference_steps, self.device)
@@ -215,7 +215,7 @@ class StreamDiffusion:
         return denoised_batch
 
     def unet_step(self, x_t_latent: torch.FloatTensor, t_list: list, idx=None):
-        if self.guidance_scale > 1.0 and (self.cfg_type == "first_uncond"):
+        if self.guidance_scale > 1.0 and (self.cfg_type == "initialize"):
             x_t_latent_plus_uc = torch.concat([x_t_latent[0:1],x_t_latent], dim=0)
             t_list = torch.concat([t_list[0:1],t_list], dim=0)
         elif self.guidance_scale > 1.0 and (self.cfg_type == "full"):
@@ -230,14 +230,14 @@ class StreamDiffusion:
             return_dict=False,
         )[0]
 
-        if self.guidance_scale > 1.0 and (self.cfg_type == "first_uncond"):
+        if self.guidance_scale > 1.0 and (self.cfg_type == "initialize"):
             noise_pred_text = model_pred[1:]
             self.stock_noise = torch.concat([model_pred[0:1], self.stock_noise[1:]], dim=0)# ここコメントアウトでself out cfg
         elif self.guidance_scale > 1.0 and (self.cfg_type == "full"):
             noise_pred_uncond, noise_pred_text = model_pred.chunk(2)
         else:
             noise_pred_text = model_pred
-        if self.guidance_scale > 1.0 and (self.cfg_type == "self_uncond" or self.cfg_type == "first_uncond"):
+        if self.guidance_scale > 1.0 and (self.cfg_type == "self" or self.cfg_type == "initialize"):
             noise_pred_uncond = self.stock_noise*self.delta
         if self.guidance_scale > 1.0:
             model_pred = noise_pred_uncond + self.guidance_scale * (noise_pred_text - noise_pred_uncond)
@@ -247,7 +247,7 @@ class StreamDiffusion:
         # compute the previous noisy sample x_t -> x_t-1
         if self.use_denoising_batch:
             denoised_batch = self.scheduler_step_batch(model_pred, x_t_latent, idx)
-            if self.cfg_type == "self_uncond" or self.cfg_type == "first_uncond":
+            if self.cfg_type == "self" or self.cfg_type == "initialize":
                 scaled_noise = self.beta_prod_t_sqrt * self.stock_noise
                 delta_x = self.scheduler_step_batch(model_pred, scaled_noise, idx)
                 alpha_next = torch.concat([self.alpha_prod_t_sqrt[1:], torch.ones_like(self.alpha_prod_t_sqrt[0:1])],dim=0)

@@ -62,7 +62,7 @@ def run(
         similar_image_filter_threshold=0.99,
         mode="img2img",
         use_denoising_batch=use_denoising_batch,
-        cfg_type="self_uncond",  #first_uncond, full, self_uncond
+        cfg_type="self",  #initialize, full, self
     )
 
     stream.prepare(

@@ -40,7 +40,7 @@ class StreamDiffusionWrapper:
         enable_similar_image_filter: bool = False,
         similar_image_filter_threshold: float = 0.99,
         use_denoising_batch: bool = True,
-        cfg_type: Literal["none", "full", "self_uncond", "first_uncond"] = "self_uncond",
+        cfg_type: Literal["none", "full", "self", "initialize"] = "self",
     ):
         self.device = device
         self.dtype = dtype
@@ -208,7 +208,7 @@ class StreamDiffusionWrapper:
         is_drawing: bool = True,
         use_lcm_lora: bool = True,
         use_tiny_vae: bool = True,
-        cfg_type: Literal["none", "full", "self_uncond", "first_uncond"] = "self_uncond",
+        cfg_type: Literal["none", "full", "self", "initialize"] = "self",
     ):
         """
         Loads the model.
@@ -410,7 +410,7 @@ class StreamDiffusionWrapper:
             "",
             "",
             num_inference_steps=50,
-            guidance_scale= 1.1 if stream.cfg_type in ["full", "self_uncond", "first_uncond"] else 1.0,
+            guidance_scale= 1.1 if stream.cfg_type in ["full", "self", "initialize"] else 1.0,
             generator=torch.manual_seed(2),
         )
 
