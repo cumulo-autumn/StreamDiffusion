@@ -20,7 +20,6 @@ class UDP:
 
         self.sock.sendto(struct.pack(">I", len(img_data)), (self.ip, self.port))
 
-        print(len(list(range(0, len(img_data), self.buffer_size))))
         for i in range(0, len(img_data), self.buffer_size):
             self.sock.sendto(img_data[i : i + self.buffer_size], (self.ip, self.port))
 
