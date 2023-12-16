@@ -99,7 +99,7 @@ class StreamDiffusion:
         negative_prompt: str = "",
         num_inference_steps: int = 50,
         guidance_scale: float = 1.2,
-        cfg_type: Literal["none", "full", "self_uncond", "first_uncond"] = "first_uncond",
+        cfg_type: Literal["none", "full", "self_uncond", "first_uncond"] = "self_uncond",
         generator: Optional[torch.Generator] = torch.Generator(),
     ):
         self.generator = generator
@@ -277,8 +277,7 @@ class StreamDiffusion:
             t_list = self.sub_timesteps_tensor
             if self.batch_size > 1:
                 x_t_latent = torch.cat((x_t_latent, prev_latent_batch), dim=0)
-                self.stock_noise = torch.cat((self.init_noise[0].reshape((1,)+self.stock_noise.size()[1:]), self.stock_noise), dim=0)
-                self.stock_noise = self.stock_noise[:-1]
+                self.stock_noise = torch.cat((self.init_noise[0:1], self.stock_noise[:-1]), dim=0)
             x_0_pred_batch, model_pred = self.unet_step(x_t_latent, t_list)
 
             if self.batch_size > 1:
