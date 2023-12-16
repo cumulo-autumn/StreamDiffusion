@@ -1,34 +1,53 @@
 import glob
 import os
-from typing import *
+import sys
+from typing import Literal
 
 import fire
-import PIL.Image
-import torch
-from diffusers import AutoencoderTiny, StableDiffusionPipeline
 
-from streamdiffusion import StreamDiffusion
-from streamdiffusion.image_utils import postprocess_image
+
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+
+from wrapper import StreamDiffusionWrapper
 
 
 def main(
-    input: str, output: str, prompt: str = "Girl with panda ears wearing a hood", width: int = 512, height: int = 512
+    input: str,
+    output: str = "output",
+    model_id: str = "KBlueLeaf/kohaku-v2.1",
+    prompt: str = "Girl with panda ears wearing a hood",
+    width: int = 512,
+    height: int = 512,
+    acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
+    use_denoising_batch: bool = True,
+    guidance_scale: float = 1.2,
+    cfg_type: Literal["none", "full", "self", "initialize"] = "initialize",
 ):
-    pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file("../../model.safetensors").to(
-        device=torch.device("cuda"),
-        dtype=torch.float16,
-    )
-    pipe.enable_xformers_memory_efficient_attention()
+    if not os.path.exists(output):
+        os.makedirs(output, exist_ok=True)
 
-    stream = StreamDiffusion(
-        pipe, [32, 40, 45], torch_dtype=torch.float16, width=width, height=height, is_drawing=True
+    if guidance_scale <= 1.0:
+        cfg_type = "none"
+
+    stream = StreamDiffusionWrapper(
+        model_id=model_id,
+        t_index_list=[32, 40, 45],
+        frame_buffer_size=1,
+        width=width,
+        height=height,
+        warmup=10,
+        acceleration=acceleration,
+        is_drawing=True,
+        mode="img2img",
+        use_denoising_batch = use_denoising_batch,
+        cfg_type = cfg_type,
     )
-    stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
-    stream.load_lcm_lora()
-    stream.fuse_lora()
+
     stream.prepare(
-        prompt,
+        prompt=prompt,
         num_inference_steps=50,
+        guidance_scale=guidance_scale,
+        cfg_type="self",
     )
 
     images = glob.glob(os.path.join(input, "*"))
@@ -38,20 +57,15 @@ def main(
     for i in range(stream.batch_size - 1):
         image = images.pop(0)
         outputs.append(image)
-        input_image = PIL.Image.open(image).convert("RGB")
-        output_x = stream(input_image)
-        output_image = postprocess_image(output_x, output_type="pil")[0]
+        output_image = stream(image=image)
         output_image.save(os.path.join(output, f"{i}.png"))
 
     for image in images:
         outputs.append(image)
         try:
-            input_image = PIL.Image.open(image).convert("RGB")
+            output_image = stream(image=image)
         except Exception:
             continue
-
-        output_x = stream(input_image)
-        output_image = postprocess_image(output_x, output_type="pil")[0]
 
         name = outputs.pop(0)
         basename = os.path.basename(name)

@@ -1,24 +1,21 @@
+import os
+import sys
 import threading
 import time
 import tkinter as tk
 from multiprocessing import Process, Queue
-from typing import List
+from typing import List, Literal
 
-import torch
-from diffusers import (
-    AutoencoderTiny,
-    AutoPipelineForText2Image,
-    StableDiffusionPipeline,
-)
+import fire
 from PIL import Image, ImageTk
 
-from streamdiffusion import StreamDiffusion
-from streamdiffusion.acceleration.tensorrt import accelerate_with_tensorrt
 from streamdiffusion.image_utils import postprocess_image
 
-torch.set_grad_enabled(False)
-torch.backends.cuda.matmul.allow_tf32 = True
-torch.backends.cudnn.allow_tf32 = True
+
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+
+from wrapper import StreamDiffusionWrapper
+
 
 image_update_counter = 0
 
@@ -37,16 +34,21 @@ def update_image(image_data: Image.Image, labels: List[tk.Label]) -> None:
     global image_update_counter
     label = labels[image_update_counter % len(labels)]
     image_update_counter += 1
-    
+
     width = 320
     height = 320
-    tk_image = ImageTk.PhotoImage(image_data.resize((width,height)), size=width)
+    tk_image = ImageTk.PhotoImage(image_data.resize((width, height)), size=width)
     label.configure(image=tk_image, width=width, height=height)
     label.image = tk_image  # keep a reference
 
 
 def image_generation_process(
-    queue: Queue, fps_queue: Queue, prompt: str, model_name: str, batch_size: int = 10
+    queue: Queue,
+    fps_queue: Queue,
+    prompt: str,
+    model_name: str,
+    batch_size: int = 10,
+    acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "tensorrt",
 ) -> None:
     """
     Process for generating images based on a prompt using a specified model.
@@ -63,48 +65,37 @@ def image_generation_process(
         The name of the model to use for image generation.
     batch_size : int
         The batch size to use for image generation.
+    acceleration : Literal["none", "xformers", "sfast", "tensorrt"]
+        The type of acceleration to use for image generation.
     """
-    try:
-        pipe = AutoPipelineForText2Image.from_pretrained(model_name).to(
-            device=torch.device("cuda"), dtype=torch.float16
-        )
-    except Exception:
-        pipe = StableDiffusionPipeline.from_pretrained(model_name).to(
-            device=torch.device("cuda")
-        )
-
-    denoising_steps = [0]
-    stream = StreamDiffusion(
-        pipe, denoising_steps, is_drawing=True, frame_buffer_size=batch_size
-    )
-    stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(
-        device=pipe.device, dtype=pipe.dtype
-    )
-    if model_name != "stabilityai/sd-turbo":
-        stream.load_lcm_lora()
-        stream.fuse_lora()
-
-    stream = accelerate_with_tensorrt(
-        stream,
-        f"./engines/{model_name}_max_batch_{batch_size}_min_batch_{batch_size}",
-        max_batch_size=batch_size,
-        min_batch_size=batch_size,
+    stream = StreamDiffusionWrapper(
+        model_id=model_name,
+        t_index_list=[0],
+        frame_buffer_size=batch_size,
+        warmup=10,
+        acceleration=acceleration,
+        is_drawing=True,
+        use_lcm_lora=False,
+        mode="txt2img",
     )
 
-    stream.prepare(prompt, num_inference_steps=50)
-    
+    stream.prepare(
+        prompt=prompt,
+        num_inference_steps=50,
+    )
+
     while True:
         try:
             start_time = time.time()
 
-            x_outputs = stream.txt2img_batch(batch_size).cpu()
+            x_outputs = stream.stream.txt2img_sd_turbo(batch_size).cpu()
             queue.put(x_outputs, block=False)
 
             fps = 1 / (time.time() - start_time) * batch_size
             fps_queue.put(fps)
         except KeyboardInterrupt:
             print(f"fps: {fps}")
-            break
+            return
 
 
 def _receive_images(queue: Queue, fps_queue: Queue, labels: List[tk.Label], fps_label: tk.Label) -> None:
@@ -134,7 +125,7 @@ def _receive_images(queue: Queue, fps_queue: Queue, labels: List[tk.Label], fps_
 
             time.sleep(0.0005)
         except KeyboardInterrupt:
-            break
+            return
 
 
 def receive_images(queue: Queue, fps_queue: Queue) -> None:
@@ -161,20 +152,26 @@ def receive_images(queue: Queue, fps_queue: Queue) -> None:
     thread = threading.Thread(target=_receive_images, args=(queue, fps_queue, labels, fps_label), daemon=True)
     thread.start()
 
-    root.mainloop()
+    try:
+        root.mainloop()
+    except KeyboardInterrupt:
+        return
 
 
-def main() -> None:
+def main(
+    prompt: str = "cat with sunglasses and a hat, photoreal, 8K",
+    model_name: str = "stabilityai/sd-turbo",
+    batch_size: int = 12,
+    acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "tensorrt",
+) -> None:
     """
     Main function to start the image generation and viewer processes.
     """
     queue = Queue()
     fps_queue = Queue()
-    prompt = "cat with sunglasses and a hat, photoreal, 8K"
-    model_name = "stabilityai/sd-turbo"
-    batch_size = 12
     process1 = Process(
-        target=image_generation_process, args=(queue, fps_queue, prompt, model_name, batch_size)
+        target=image_generation_process,
+        args=(queue, fps_queue, prompt, model_name, batch_size, acceleration),
     )
     process1.start()
 
@@ -183,4 +180,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    fire.Fire(main)

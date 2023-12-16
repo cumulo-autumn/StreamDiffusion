@@ -2,8 +2,13 @@
 
 .vscode/
 engines/
+output/
+*.csv
+*.mp4
 *.safetensors
-*.ckpt
+result_lcm.png
+model.ckpt
+*.png
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
