@@ -38,6 +38,7 @@ def run(
     iterations: int = 100,
     model_id: str = "KBlueLeaf/kohaku-v2.1",
     prompt: str = "Girl with brown dog ears,thick frame glasses",
+    negative_prompt: str = "bad image , bad quality",
     use_lcm_lora: bool = True,
     use_tiny_vae: bool = True,
     width: int = 512,
@@ -62,11 +63,12 @@ def run(
         similar_image_filter_threshold=0.99,
         mode="img2img",
         use_denoising_batch=use_denoising_batch,
-        cfg_type="self",  #initialize, full, self
+        cfg_type="self",  #initialize, full, self , none
     )
 
     stream.prepare(
-        prompt,
+        prompt = prompt,
+        negative_prompt = negative_prompt,
         num_inference_steps=50,
         guidance_scale=1.2,
         delta=0.5,
