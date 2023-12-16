@@ -162,7 +162,7 @@ def main(
     prompt: str = "cat with sunglasses and a hat, photoreal, 8K",
     model_name: str = "stabilityai/sd-turbo",
     batch_size: int = 12,
-    acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "none",
+    acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "tensorrt",
 ) -> None:
     """
     Main function to start the image generation and viewer processes.
