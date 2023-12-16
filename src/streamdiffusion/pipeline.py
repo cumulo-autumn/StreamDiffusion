@@ -99,6 +99,7 @@ class StreamDiffusion:
         negative_prompt: str = "",
         num_inference_steps: int = 50,
         guidance_scale: float = 1.2,
+        delta: float = 1.0,
         cfg_type: Literal["none", "full", "self_uncond", "first_uncond"] = "self_uncond",
         generator: Optional[torch.Generator] = torch.Generator(),
     ):
@@ -114,6 +115,7 @@ class StreamDiffusion:
             self.x_t_latent_buffer = None
 
         self.guidance_scale = guidance_scale
+        self.delta  = delta
 
         self.cfg_type = cfg_type
 
@@ -231,7 +233,7 @@ class StreamDiffusion:
         else:
             noise_pred_text = model_pred
         if self.guidance_scale > 1.0 and (self.cfg_type == "self_uncond" or self.cfg_type == "first_uncond"):
-            noise_pred_uncond = self.stock_noise
+            noise_pred_uncond = self.stock_noise*self.delta
         if self.guidance_scale > 1.0:
             model_pred = noise_pred_uncond + self.guidance_scale * (noise_pred_text - noise_pred_uncond)
         else:

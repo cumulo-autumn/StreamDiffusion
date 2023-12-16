@@ -76,6 +76,7 @@ class StreamDiffusionWrapper:
         negative_prompt: str = "",
         num_inference_steps: int = 50,
         guidance_scale: float = 1.2,
+        delta: float = 1.0,
         cfg_type: Literal["none", "full", "self_uncond", "first_uncond"] = "self_uncond",
     ) -> None:
         """
@@ -93,6 +94,7 @@ class StreamDiffusionWrapper:
             negative_prompt,
             num_inference_steps=num_inference_steps,
             guidance_scale=guidance_scale,
+            delta=delta,
             cfg_type=cfg_type,
         )
 

@@ -23,7 +23,6 @@ def _postprocess_image(queue: Queue) -> None:
         try:
             if not queue.empty():
                 output = postprocess_image(queue.get(block=False), output_type="pil")[0]
-                output.save(f"{str(uuid.uuid4())}.png")
             time.sleep(0.0005)
         except KeyboardInterrupt:
             break
@@ -38,7 +37,7 @@ def run(
     warmup: int = 10,
     iterations: int = 100,
     model_id: str = "KBlueLeaf/kohaku-v2.1",
-    prompt: str = "Girl with panda ears wearing a hood",
+    prompt: str = "Girl with brown dog ears,thick frame glasses",
     use_lcm_lora: bool = True,
     use_tiny_vae: bool = True,
     width: int = 512,
@@ -51,7 +50,7 @@ def run(
         model_id=model_id,
         use_lcm_lora=use_lcm_lora,
         use_tiny_vae=use_tiny_vae,
-        t_index_list=[35, 45],
+        t_index_list=[32, 45],
         frame_buffer_size=1,
         width=width,
         height=height,
@@ -66,11 +65,13 @@ def run(
     stream.prepare(
         prompt,
         num_inference_steps=50,
+        guidance_scale=1.2,
+        delta=0.5,
+        cfg_type="self_uncond",  #first_uncond, full, self_uncond
     )
 
-    image_tensor = stream.preprocess_image(
-        download_image("https://github.com/ddpn08.png").resize((width, height))
-    )
+    image = download_image("https://github.com/ddpn08.png").resize((width, height))
+    image_tensor = stream.preprocess_image(image)
 
     # warmup
     for _ in range(warmup):
@@ -86,7 +87,7 @@ def run(
     end = torch.cuda.Event(enable_timing=True)
     for _ in tqdm(range(iterations)):
         start.record()
-        out_tensor = stream.stream(image_tensor)
+        out_tensor = stream.stream(image_tensor).cpu()
         queue.put(out_tensor)
         end.record()
 

@@ -40,6 +40,8 @@ def main(
     stream.prepare(
         prompt=prompt,
         num_inference_steps=50,
+        guidance_scale=1.0,
+        cfg_type="self_uncond",
     )
 
     images = glob.glob(os.path.join(input, "*"))
