@@ -4,7 +4,7 @@ import torch
 
 
 class SimilarImageFilter:
-    def __init__(self, threshold: float = 0.99):
+    def __init__(self, threshold: float = 0.98):
         self.threshold = threshold
         self.prev_tensor = None
         self.cos = torch.nn.CosineSimilarity(dim=0, eps=1e-6)
