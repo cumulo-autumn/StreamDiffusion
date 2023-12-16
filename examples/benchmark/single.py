@@ -26,6 +26,7 @@ def run(
     iterations: int = 100,
     model_id: str = "KBlueLeaf/kohaku-v2.1",
     prompt: str = "Girl with panda ears wearing a hood",
+    negative_prompt: str = "bad image , bad quality",
     use_lcm_lora: bool = True,
     use_tiny_vae: bool = True,
     width: int = 512,
@@ -48,11 +49,15 @@ def run(
         device_ids=device_ids,
         mode="img2img",
         use_denoising_batch = use_denoising_batch,
+        cfg_type="initialize",  #initialize, full, self , none
     )
 
     stream.prepare(
-        prompt,
+        prompt = prompt,
+        negative_prompt = negative_prompt,
         num_inference_steps=50,
+        guidance_scale=1.4,
+        delta=0.5,
     )
 
     downloaded_image = download_image("https://github.com/ddpn08.png").resize((width, height))
