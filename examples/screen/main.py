@@ -70,7 +70,7 @@ def run(
         warmup=10,
         acceleration=acceleration,
         is_drawing=False,
-        enable_similar_image_filter=False,
+        enable_similar_image_filter=True,
         similar_image_filter_threshold=0.98,
         mode="img2img",
         use_denoising_batch=use_denoising_batch,

@@ -63,7 +63,7 @@ class StreamDiffusion:
         self.unet = pipe.unet
         self.vae = pipe.vae
 
-        self.inference_time = 0
+        self.inference_time_ema = 0
 
     def load_lcm_lora(
         self,
@@ -317,15 +317,17 @@ class StreamDiffusion:
 
     @torch.no_grad()
     def __call__(self, x: Union[torch.FloatTensor, PIL.Image.Image, np.ndarray] = None):
-        start_time = time.time()
+        start = torch.cuda.Event(enable_timing=True)
+        end = torch.cuda.Event(enable_timing=True)
+        start.record()
         if x is not None:
             x = self.image_processor.preprocess(x, self.height, self.width).to(device=self.device, dtype=self.dtype)
             if self.similar_image_filter:
                 x = self.similar_filter(x)
                 if x is None:
+                    time.sleep(self.inference_time_ema)
                     return self.prev_image_result
             x_t_latent = self.encode_image(x)
-            start_time = time.time()
         else:
             # TODO: check the dimension of x_t_latent
             x_t_latent = torch.randn((1, 4, self.latent_height, self.latent_width)).to(device=self.device, dtype=self.dtype)
@@ -333,7 +335,10 @@ class StreamDiffusion:
         x_output = self.decode_image(x_0_pred_out).detach().clone()
 
         self.prev_image_result = x_output
-        self.inference_time = time.time() - start_time
+        end.record()
+        torch.cuda.synchronize()
+        inference_time = start.elapsed_time(end) / 1000
+        self.inference_time_ema = 0.9 * self.inference_time_ema + 0.1 * inference_time
         return x_output
 
     @torch.no_grad()
