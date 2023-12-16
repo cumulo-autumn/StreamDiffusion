@@ -29,7 +29,7 @@ def main(
         acceleration=acceleration,
         is_drawing=True,
         mode="txt2img",
-        use_denoising_batch = use_denoising_batch,
+        use_denoising_batch=use_denoising_batch,
     )
 
     stream.prepare(

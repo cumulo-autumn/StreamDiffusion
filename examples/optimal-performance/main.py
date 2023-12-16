@@ -152,14 +152,17 @@ def receive_images(queue: Queue, fps_queue: Queue) -> None:
     thread = threading.Thread(target=_receive_images, args=(queue, fps_queue, labels, fps_label), daemon=True)
     thread.start()
 
-    root.mainloop()
+    try:
+        root.mainloop()
+    except KeyboardInterrupt:
+        return
 
 
 def main(
     prompt: str = "cat with sunglasses and a hat, photoreal, 8K",
     model_name: str = "stabilityai/sd-turbo",
     batch_size: int = 12,
-    acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "tensorrt",
+    acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "none",
 ) -> None:
     """
     Main function to start the image generation and viewer processes.

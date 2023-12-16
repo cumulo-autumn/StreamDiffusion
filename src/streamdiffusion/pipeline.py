@@ -145,8 +145,9 @@ class StreamDiffusion:
             c_skip, c_out = self.scheduler.get_scalings_for_boundary_condition_discrete(timestep)
             c_skip_list.append(c_skip)
             c_out_list.append(c_out)
-        self.c_skip = torch.stack(c_skip_list).view(self.batch_size, 1, 1, 1).to(dtype=self.dtype, device=self.device)
-        self.c_out = torch.stack(c_out_list).view(self.batch_size, 1, 1, 1).to(dtype=self.dtype, device=self.device)
+
+        self.c_skip = torch.stack(c_skip_list).view(len(self.t_list), 1, 1, 1).to(dtype=self.dtype, device=self.device)
+        self.c_out = torch.stack(c_out_list).view(len(self.t_list), 1, 1, 1).to(dtype=self.dtype, device=self.device)
 
         alpha_prod_t_sqrt_list = []
         beta_prod_t_sqrt_list = []
