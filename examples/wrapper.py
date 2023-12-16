@@ -42,6 +42,17 @@ class StreamDiffusionWrapper:
         use_denoising_batch: bool = True,
         cfg_type: Literal["none", "full", "self", "initialize"] = "self",
     ):
+        if mode == "txt2img":
+            if cfg_type != "none":
+                raise ValueError(f"txt2img mode accepts only cfg_type = 'none', but got {cfg_type}")
+            if use_denoising_batch and frame_buffer_size > 1:
+                raise ValueError("txt2img mode cannot use denoising batch with frame_buffer_size > 1.")
+
+        if mode == "img2img":
+            if not use_denoising_batch:
+                raise NotImplementedError("img2img mode must use denoising batch for now.")
+
+        self.sd_turbo = "turbo" in model_id
         self.device = device
         self.dtype = dtype
         self.width = width
@@ -129,10 +140,10 @@ class StreamDiffusionWrapper:
         Union[Image.Image, List[Image.Image]]
             The generated image.
         """
-        if self.frame_buffer_size > 1:
-            image_tensor = self.stream.txt2img_batch(self.batch_size)
+        if self.sd_turbo:
+            image_tensor = self.stream.txt2img_sd_turbo(self.batch_size)
         else:
-            image_tensor = self.stream.txt2img()
+            image_tensor = self.stream.txt2img(self.frame_buffer_size)
         return self.postprocess_image(image_tensor, output_type=self.output_type)
 
     def img2img(self, image: Union[str, Image.Image, torch.Tensor]) -> Union[Image.Image, List[Image.Image], torch.Tensor, np.ndarray]:
@@ -267,7 +278,7 @@ class StreamDiffusionWrapper:
             use_denoising_batch=self.use_denoising_batch,
             cfg_type=cfg_type,
         )
-        if "turbo" not in model_id:
+        if not self.sd_turbo:
             if use_lcm_lora:
                 if lcm_lora_id is not None:
                     stream.load_lcm_lora(pretrained_model_name_or_path_or_dict=lcm_lora_id)
