@@ -16,7 +16,10 @@ class SimilarImageFilter:
         else:
             cos_sim = self.cos(self.prev_tensor.reshape(-1), x.reshape(-1)).item()
             sample = random.uniform(0, 1)
-            skip_prob = max(0, 1 - (1 - cos_sim) / (1 - self.threshold))
+            if self.threshold >= 1:
+                skip_prob = 0
+            else:
+                skip_prob = max(0, 1 - (1 - cos_sim) / (1 - self.threshold))
 
             # not skip frame
             if skip_prob < sample:
