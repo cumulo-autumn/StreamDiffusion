@@ -38,20 +38,25 @@ class StreamDiffusion:
 
         self.frame_bff_size = frame_buffer_size
         self.denoising_steps_num = len(t_index_list)
-        self.batch_size = self.denoising_steps_num * frame_buffer_size
 
         self.cfg_type = cfg_type
 
-        if self.cfg_type == "initialize":
-            self.trt_unet_batch_size = (
-                self.denoising_steps_num + 1
-            ) * self.frame_bff_size
-        elif self.cfg_type == "full":
-            self.trt_unet_batch_size = (
-                2 * self.denoising_steps_num * self.frame_bff_size
-            )
+        if use_denoising_batch:
+            self.batch_size = self.denoising_steps_num * frame_buffer_size
+            if self.cfg_type == "initialize":
+                self.trt_unet_batch_size = (
+                    self.denoising_steps_num + 1
+                ) * self.frame_bff_size
+            elif self.cfg_type == "full":
+                self.trt_unet_batch_size = (
+                    2 * self.denoising_steps_num * self.frame_bff_size
+                )
+            else:
+                self.trt_unet_batch_size = self.denoising_steps_num * frame_buffer_size
         else:
-            self.trt_unet_batch_size = self.denoising_steps_num * frame_buffer_size
+            self.trt_unet_batch_size = self.frame_bff_size
+            self.batch_size = frame_buffer_size
+
         self.t_list = t_index_list
 
         self.is_drawing = is_drawing
@@ -159,10 +164,7 @@ class StreamDiffusion:
             do_classifier_free_guidance=do_classifier_free_guidance,
             negative_prompt=negative_prompt,
         )
-        if self.use_denoising_batch:
-            self.prompt_embeds = encoder_output[0].repeat(self.batch_size, 1, 1)
-        else:
-            self.prompt_embeds = encoder_output[0].repeat(self.frame_bff_size, 1, 1)
+        self.prompt_embeds = encoder_output[0].repeat(self.batch_size, 1, 1)
 
         if self.use_denoising_batch and self.cfg_type == "full":
             uncond_prompt_embeds = encoder_output[1].repeat(self.batch_size, 1, 1)
@@ -193,16 +195,10 @@ class StreamDiffusion:
             dim=0,
         )
 
-        if self.use_denoising_batch:
-            self.init_noise = torch.randn(
-                (self.batch_size, 4, self.latent_height, self.latent_width),
-                generator=generator,
-            ).to(device=self.device, dtype=self.dtype)
-        else:
-            self.init_noise = torch.randn(
-                (self.frame_bff_size, 4, self.latent_height, self.latent_width),
-                generator=generator,
-            ).to(device=self.device, dtype=self.dtype)
+        self.init_noise = torch.randn(
+            (self.batch_size, 4, self.latent_height, self.latent_width),
+            generator=generator,
+        ).to(device=self.device, dtype=self.dtype)
 
         self.stock_noise = torch.zeros_like(self.init_noise)
 
