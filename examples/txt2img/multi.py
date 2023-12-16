@@ -15,7 +15,7 @@ def main(
     prompt: str = "Girl with panda ears wearing a hood",
     width: int = 512,
     height: int = 512,
-    frame_buffer_size: int = 2,
+    frame_buffer_size: int = 3,
     acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
 ):
     os.makedirs(output, exist_ok=True)

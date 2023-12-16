@@ -293,6 +293,7 @@ class StreamDiffusion:
             t_list = torch.concat([t_list, t_list], dim=0)
         else:
             x_t_latent_plus_uc = x_t_latent
+
         model_pred = self.unet(
             x_t_latent_plus_uc,
             t_list,
@@ -398,7 +399,7 @@ class StreamDiffusion:
         else:
             self.init_noise = x_t_latent
             for idx, t in enumerate(self.sub_timesteps_tensor):
-                t = t.view(1, )
+                t = t.view(1, ).repeat(self.frame_bff_size, )
                 x_0_pred, model_pred = self.unet_step(x_t_latent, t, idx)
                 if idx < len(self.sub_timesteps_tensor) - 1:
                     if self.is_drawing:
