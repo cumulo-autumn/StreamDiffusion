@@ -408,7 +408,7 @@ class StreamDiffusion:
                     if self.is_drawing:
                         x_t_latent = (
                             self.alpha_prod_t_sqrt[idx + 1] * x_0_pred
-                            + self.beta_prod_t_sqrt[idx + 1] * self.init_noise
+                            + self.beta_prod_t_sqrt[idx + 1] * torch.randn_like(x_0_pred, device=self.device, dtype=self.dtype)
                         )
                     else:
                         x_t_latent = self.alpha_prod_t_sqrt[idx + 1] * x_0_pred
