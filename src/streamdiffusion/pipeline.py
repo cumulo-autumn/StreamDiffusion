@@ -22,6 +22,7 @@ class StreamDiffusion:
         is_drawing: bool = False,
         use_denoising_batch: bool = True,
         frame_buffer_size: int = 1,
+        cfg_type: Literal["none", "full", "self_uncond", "first_uncond"] = "self_uncond",
     ):
         self.device = pipe.device
         self.dtype = torch_dtype
@@ -34,8 +35,17 @@ class StreamDiffusion:
         self.latent_width = int(width // pipe.vae_scale_factor)
 
         self.frame_bff_size = frame_buffer_size
+        self.denoising_steps_num = len(t_index_list)
+        self.batch_size = self.denoising_steps_num * frame_buffer_size
 
-        self.batch_size = len(t_index_list) * frame_buffer_size
+        self.cfg_type = cfg_type
+
+        if self.cfg_type == "first_uncond":
+            self.trt_unet_batch_size = (self.denoising_steps_num + 1)*self.frame_bff_size
+        elif self.cfg_type == "full":
+            self.trt_unet_batch_size = 2*self.denoising_steps_num*self.frame_bff_size
+        else:
+            self.trt_unet_batch_size = self.denoising_steps_num * frame_buffer_size
         self.t_list = t_index_list
 
         self.is_drawing = is_drawing
@@ -100,14 +110,13 @@ class StreamDiffusion:
         num_inference_steps: int = 50,
         guidance_scale: float = 1.2,
         delta: float = 1.0,
-        cfg_type: Literal["none", "full", "self_uncond", "first_uncond"] = "self_uncond",
         generator: Optional[torch.Generator] = torch.Generator(),
     ):
         self.generator = generator
         # initialize x_t_latent (it can be any random tensor)
-        if self.batch_size > 1:
+        if self.denoising_steps_num > 1:
             self.x_t_latent_buffer = torch.zeros(
-                (self.batch_size - self.frame_bff_size, 4, self.latent_height, self.latent_width),
+                ((self.denoising_steps_num-1)*self.frame_bff_size, 4, self.latent_height, self.latent_width),
                 dtype=self.dtype,
                 device=self.device,
             )
@@ -117,14 +126,10 @@ class StreamDiffusion:
         self.guidance_scale = guidance_scale
         self.delta  = delta
 
-        self.cfg_type = cfg_type
-
         do_classifier_free_guidance = False
         if self.guidance_scale > 1.0:
             do_classifier_free_guidance = True
-        else:
-            self.cfg_type = "none"
-
+        
         encoder_output = self.pipe.encode_prompt(
             prompt=prompt,
             device=self.device,
@@ -135,12 +140,12 @@ class StreamDiffusion:
         if self.use_denoising_batch:
             self.prompt_embeds = encoder_output[0].repeat(self.batch_size, 1, 1)
         else:
-            self.prompt_embeds = encoder_output[0]
+            self.prompt_embeds = encoder_output[0].repeat(self.frame_bff_size, 1, 1)
             
         if self.use_denoising_batch and self.cfg_type == "full":
             uncond_prompt_embeds = encoder_output[1].repeat(self.batch_size, 1, 1)
-        else:
-            uncond_prompt_embeds = encoder_output[1]
+        elif self.cfg_type == "first_uncond":
+            uncond_prompt_embeds = encoder_output[1].repeat(self.frame_bff_size, 1, 1)
 
         if self.guidance_scale > 1.0 and (self.cfg_type == "first_uncond" or self.cfg_type == "full"):
             self.prompt_embeds = torch.cat([uncond_prompt_embeds, self.prompt_embeds], dim=0)
@@ -277,12 +282,12 @@ class StreamDiffusion:
 
         if self.use_denoising_batch:
             t_list = self.sub_timesteps_tensor
-            if self.batch_size > 1:
+            if self.denoising_steps_num > 1:
                 x_t_latent = torch.cat((x_t_latent, prev_latent_batch), dim=0)
                 self.stock_noise = torch.cat((self.init_noise[0:1], self.stock_noise[:-1]), dim=0)
             x_0_pred_batch, model_pred = self.unet_step(x_t_latent, t_list)
 
-            if self.batch_size > 1:
+            if self.denoising_steps_num > 1:
                 x_0_pred_out = x_0_pred_batch[-1].unsqueeze(0)
                 if self.is_drawing:
                     self.x_t_latent_buffer = self.alpha_prod_t_sqrt[1:] * x_0_pred_batch[:-1] + self.beta_prod_t_sqrt[1:] * self.init_noise[1:]

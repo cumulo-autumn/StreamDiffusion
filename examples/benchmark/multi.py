@@ -58,8 +58,11 @@ def run(
         acceleration=acceleration,
         is_drawing=True,
         device_ids=device_ids,
+        enable_similar_image_filter=False,
+        similar_image_filter_threshold=0.99,
         mode="img2img",
         use_denoising_batch=use_denoising_batch,
+        cfg_type="self_uncond",  #first_uncond, full, self_uncond
     )
 
     stream.prepare(
@@ -67,7 +70,6 @@ def run(
         num_inference_steps=50,
         guidance_scale=1.2,
         delta=0.5,
-        cfg_type="self_uncond",  #first_uncond, full, self_uncond
     )
 
     image = download_image("https://github.com/ddpn08.png").resize((width, height))

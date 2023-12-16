@@ -70,10 +70,11 @@ def run(
         warmup=10,
         acceleration=acceleration,
         is_drawing=False,
-        enable_similar_image_filter=True,
+        enable_similar_image_filter=False,
         similar_image_filter_threshold=0.99,
         mode="img2img",
         use_denoising_batch=use_denoising_batch,
+        cfg_type="self_uncond",  #first_uncond, full, self_uncond
     )
 
     stream.prepare(
@@ -81,7 +82,6 @@ def run(
         num_inference_steps=50,
         guidance_scale=1.4,
         delta=0.5,
-        cfg_type="self_uncond",  #first_uncond, full, self_uncond
     )
 
     output_window = mp.Process(target=result_window, args=(address, port))
