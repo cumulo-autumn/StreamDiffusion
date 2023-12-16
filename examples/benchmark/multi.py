@@ -15,9 +15,11 @@ from streamdiffusion.image_utils import postprocess_image
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
+import uuid
+
 from wrapper import StreamDiffusionWrapper
 
-import uuid
+
 def _postprocess_image(queue: Queue) -> None:
     while True:
         try:
@@ -26,6 +28,7 @@ def _postprocess_image(queue: Queue) -> None:
             time.sleep(0.0005)
         except KeyboardInterrupt:
             break
+
 
 def download_image(url: str):
     response = requests.get(url)
@@ -59,10 +62,10 @@ def run(
         is_drawing=True,
         device_ids=device_ids,
         enable_similar_image_filter=False,
-        similar_image_filter_threshold=0.99,
+        similar_image_filter_threshold=0.98,
         mode="img2img",
         use_denoising_batch=use_denoising_batch,
-        cfg_type="self",  #initialize, full, self
+        cfg_type="self",  # initialize, full, self
     )
 
     stream.prepare(

@@ -38,7 +38,7 @@ class StreamDiffusionWrapper:
         use_lcm_lora: bool = True,
         use_tiny_vae: bool = True,
         enable_similar_image_filter: bool = False,
-        similar_image_filter_threshold: float = 0.99,
+        similar_image_filter_threshold: float = 0.98,
         use_denoising_batch: bool = True,
         cfg_type: Literal["none", "full", "self", "initialize"] = "self",
     ):
@@ -63,7 +63,7 @@ class StreamDiffusionWrapper:
             is_drawing=is_drawing,
             use_lcm_lora=use_lcm_lora,
             use_tiny_vae=use_tiny_vae,
-            cfg_type = cfg_type,
+            cfg_type=cfg_type,
         )
 
         if device_ids is not None:
@@ -264,8 +264,8 @@ class StreamDiffusionWrapper:
             height=self.height,
             is_drawing=is_drawing,
             frame_buffer_size=self.frame_buffer_size,
-            use_denoising_batch = self.use_denoising_batch,
-            cfg_type = cfg_type,
+            use_denoising_batch=self.use_denoising_batch,
+            cfg_type=cfg_type,
         )
         if "turbo" not in model_id:
             if use_lcm_lora:
@@ -285,20 +285,16 @@ class StreamDiffusionWrapper:
             if acceleration == "xformers":
                 stream.pipe.enable_xformers_memory_efficient_attention()
             if acceleration == "tensorrt":
-                from streamdiffusion.acceleration.tensorrt import (
-                    TorchVAEEncoder, compile_unet, compile_vae_decoder,
-                    compile_vae_encoder)
-                from streamdiffusion.acceleration.tensorrt.engine import (
-                    AutoencoderKLEngine, UNet2DConditionModelEngine)
-                from streamdiffusion.acceleration.tensorrt.models import (
-                    VAE, UNet, VAEEncoder)
+                from streamdiffusion.acceleration.tensorrt import TorchVAEEncoder, compile_unet, compile_vae_decoder, compile_vae_encoder
+                from streamdiffusion.acceleration.tensorrt.engine import AutoencoderKLEngine, UNet2DConditionModelEngine
+                from streamdiffusion.acceleration.tensorrt.models import VAE, UNet, VAEEncoder
 
                 def create_prefix(
                     max_batch_size: int,
                     min_batch_size: int,
                 ):
                     return f"{model_id}--lcm_lora-{use_tiny_vae}--tiny_vae-{use_lcm_lora}--max_batch-{max_batch_size}--min_batch-{min_batch_size}--mode-{self.mode}"
-                
+
                 engine_dir = os.path.join("engines")
                 unet_path = os.path.join(
                     engine_dir,
@@ -397,8 +393,7 @@ class StreamDiffusionWrapper:
 
                 print("TensorRT acceleration enabled.")
             if acceleration == "sfast":
-                from streamdiffusion.acceleration.sfast import \
-                    accelerate_with_stable_fast
+                from streamdiffusion.acceleration.sfast import accelerate_with_stable_fast
 
                 stream = accelerate_with_stable_fast(stream)
                 print("StableFast acceleration enabled.")
@@ -410,7 +405,7 @@ class StreamDiffusionWrapper:
             "",
             "",
             num_inference_steps=50,
-            guidance_scale= 1.1 if stream.cfg_type in ["full", "self", "initialize"] else 1.0,
+            guidance_scale=1.1 if stream.cfg_type in ["full", "self", "initialize"] else 1.0,
             generator=torch.manual_seed(2),
         )
 

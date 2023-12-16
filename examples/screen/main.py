@@ -71,10 +71,10 @@ def run(
         acceleration=acceleration,
         is_drawing=False,
         enable_similar_image_filter=False,
-        similar_image_filter_threshold=0.99,
+        similar_image_filter_threshold=0.98,
         mode="img2img",
         use_denoising_batch=use_denoising_batch,
-        cfg_type="self",  #initialize, full, self
+        cfg_type="self",  # initialize, full, self
     )
 
     stream.prepare(

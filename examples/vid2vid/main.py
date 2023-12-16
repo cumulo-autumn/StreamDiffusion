@@ -40,7 +40,7 @@ def main(
         mode="img2img",
         output_type="pt",
         enable_similar_image_filter=enable_similar_image_filter,
-        similar_image_filter_threshold=0.99,
+        similar_image_filter_threshold=0.98,
         use_denoising_batch=use_denoising_batch,
     )
 
