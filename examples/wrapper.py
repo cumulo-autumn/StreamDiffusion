@@ -48,6 +48,10 @@ class StreamDiffusionWrapper:
             if use_denoising_batch and frame_buffer_size > 1:
                 raise ValueError("txt2img mode cannot use denoising batch with frame_buffer_size > 1.")
 
+        if mode == "img2img":
+            if not use_denoising_batch:
+                raise NotImplementedError("img2img mode must use denoising batch for now.")
+
         self.sd_turbo = "turbo" in model_id
         self.device = device
         self.dtype = dtype
