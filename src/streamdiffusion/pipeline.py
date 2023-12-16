@@ -6,7 +6,9 @@ import PIL.Image
 import torch
 from diffusers import LCMScheduler, StableDiffusionPipeline
 from diffusers.image_processor import VaeImageProcessor
-from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import retrieve_latents
+from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import (
+    retrieve_latents,
+)
 
 from streamdiffusion.image_filter import SimilarImageFilter
 
@@ -41,9 +43,13 @@ class StreamDiffusion:
         self.cfg_type = cfg_type
 
         if self.cfg_type == "initialize":
-            self.trt_unet_batch_size = (self.denoising_steps_num + 1) * self.frame_bff_size
+            self.trt_unet_batch_size = (
+                self.denoising_steps_num + 1
+            ) * self.frame_bff_size
         elif self.cfg_type == "full":
-            self.trt_unet_batch_size = 2 * self.denoising_steps_num * self.frame_bff_size
+            self.trt_unet_batch_size = (
+                2 * self.denoising_steps_num * self.frame_bff_size
+            )
         else:
             self.trt_unet_batch_size = self.denoising_steps_num * frame_buffer_size
         self.t_list = t_index_list
@@ -67,19 +73,27 @@ class StreamDiffusion:
 
     def load_lcm_lora(
         self,
-        pretrained_model_name_or_path_or_dict: Union[str, Dict[str, torch.Tensor]] = "latent-consistency/lcm-lora-sdv1-5",
+        pretrained_model_name_or_path_or_dict: Union[
+            str, Dict[str, torch.Tensor]
+        ] = "latent-consistency/lcm-lora-sdv1-5",
         adapter_name=None,
         **kwargs,
     ):
-        self.pipe.load_lora_weights(pretrained_model_name_or_path_or_dict, adapter_name, **kwargs)
+        self.pipe.load_lora_weights(
+            pretrained_model_name_or_path_or_dict, adapter_name, **kwargs
+        )
 
     def load_lora(
         self,
-        pretrained_lora_model_name_or_path_or_dict: Union[str, Dict[str, torch.Tensor]] = "<path/to/LoRA/>",
+        pretrained_lora_model_name_or_path_or_dict: Union[
+            str, Dict[str, torch.Tensor]
+        ] = "<path/to/LoRA/>",
         adapter_name=None,
         **kwargs,
     ):
-        self.pipe.load_lora_weights(pretrained_lora_model_name_or_path_or_dict, adapter_name, **kwargs)
+        self.pipe.load_lora_weights(
+            pretrained_lora_model_name_or_path_or_dict, adapter_name, **kwargs
+        )
 
     def fuse_lora(
         self,
@@ -116,7 +130,12 @@ class StreamDiffusion:
         # initialize x_t_latent (it can be any random tensor)
         if self.denoising_steps_num > 1:
             self.x_t_latent_buffer = torch.zeros(
-                ((self.denoising_steps_num - 1) * self.frame_bff_size, 4, self.latent_height, self.latent_width),
+                (
+                    (self.denoising_steps_num - 1) * self.frame_bff_size,
+                    4,
+                    self.latent_height,
+                    self.latent_width,
+                ),
                 dtype=self.dtype,
                 device=self.device,
             )
@@ -150,8 +169,12 @@ class StreamDiffusion:
         elif self.cfg_type == "initialize":
             uncond_prompt_embeds = encoder_output[1].repeat(self.frame_bff_size, 1, 1)
 
-        if self.guidance_scale > 1.0 and (self.cfg_type == "initialize" or self.cfg_type == "full"):
-            self.prompt_embeds = torch.cat([uncond_prompt_embeds, self.prompt_embeds], dim=0)
+        if self.guidance_scale > 1.0 and (
+            self.cfg_type == "initialize" or self.cfg_type == "full"
+        ):
+            self.prompt_embeds = torch.cat(
+                [uncond_prompt_embeds, self.prompt_embeds], dim=0
+            )
 
         self.scheduler.set_timesteps(num_inference_steps, self.device)
         self.timesteps = self.scheduler.timesteps.to(self.device)
@@ -161,25 +184,47 @@ class StreamDiffusion:
         for t in self.t_list:
             self.sub_timesteps.append(self.timesteps[t])
 
-        sub_timesteps_tensor = torch.tensor(self.sub_timesteps, dtype=torch.long, device=self.device)
-        self.sub_timesteps_tensor = torch.repeat_interleave(sub_timesteps_tensor, repeats=self.frame_bff_size, dim=0)
+        sub_timesteps_tensor = torch.tensor(
+            self.sub_timesteps, dtype=torch.long, device=self.device
+        )
+        self.sub_timesteps_tensor = torch.repeat_interleave(
+            sub_timesteps_tensor,
+            repeats=self.frame_bff_size if self.use_denoising_batch else 1,
+            dim=0,
+        )
 
-        self.init_noise = torch.randn(
-            (self.batch_size, 4, self.latent_height, self.latent_width),
-            generator=generator,
-        ).to(device=self.device, dtype=self.dtype)
+        if self.use_denoising_batch:
+            self.init_noise = torch.randn(
+                (self.batch_size, 4, self.latent_height, self.latent_width),
+                generator=generator,
+            ).to(device=self.device, dtype=self.dtype)
+        else:
+            self.init_noise = torch.randn(
+                (self.frame_bff_size, 4, self.latent_height, self.latent_width),
+                generator=generator,
+            ).to(device=self.device, dtype=self.dtype)
 
         self.stock_noise = torch.zeros_like(self.init_noise)
 
         c_skip_list = []
         c_out_list = []
         for timestep in self.sub_timesteps:
-            c_skip, c_out = self.scheduler.get_scalings_for_boundary_condition_discrete(timestep)
+            c_skip, c_out = self.scheduler.get_scalings_for_boundary_condition_discrete(
+                timestep
+            )
             c_skip_list.append(c_skip)
             c_out_list.append(c_out)
 
-        self.c_skip = torch.stack(c_skip_list).view(len(self.t_list), 1, 1, 1).to(dtype=self.dtype, device=self.device)
-        self.c_out = torch.stack(c_out_list).view(len(self.t_list), 1, 1, 1).to(dtype=self.dtype, device=self.device)
+        self.c_skip = (
+            torch.stack(c_skip_list)
+            .view(len(self.t_list), 1, 1, 1)
+            .to(dtype=self.dtype, device=self.device)
+        )
+        self.c_out = (
+            torch.stack(c_out_list)
+            .view(len(self.t_list), 1, 1, 1)
+            .to(dtype=self.dtype, device=self.device)
+        )
 
         alpha_prod_t_sqrt_list = []
         beta_prod_t_sqrt_list = []
@@ -188,10 +233,26 @@ class StreamDiffusion:
             beta_prod_t_sqrt = (1 - self.scheduler.alphas_cumprod[timestep]).sqrt()
             alpha_prod_t_sqrt_list.append(alpha_prod_t_sqrt)
             beta_prod_t_sqrt_list.append(beta_prod_t_sqrt)
-        alpha_prod_t_sqrt = torch.stack(alpha_prod_t_sqrt_list).view(len(self.t_list), 1, 1, 1).to(dtype=self.dtype, device=self.device)
-        beta_prod_t_sqrt = torch.stack(beta_prod_t_sqrt_list).view(len(self.t_list), 1, 1, 1).to(dtype=self.dtype, device=self.device)
-        self.alpha_prod_t_sqrt = torch.repeat_interleave(alpha_prod_t_sqrt, repeats=self.frame_bff_size, dim=0)
-        self.beta_prod_t_sqrt = torch.repeat_interleave(beta_prod_t_sqrt, repeats=self.frame_bff_size, dim=0)
+        alpha_prod_t_sqrt = (
+            torch.stack(alpha_prod_t_sqrt_list)
+            .view(len(self.t_list), 1, 1, 1)
+            .to(dtype=self.dtype, device=self.device)
+        )
+        beta_prod_t_sqrt = (
+            torch.stack(beta_prod_t_sqrt_list)
+            .view(len(self.t_list), 1, 1, 1)
+            .to(dtype=self.dtype, device=self.device)
+        )
+        self.alpha_prod_t_sqrt = torch.repeat_interleave(
+            alpha_prod_t_sqrt,
+            repeats=self.frame_bff_size if self.use_denoising_batch else 1,
+            dim=0,
+        )
+        self.beta_prod_t_sqrt = torch.repeat_interleave(
+            beta_prod_t_sqrt,
+            repeats=self.frame_bff_size if self.use_denoising_batch else 1,
+            dim=0,
+        )
 
     @torch.no_grad()
     def update_prompt(self, prompt: str):
@@ -204,17 +265,26 @@ class StreamDiffusion:
         self.prompt_embeds = encoder_output[0].repeat(self.batch_size, 1, 1)
 
     def add_noise(self, original_samples, noise, t_index):
-        noisy_samples = self.alpha_prod_t_sqrt[t_index] * original_samples + self.beta_prod_t_sqrt[t_index] * noise
+        noisy_samples = (
+            self.alpha_prod_t_sqrt[t_index] * original_samples
+            + self.beta_prod_t_sqrt[t_index] * noise
+        )
         return noisy_samples
 
     def scheduler_step_batch(self, model_pred_batch, x_t_latent_batch, idx):
         # TODO: use t_list to select beta_prod_t_sqrt
         if idx is None:
-            F_theta = (x_t_latent_batch - self.beta_prod_t_sqrt * model_pred_batch) / self.alpha_prod_t_sqrt
+            F_theta = (
+                x_t_latent_batch - self.beta_prod_t_sqrt * model_pred_batch
+            ) / self.alpha_prod_t_sqrt
             denoised_batch = self.c_out * F_theta + self.c_skip * x_t_latent_batch
         else:
-            F_theta = (x_t_latent_batch - self.beta_prod_t_sqrt[idx] * model_pred_batch) / self.alpha_prod_t_sqrt[idx]
-            denoised_batch = self.c_out[idx] * F_theta + self.c_skip[idx] * x_t_latent_batch
+            F_theta = (
+                x_t_latent_batch - self.beta_prod_t_sqrt[idx] * model_pred_batch
+            ) / self.alpha_prod_t_sqrt[idx]
+            denoised_batch = (
+                self.c_out[idx] * F_theta + self.c_skip[idx] * x_t_latent_batch
+            )
 
         return denoised_batch
 
@@ -236,15 +306,21 @@ class StreamDiffusion:
 
         if self.guidance_scale > 1.0 and (self.cfg_type == "initialize"):
             noise_pred_text = model_pred[1:]
-            self.stock_noise = torch.concat([model_pred[0:1], self.stock_noise[1:]], dim=0)  # ここコメントアウトでself out cfg
+            self.stock_noise = torch.concat(
+                [model_pred[0:1], self.stock_noise[1:]], dim=0
+            )  # ここコメントアウトでself out cfg
         elif self.guidance_scale > 1.0 and (self.cfg_type == "full"):
             noise_pred_uncond, noise_pred_text = model_pred.chunk(2)
         else:
             noise_pred_text = model_pred
-        if self.guidance_scale > 1.0 and (self.cfg_type == "self" or self.cfg_type == "initialize"):
+        if self.guidance_scale > 1.0 and (
+            self.cfg_type == "self" or self.cfg_type == "initialize"
+        ):
             noise_pred_uncond = self.stock_noise * self.delta
-        if self.guidance_scale > 1.0:
-            model_pred = noise_pred_uncond + self.guidance_scale * (noise_pred_text - noise_pred_uncond)
+        if self.guidance_scale > 1.0 and self.cfg_type != "none":
+            model_pred = noise_pred_uncond + self.guidance_scale * (
+                noise_pred_text - noise_pred_uncond
+            )
         else:
             model_pred = noise_pred_text
 
@@ -254,11 +330,25 @@ class StreamDiffusion:
             if self.cfg_type == "self" or self.cfg_type == "initialize":
                 scaled_noise = self.beta_prod_t_sqrt * self.stock_noise
                 delta_x = self.scheduler_step_batch(model_pred, scaled_noise, idx)
-                alpha_next = torch.concat([self.alpha_prod_t_sqrt[1:], torch.ones_like(self.alpha_prod_t_sqrt[0:1])], dim=0)
+                alpha_next = torch.concat(
+                    [
+                        self.alpha_prod_t_sqrt[1:],
+                        torch.ones_like(self.alpha_prod_t_sqrt[0:1]),
+                    ],
+                    dim=0,
+                )
                 delta_x = alpha_next * delta_x
-                beta_next = torch.concat([self.beta_prod_t_sqrt[1:], torch.ones_like(self.beta_prod_t_sqrt[0:1])], dim=0)
+                beta_next = torch.concat(
+                    [
+                        self.beta_prod_t_sqrt[1:],
+                        torch.ones_like(self.beta_prod_t_sqrt[0:1]),
+                    ],
+                    dim=0,
+                )
                 delta_x = delta_x / beta_next
-                init_noise = torch.concat([self.init_noise[1:], self.init_noise[0:1]], dim=0)
+                init_noise = torch.concat(
+                    [self.init_noise[1:], self.init_noise[0:1]], dim=0
+                )
                 self.stock_noise = init_noise + delta_x
 
         else:
@@ -278,7 +368,9 @@ class StreamDiffusion:
         return x_t_latent
 
     def decode_image(self, x_0_pred_out):
-        output_latent = self.vae.decode(x_0_pred_out / self.vae.config.scaling_factor, return_dict=False)[0]
+        output_latent = self.vae.decode(
+            x_0_pred_out / self.vae.config.scaling_factor, return_dict=False
+        )[0]
         return output_latent
 
     def predict_x0_batch(self, x_t_latent):
@@ -288,27 +380,36 @@ class StreamDiffusion:
             t_list = self.sub_timesteps_tensor
             if self.denoising_steps_num > 1:
                 x_t_latent = torch.cat((x_t_latent, prev_latent_batch), dim=0)
-                self.stock_noise = torch.cat((self.init_noise[0:1], self.stock_noise[:-1]), dim=0)
+                self.stock_noise = torch.cat(
+                    (self.init_noise[0:1], self.stock_noise[:-1]), dim=0
+                )
             x_0_pred_batch, model_pred = self.unet_step(x_t_latent, t_list)
 
             if self.denoising_steps_num > 1:
                 x_0_pred_out = x_0_pred_batch[-1].unsqueeze(0)
                 if self.is_drawing:
-                    self.x_t_latent_buffer = self.alpha_prod_t_sqrt[1:] * x_0_pred_batch[:-1] + self.beta_prod_t_sqrt[1:] * self.init_noise[1:]
+                    self.x_t_latent_buffer = (
+                        self.alpha_prod_t_sqrt[1:] * x_0_pred_batch[:-1]
+                        + self.beta_prod_t_sqrt[1:] * self.init_noise[1:]
+                    )
                 else:
-                    self.x_t_latent_buffer = self.alpha_prod_t_sqrt[1:] * x_0_pred_batch[:-1]
+                    self.x_t_latent_buffer = (
+                        self.alpha_prod_t_sqrt[1:] * x_0_pred_batch[:-1]
+                    )
             else:
                 x_0_pred_out = x_0_pred_batch
                 self.x_t_latent_buffer = None
         else:
+            self.init_noise = x_t_latent
             for idx, t in enumerate(self.sub_timesteps_tensor):
-                t = t.view(
-                    1,
-                )
+                t = t.view(1, )
                 x_0_pred, model_pred = self.unet_step(x_t_latent, t, idx)
                 if idx < len(self.sub_timesteps_tensor) - 1:
                     if self.is_drawing:
-                        x_t_latent = self.alpha_prod_t_sqrt[idx + 1] * x_0_pred + self.beta_prod_t_sqrt[idx + 1] * self.init_noise[idx + 1]
+                        x_t_latent = (
+                            self.alpha_prod_t_sqrt[idx + 1] * x_0_pred
+                            + self.beta_prod_t_sqrt[idx + 1] * self.init_noise
+                        )
                     else:
                         x_t_latent = self.alpha_prod_t_sqrt[idx + 1] * x_0_pred
             x_0_pred_out = x_0_pred
@@ -319,7 +420,9 @@ class StreamDiffusion:
     def __call__(self, x: Union[torch.FloatTensor, PIL.Image.Image, np.ndarray] = None):
         start_time = time.time()
         if x is not None:
-            x = self.image_processor.preprocess(x, self.height, self.width).to(device=self.device, dtype=self.dtype)
+            x = self.image_processor.preprocess(x, self.height, self.width).to(
+                device=self.device, dtype=self.dtype
+            )
             if self.similar_image_filter:
                 x = self.similar_filter(x)
                 if x is None:
@@ -328,7 +431,9 @@ class StreamDiffusion:
             start_time = time.time()
         else:
             # TODO: check the dimension of x_t_latent
-            x_t_latent = torch.randn((1, 4, self.latent_height, self.latent_width)).to(device=self.device, dtype=self.dtype)
+            x_t_latent = torch.randn((1, 4, self.latent_height, self.latent_width)).to(
+                device=self.device, dtype=self.dtype
+            )
         x_0_pred_out = self.predict_x0_batch(x_t_latent)
         x_output = self.decode_image(x_0_pred_out).detach().clone()
 
@@ -337,18 +442,28 @@ class StreamDiffusion:
         return x_output
 
     @torch.no_grad()
-    def txt2img(self):
-        x_0_pred_out = self.predict_x0_batch(torch.randn((1, 4, self.latent_height, self.latent_width)).to(device=self.device, dtype=self.dtype))
+    def txt2img(self, batch_size: int = 1):
+        x_0_pred_out = self.predict_x0_batch(
+            torch.randn((batch_size, 4, self.latent_height, self.latent_width)).to(
+                device=self.device, dtype=self.dtype
+            )
+        )
         x_output = self.decode_image(x_0_pred_out).detach().clone()
         return x_output
 
-    def txt2img_batch(self, batch_size: int = 1):
-        x_t_latent = torch.randn((batch_size, 4, self.latent_height, self.latent_width), device=self.device, dtype=self.dtype)
+    def txt2img_sd_turbo(self, batch_size: int = 1):
+        x_t_latent = torch.randn(
+            (batch_size, 4, self.latent_height, self.latent_width),
+            device=self.device,
+            dtype=self.dtype,
+        )
         model_pred = self.unet(
             x_t_latent,
             self.sub_timesteps_tensor,
             encoder_hidden_states=self.prompt_embeds,
             return_dict=False,
         )[0]
-        x_0_pred_out = (x_t_latent - self.beta_prod_t_sqrt * model_pred) / self.alpha_prod_t_sqrt
+        x_0_pred_out = (
+            x_t_latent - self.beta_prod_t_sqrt * model_pred
+        ) / self.alpha_prod_t_sqrt
         return self.decode_image(x_0_pred_out)

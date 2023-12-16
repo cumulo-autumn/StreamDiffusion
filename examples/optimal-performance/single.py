@@ -78,7 +78,7 @@ def image_generation_process(
         try:
             start_time = time.time()
 
-            x_outputs = stream.stream.txt2img_batch(1).cpu()
+            x_outputs = stream.stream.txt2img_sd_turbo(1).cpu()
             queue.put(x_outputs, block=False)
 
             fps = 1 / (time.time() - start_time)
