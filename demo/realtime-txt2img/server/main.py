@@ -8,6 +8,8 @@ import uvicorn
 from config import Config
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+
 from PIL import Image
 from pydantic import BaseModel
 from wrapper import StreamDiffusionWrapper
@@ -60,10 +62,11 @@ class Api:
             dtype=config.dtype,
             t_index_list=config.t_index_list,
             warmup=config.warmup,
+            safety_checker=config.safety_checker,
         )
         self.app = FastAPI()
         self.app.add_api_route(
-            "/predict",
+            "/api/predict",
             self._predict,
             methods=["POST"],
             response_model=PredictResponseModel,
@@ -75,6 +78,10 @@ class Api:
             allow_methods=["*"],
             allow_headers=["*"],
         )
+        self.app.mount(
+            "/", StaticFiles(directory="../view/build", html=True), name="public"
+        )
+
         self._predict_lock = asyncio.Lock()
         self._update_prompt_lock = asyncio.Lock()
 
