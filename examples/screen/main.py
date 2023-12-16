@@ -53,6 +53,7 @@ def result_window(server_ip: str, server_port: int):
 def run(
     model_id: str = "KBlueLeaf/kohaku-v2.1",
     prompt: str = "Girl with brown dog ears,thick frame glasses",
+    negative_prompt: str = "bad image , bad quality",
     address: str = "127.0.0.1",
     port: int = 8080,
     frame_buffer_size: int = 1,
@@ -74,11 +75,12 @@ def run(
         similar_image_filter_threshold=0.99,
         mode="img2img",
         use_denoising_batch=use_denoising_batch,
-        cfg_type="self",  #initialize, full, self
+        cfg_type="self",  #initialize, full, self , none
     )
 
     stream.prepare(
-        prompt,
+        prompt = prompt,
+        negative_prompt = negative_prompt,
         num_inference_steps=50,
         guidance_scale=1.4,
         delta=0.5,
