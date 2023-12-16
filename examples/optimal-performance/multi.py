@@ -95,7 +95,7 @@ def image_generation_process(
             fps_queue.put(fps)
         except KeyboardInterrupt:
             print(f"fps: {fps}")
-            break
+            return
 
 
 def _receive_images(queue: Queue, fps_queue: Queue, labels: List[tk.Label], fps_label: tk.Label) -> None:
@@ -125,7 +125,7 @@ def _receive_images(queue: Queue, fps_queue: Queue, labels: List[tk.Label], fps_
 
             time.sleep(0.0005)
         except KeyboardInterrupt:
-            break
+            return
 
 
 def receive_images(queue: Queue, fps_queue: Queue) -> None:
