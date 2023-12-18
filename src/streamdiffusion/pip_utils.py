@@ -3,7 +3,7 @@ import importlib.util
 import os
 import subprocess
 import sys
-from typing import *
+from typing import Dict, Optional
 
 from packaging.version import Version
 

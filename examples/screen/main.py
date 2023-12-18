@@ -5,7 +5,7 @@ import sys
 import threading
 import time
 from time import sleep
-from typing import *
+from typing import Dict, Literal
 
 import fire
 import mss
@@ -79,8 +79,8 @@ def run(
     )
 
     stream.prepare(
-        prompt = prompt,
-        negative_prompt = negative_prompt,
+        prompt=prompt,
+        negative_prompt=negative_prompt,
         num_inference_steps=50,
         guidance_scale=1.4,
         delta=0.5,
@@ -116,7 +116,9 @@ def run(
 
         input_batch = torch.cat(sampled_inputs)
         inputs.clear()
-        output_images = stream(image=input_batch.to(device=stream.device, dtype=stream.dtype))
+        output_images = stream(
+            image=input_batch.to(device=stream.device, dtype=stream.dtype)
+        )
 
         if frame_buffer_size == 1:
             output_images = [output_images]
@@ -125,7 +127,10 @@ def run(
         end.record()
         torch.cuda.synchronize()
         main_thread_time = start.elapsed_time(end) / (1000 * frame_buffer_size)
-        main_thread_time_cumulative = lowpass_alpha * main_thread_time + (1 - lowpass_alpha) * main_thread_time_cumulative
+        main_thread_time_cumulative = (
+            lowpass_alpha * main_thread_time
+            + (1 - lowpass_alpha) * main_thread_time_cumulative
+        )
         fps = 1 / main_thread_time_cumulative
         print(f"fps: {fps}, main_thread_time: {main_thread_time_cumulative}")
 

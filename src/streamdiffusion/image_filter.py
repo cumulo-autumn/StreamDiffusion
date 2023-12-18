@@ -1,15 +1,16 @@
+from typing import Optional
 import random
 
 import torch
 
 
 class SimilarImageFilter:
-    def __init__(self, threshold: float = 0.98):
+    def __init__(self, threshold: float = 0.98) -> None:
         self.threshold = threshold
         self.prev_tensor = None
         self.cos = torch.nn.CosineSimilarity(dim=0, eps=1e-6)
 
-    def __call__(self, x: torch.Tensor):
+    def __call__(self, x: torch.Tensor) -> Optional[torch.Tensor]:
         if self.prev_tensor is None:
             self.prev_tensor = x.detach().clone()
             return x
@@ -29,5 +30,5 @@ class SimilarImageFilter:
             else:
                 return None
 
-    def set_threshold(self, threshold: float):
+    def set_threshold(self, threshold: float) -> None:
         self.threshold = threshold
