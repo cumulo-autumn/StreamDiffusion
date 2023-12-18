@@ -18,6 +18,9 @@ def main(
     height: int = 512,
     acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
     use_denoising_batch: bool = True,
+    use_faster_sd: bool = True,
+    order: int =5,
+    mod: str = '50ls', ##["pro","50ls","50ls2","50ls3","50ls4","100ls","75ls","s2"]
 ):
     stream = StreamDiffusionWrapper(
         model_id=model_id,
@@ -31,6 +34,9 @@ def main(
         mode="txt2img",
         use_denoising_batch=use_denoising_batch,
         cfg_type="none",
+        use_faster_sd=use_faster_sd,
+        order=order,
+        mod=mod,
     )
 
     stream.prepare(

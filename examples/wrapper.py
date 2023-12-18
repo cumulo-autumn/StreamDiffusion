@@ -12,6 +12,9 @@ from polygraphy import cuda
 from streamdiffusion import StreamDiffusion
 from streamdiffusion.image_utils import postprocess_image
 
+from utils_sd import register_normal_pipeline, register_faster_forward, register_parallel_pipeline, seed_everything  # 1.import package
+
+
 torch.set_grad_enabled(False)
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
@@ -32,7 +35,7 @@ class StreamDiffusionWrapper:
         width: int = 512,
         height: int = 512,
         warmup: int = 10,
-        acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "tensorrt",
+        acceleration: Literal["none", "xformers", "sfast", "tensorrt","faster-sd"] = "tensorrt",
         is_drawing: bool = True,
         device_ids: Optional[List[int]] = None,
         use_lcm_lora: bool = True,
@@ -41,6 +44,9 @@ class StreamDiffusionWrapper:
         similar_image_filter_threshold: float = 0.98,
         use_denoising_batch: bool = True,
         cfg_type: Literal["none", "full", "self", "initialize"] = "self",
+        use_faster_sd: bool = False,
+        order: int = 0,
+        mod: str =  '50ls', ##["pro","50ls","50ls2","50ls3","50ls4","100ls","75ls","s2"]
     ):
         if mode == "txt2img":
             if cfg_type != "none":
@@ -72,6 +78,10 @@ class StreamDiffusionWrapper:
             else frame_buffer_size
         )
 
+
+        ################
+        # self.use_faster_sd = use_faster_sd
+
         self.use_denoising_batch = use_denoising_batch
 
         self.stream = self._load_model(
@@ -85,6 +95,8 @@ class StreamDiffusionWrapper:
             use_lcm_lora=use_lcm_lora,
             use_tiny_vae=use_tiny_vae,
             cfg_type=cfg_type,
+            use_faster_sd=use_faster_sd,
+            order=order,
         )
 
         if device_ids is not None:
@@ -238,6 +250,9 @@ class StreamDiffusionWrapper:
         use_lcm_lora: bool = True,
         use_tiny_vae: bool = True,
         cfg_type: Literal["none", "full", "self", "initialize"] = "self",
+        use_faster_sd: bool = False,
+        order: int = 0,
+        mod: str = '50ls', ##["pro","50ls","50ls2","50ls3","50ls4","100ls","75ls","s2"]
     ):
         """
         Loads the model.
@@ -286,6 +301,13 @@ class StreamDiffusionWrapper:
             traceback.print_exc()
             print("Model load has failed. Doesn't exist.")
             exit()
+
+        if use_faster_sd:
+            print("Faster SD enabled.")
+            #------------------------------
+            register_parallel_pipeline(pipe) # 2. enable parallel. If memory is limited, replace it with  `register_normal_pipeline(pipe)`
+            register_faster_forward(pipe.unet,order,mod)  # 3. encoder propagation
+            #------------------------------
 
         stream = StreamDiffusion(
             pipe=pipe,
