@@ -15,8 +15,6 @@ from streamdiffusion.image_utils import postprocess_image
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
-import uuid
-
 from wrapper import StreamDiffusionWrapper
 
 
@@ -27,7 +25,7 @@ def _postprocess_image(queue: Queue) -> None:
                 output = postprocess_image(queue.get(block=False), output_type="pil")[0]
             time.sleep(0.0005)
         except KeyboardInterrupt:
-            break
+            return
 
 
 def download_image(url: str):
