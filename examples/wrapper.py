@@ -12,6 +12,9 @@ from polygraphy import cuda
 from streamdiffusion import StreamDiffusion
 from streamdiffusion.image_utils import postprocess_image
 
+from utils_sd import register_normal_pipeline, register_faster_forward, register_parallel_pipeline, seed_everything  # 1.import package
+
+
 torch.set_grad_enabled(False)
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
@@ -32,7 +35,7 @@ class StreamDiffusionWrapper:
         width: int = 512,
         height: int = 512,
         warmup: int = 10,
-        acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "tensorrt",
+        acceleration: Literal["none", "xformers", "sfast", "tensorrt","faster-sd"] = "tensorrt",
         is_drawing: bool = True,
         device_ids: Optional[List[int]] = None,
         use_lcm_lora: bool = True,
@@ -41,6 +44,7 @@ class StreamDiffusionWrapper:
         similar_image_filter_threshold: float = 0.98,
         use_denoising_batch: bool = True,
         cfg_type: Literal["none", "full", "self", "initialize"] = "self",
+        use_faster_sd: bool = False,
     ):
         if mode == "txt2img":
             if cfg_type != "none":
@@ -61,6 +65,8 @@ class StreamDiffusionWrapper:
         self.output_type = output_type
         self.frame_buffer_size = frame_buffer_size
         self.batch_size = len(t_index_list) * frame_buffer_size if use_denoising_batch else frame_buffer_size
+
+        self.use_faster_sd = use_faster_sd
 
         self.use_denoising_batch = use_denoising_batch
 
@@ -266,6 +272,13 @@ class StreamDiffusionWrapper:
             traceback.print_exc()
             print("Model load has failed. Doesn't exist.")
             exit()
+
+        if self.use_faster_sd:
+            print("Faster SD enabled.")
+            #------------------------------
+            register_parallel_pipeline(pipe) # 2. enable parallel. If memory is limited, replace it with  `register_normal_pipeline(pipe)`
+            register_faster_forward(pipe.unet)  # 3. encoder propagation
+            #------------------------------
 
         stream = StreamDiffusion(
             pipe=pipe,
