@@ -598,7 +598,7 @@ def register_parallel_pipeline(pipe):
         return call
     pipe.call = new_call(pipe)
 
-def register_faster_forward(model, mod = '50ls'):
+def register_faster_forward(model,order_step = 5, mod = '50ls'):
     def faster_forward(self):
         def forward(
                 sample: torch.FloatTensor,
@@ -716,7 +716,7 @@ def register_faster_forward(model, mod = '50ls'):
 
                 #===============
                 # order = self.order #timestep, start by 0
-                order = 5
+                order = order_step
                 #===============
                 ipow = int(np.sqrt(9 + 8*order))
                 cond = order in [0, 1, 2, 3, 5, 10, 15, 25, 35]

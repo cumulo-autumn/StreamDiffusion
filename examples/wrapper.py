@@ -45,6 +45,8 @@ class StreamDiffusionWrapper:
         use_denoising_batch: bool = True,
         cfg_type: Literal["none", "full", "self", "initialize"] = "self",
         use_faster_sd: bool = False,
+        order: int = 0,
+        mod: str =  '50ls', ##["pro","50ls","50ls2","50ls3","50ls4","100ls","75ls","s2"]
     ):
         if mode == "txt2img":
             if cfg_type != "none":
@@ -66,7 +68,9 @@ class StreamDiffusionWrapper:
         self.frame_buffer_size = frame_buffer_size
         self.batch_size = len(t_index_list) * frame_buffer_size if use_denoising_batch else frame_buffer_size
 
-        self.use_faster_sd = use_faster_sd
+
+        ################
+        # self.use_faster_sd = use_faster_sd
 
         self.use_denoising_batch = use_denoising_batch
 
@@ -81,6 +85,8 @@ class StreamDiffusionWrapper:
             use_lcm_lora=use_lcm_lora,
             use_tiny_vae=use_tiny_vae,
             cfg_type=cfg_type,
+            use_faster_sd=use_faster_sd,
+            order=order,
         )
 
         if device_ids is not None:
@@ -226,6 +232,9 @@ class StreamDiffusionWrapper:
         use_lcm_lora: bool = True,
         use_tiny_vae: bool = True,
         cfg_type: Literal["none", "full", "self", "initialize"] = "self",
+        use_faster_sd: bool = False,
+        order: int = 0,
+        mod: str = '50ls', ##["pro","50ls","50ls2","50ls3","50ls4","100ls","75ls","s2"]
     ):
         """
         Loads the model.
@@ -273,11 +282,11 @@ class StreamDiffusionWrapper:
             print("Model load has failed. Doesn't exist.")
             exit()
 
-        if self.use_faster_sd:
+        if use_faster_sd:
             print("Faster SD enabled.")
             #------------------------------
             register_parallel_pipeline(pipe) # 2. enable parallel. If memory is limited, replace it with  `register_normal_pipeline(pipe)`
-            register_faster_forward(pipe.unet)  # 3. encoder propagation
+            register_faster_forward(pipe.unet,order,mod)  # 3. encoder propagation
             #------------------------------
 
         stream = StreamDiffusion(
