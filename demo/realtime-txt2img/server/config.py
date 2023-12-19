@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Literal
 
 import torch
 import os
@@ -24,6 +24,7 @@ class Config:
     ####################################################################
     # Model configuration
     ####################################################################
+    mode: Literal["txt2img", "img2img"] = "txt2img"
     # SD1.x variant model
     model_id: str = "KBlueLeaf/kohaku-v2.1"
     # LCM-LORA model
@@ -34,6 +35,8 @@ class Config:
     device: torch.device = torch.device("cuda")
     # Data type
     dtype: torch.dtype = torch.float16
+    # acceleration
+    acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers"
 
     ####################################################################
     # Inference configuration
@@ -42,4 +45,4 @@ class Config:
     t_index_list: List[int] = field(default_factory=lambda: [0, 16, 32, 45])
     # Number of warmup steps
     warmup: int = 10
-    safety_checker: bool = SAFETY_CHECKER
+    use_safety_checker: bool = SAFETY_CHECKER
