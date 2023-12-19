@@ -1,4 +1,4 @@
-from typing import *
+from typing import Optional
 
 from sfast.compilers.stable_diffusion_pipeline_compiler import CompilationConfig, compile
 

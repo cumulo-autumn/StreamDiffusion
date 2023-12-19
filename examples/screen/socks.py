@@ -1,43 +1,33 @@
 import io
 import socket
-import struct
+
+from PIL import Image
 
 
 class UDP:
-    def __init__(self, ip, port):
+    def __init__(self, ip: str, port: int, max_size: int = 65507):
         self.ip = ip
         self.port = port
+        self.max_size = max_size
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.buffer_size = 65507
 
     def __del__(self):
         self.sock.close()
 
-    def send_udp_data(self, images):
+    def send_udp_data(self, image: Image):
         img_byte_arr = io.BytesIO()
-        images.save(img_byte_arr, format="JPEG")
-        img_data = img_byte_arr.getvalue()
+        image.save(img_byte_arr, format="JPEG")
+        img_byte_arr = img_byte_arr.getvalue()
 
-        self.sock.sendto(struct.pack(">I", len(img_data)), (self.ip, self.port))
+        if len(img_byte_arr) <= self.max_size:
+            self.sock.sendto(img_byte_arr, (self.ip, self.port))
+        else:
+            print("Warning: Image size is too large. Image is not sent.")
 
-        for i in range(0, len(img_data), self.buffer_size):
-            self.sock.sendto(img_data[i : i + self.buffer_size], (self.ip, self.port))
 
-
-def receive_udp_data(ip, port):
+def receive_udp_data(ip: str, port: int) -> bytes:
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((ip, port))
-
-    data_size, _ = sock.recvfrom(4)
-    data_size = struct.unpack(">I", data_size)[0]
-
-    received = 0
-    packets = []
-
-    while received < data_size:
-        data, addr = sock.recvfrom(65535)
-        packets.append(data)
-        received += len(data)
-
+    data, addr = sock.recvfrom(65535)
     sock.close()
-    return b"".join(packets)
+    return data

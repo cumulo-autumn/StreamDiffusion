@@ -53,7 +53,12 @@ git clone https://github.com/cumulo-autumn/StreamDiffusion.git
 python setup.py develop easy_install stream-diffusion[tensorrt]
 python -m streamdiffusion.tools.install-tensorrt
 ```
+## Quick Start
+
+You can try StreamDiffusion in `examples` directory.
+
 ## Usage
+
 ```python
 import io
 from typing import *
