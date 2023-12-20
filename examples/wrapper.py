@@ -316,13 +316,13 @@ class StreamDiffusionWrapper:
                 else:
                     stream.load_lcm_lora()
                 stream.fuse_lora()
-            
+                        
             if LoRA_list is not None:
-                for LoRA in LoRA_list:
-                    LoRA = os.path.join(os.path.dirname(__file__), "..\Models\LoRA", LoRA)
+                for LoRA_name in LoRA_list:
+                    LoRA = os.path.join(os.path.dirname(__file__), "..\Models\LoRA", LoRA_name)
                     stream.load_lora(LoRA)
-                    stream.fuse_lora(lora_scale=0.5)
-                    print("Use LoRA: ", LoRA)
+                    stream.fuse_lora(lora_scale=LoRA_list[LoRA_name])
+                    print(f"Use LoRA: {LoRA} in weights {LoRA_list[LoRA_name]}")
 
         if use_tiny_vae:
             if vae_id is not None:
@@ -358,7 +358,7 @@ class StreamDiffusionWrapper:
                     max_batch_size: int,
                     min_batch_size: int,
                 ):
-                    return f"{model_id}--lcm_lora-{use_tiny_vae}--tiny_vae-{use_lcm_lora}--max_batch-{max_batch_size}--min_batch-{min_batch_size}--mode-{self.mode}"
+                    return f"{model_id}--lcm_lora-{use_lcm_lora}--tiny_vae-{use_tiny_vae}--max_batch-{max_batch_size}--min_batch-{min_batch_size}--mode-{self.mode}"
 
                 engine_dir = os.path.join("engines")
                 unet_path = os.path.join(
