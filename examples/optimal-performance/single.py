@@ -40,7 +40,7 @@ def image_generation_process(
     fps_queue: Queue,
     prompt: str,
     model_name: str,
-    acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "tensorrt",
+    acceleration: Literal["none", "xformers", "tensorrt"] = "tensorrt",
 ) -> None:
     """
     Process for generating images based on a prompt using a specified model.
@@ -55,7 +55,7 @@ def image_generation_process(
         The prompt to generate images from.
     model_name : str
         The name of the model to use for image generation.
-    acceleration : Literal["none", "xformers", "sfast", "tensorrt"]
+    acceleration : Literal["none", "xformers", "tensorrt"]
         The type of acceleration to use for image generation.
     """
     stream = StreamDiffusionWrapper(
@@ -150,7 +150,7 @@ def receive_images(queue: Queue, fps_queue: Queue) -> None:
 def main(
     prompt: str = "cat with sunglasses and a hat, photoreal, 8K",
     model_name: str = "stabilityai/sd-turbo",
-    acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "tensorrt",
+    acceleration: Literal["none", "xformers", "tensorrt"] = "tensorrt",
 ) -> None:
     """
     Main function to start the image generation and viewer processes.

@@ -45,7 +45,7 @@ def run(
     use_tiny_vae: bool = True,
     width: int = 512,
     height: int = 512,
-    acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
+    acceleration: Literal["none", "xformers", "tensorrt"] = "xformers",
     device_ids: Optional[List[int]] = None,
     use_denoising_batch: bool = True,
     seed: int = 2,

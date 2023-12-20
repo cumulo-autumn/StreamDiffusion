@@ -32,7 +32,7 @@ class StreamDiffusionWrapper:
         width: int = 512,
         height: int = 512,
         warmup: int = 10,
-        acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
+        acceleration: Literal["none", "xformers", "tensorrt"] = "xformers",
         is_drawing: bool = True,
         device_ids: Optional[List[int]] = None,
         use_lcm_lora: bool = True,

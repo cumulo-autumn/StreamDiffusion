@@ -19,7 +19,7 @@ def main(
     LoRA_list: list = [],
     prompt: str = "Girl with panda ears wearing a hood",
     scale: float = 1.0,
-    acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
+    acceleration: Literal["none", "xformers", "tensorrt"] = "xformers",
     use_denoising_batch: bool = True,
     enable_similar_image_filter: bool = True,
     seed: int = 2,
