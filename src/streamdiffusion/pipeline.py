@@ -21,7 +21,7 @@ class StreamDiffusion:
         torch_dtype: torch.dtype = torch.float16,
         width: int = 512,
         height: int = 512,
-        is_drawing: bool = False,
+        do_add_noise: bool = True,
         use_denoising_batch: bool = True,
         frame_buffer_size: int = 1,
         cfg_type: Literal["none", "full", "self", "initialize"] = "self",
@@ -59,7 +59,7 @@ class StreamDiffusion:
 
         self.t_list = t_index_list
 
-        self.is_drawing = is_drawing
+        self.do_add_noise = do_add_noise
         self.use_denoising_batch = use_denoising_batch
 
         self.similar_image_filter = False
@@ -399,7 +399,7 @@ class StreamDiffusion:
 
             if self.denoising_steps_num > 1:
                 x_0_pred_out = x_0_pred_batch[-1].unsqueeze(0)
-                if self.is_drawing:
+                if self.do_add_noise:
                     self.x_t_latent_buffer = (
                         self.alpha_prod_t_sqrt[1:] * x_0_pred_batch[:-1]
                         + self.beta_prod_t_sqrt[1:] * self.init_noise[1:]
@@ -421,7 +421,7 @@ class StreamDiffusion:
                 )
                 x_0_pred, model_pred = self.unet_step(x_t_latent, t, idx)
                 if idx < len(self.sub_timesteps_tensor) - 1:
-                    if self.is_drawing:
+                    if self.do_add_noise:
                         x_t_latent = self.alpha_prod_t_sqrt[
                             idx + 1
                         ] * x_0_pred + self.beta_prod_t_sqrt[

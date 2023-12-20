@@ -43,7 +43,7 @@ def main(
         height=height,
         warmup=10,
         acceleration=acceleration,
-        is_drawing=False,
+        do_add_noise=False,
         mode="img2img",
         output_type="pt",
         enable_similar_image_filter=enable_similar_image_filter,

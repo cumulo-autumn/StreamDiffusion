@@ -36,7 +36,7 @@ class StreamDiffusionWrapper:
         height: int = 512,
         warmup: int = 10,
         acceleration: Literal["none", "xformers", "tensorrt"] = "tensorrt",
-        is_drawing: bool = True,
+        do_add_noise: bool = True,
         device_ids: Optional[List[int]] = None,
         use_lcm_lora: bool = True,
         use_tiny_vae: bool = True,
@@ -90,7 +90,7 @@ class StreamDiffusionWrapper:
             t_index_list=t_index_list,
             acceleration=acceleration,
             warmup=warmup,
-            is_drawing=is_drawing,
+            do_add_noise=do_add_noise,
             use_lcm_lora=use_lcm_lora,
             use_tiny_vae=use_tiny_vae,
             cfg_type=cfg_type,
@@ -285,7 +285,7 @@ class StreamDiffusionWrapper:
         vae_id: Optional[str] = None,
         acceleration: Literal["none", "sfast", "tensorrt"] = "tensorrt",
         warmup: int = 10,
-        is_drawing: bool = True,
+        do_add_noise: bool = True,
         use_lcm_lora: bool = True,
         use_tiny_vae: bool = True,
         cfg_type: Literal["none", "full", "self", "initialize"] = "self",
@@ -320,8 +320,9 @@ class StreamDiffusionWrapper:
             The acceleration method to use, by default "tensorrt".
         warmup : int, optional
             The number of warmup steps to perform, by default 10.
-        is_drawing : bool, optional
-            Whether to draw the image or not, by default True.
+        do_add_noise : bool, optional
+            Whether to add noise for following denoising steps or not,
+            by default True.
         use_lcm_lora : bool, optional
             Whether to use LCM-LoRA or not, by default True.
         use_tiny_vae : bool, optional
@@ -353,7 +354,7 @@ class StreamDiffusionWrapper:
             torch_dtype=self.dtype,
             width=self.width,
             height=self.height,
-            is_drawing=is_drawing,
+            do_add_noise=do_add_noise,
             frame_buffer_size=self.frame_buffer_size,
             use_denoising_batch=self.use_denoising_batch,
             cfg_type=cfg_type,

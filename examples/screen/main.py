@@ -75,7 +75,7 @@ def run(
         height=height,
         warmup=10,
         acceleration=acceleration,
-        is_drawing=False,
+        do_add_noise=False,
         enable_similar_image_filter=True,
         similar_image_filter_threshold=0.98,
         mode="img2img",
