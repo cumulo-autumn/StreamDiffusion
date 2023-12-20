@@ -125,7 +125,8 @@ class StreamDiffusionWrapper:
         guidance_scale : float, optional
             The guidance scale to use, by default 1.2.
         delta : float, optional
-            The delta to use, by default 1.0.
+            The delta multiplier of virtual residual noise,
+            by default 1.0.
         """
         self.stream.prepare(
             prompt,
