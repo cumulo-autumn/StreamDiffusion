@@ -38,6 +38,7 @@ def run(
     warmup: int = 10,
     iterations: int = 100,
     model_id: str = "KBlueLeaf/kohaku-v2.1",
+    LoRA_list: list = [],
     prompt: str = "Girl with brown dog ears,thick frame glasses",
     negative_prompt: str = "bad image , bad quality",
     use_lcm_lora: bool = True,
@@ -51,6 +52,7 @@ def run(
 ):
     stream = StreamDiffusionWrapper(
         model_id=model_id,
+        LoRA_list = LoRA_list,
         use_lcm_lora=use_lcm_lora,
         use_tiny_vae=use_tiny_vae,
         t_index_list=[32, 45],

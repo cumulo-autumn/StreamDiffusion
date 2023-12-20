@@ -52,6 +52,7 @@ def result_window(server_ip: str, server_port: int):
 
 def run(
     model_id: str = "KBlueLeaf/kohaku-v2.1",
+    LoRA_list: list = [],
     prompt: str = "Girl with brown dog ears,thick frame glasses",
     negative_prompt: str = "bad image , bad quality",
     address: str = "127.0.0.1",
@@ -65,6 +66,7 @@ def run(
 ):
     stream = StreamDiffusionWrapper(
         model_id=model_id,
+        LoRA_list = LoRA_list,
         t_index_list=[32, 45],
         frame_buffer_size=frame_buffer_size,
         width=width,

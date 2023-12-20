@@ -14,6 +14,7 @@ def main(
     input: str,
     output: str = "output.png",
     model_id: str = "KBlueLeaf/kohaku-v2.1",
+    LoRA_list: list = [],
     prompt: str = "Girl with panda ears wearing a hood",
     negative_prompt: str = "",
     width: int = 512,
@@ -29,6 +30,7 @@ def main(
 
     stream = StreamDiffusionWrapper(
         model_id=model_id,
+        LoRA_list = LoRA_list,
         t_index_list=[32, 40, 45],
         frame_buffer_size=1,
         width=width,
