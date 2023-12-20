@@ -1,7 +1,7 @@
 import io
 import os
 import sys
-from typing import List, Literal, Optional
+from typing import List, Literal, Optional, Dict
 
 import fire
 import PIL.Image
@@ -10,9 +10,9 @@ import torch
 from tqdm import tqdm
 
 
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 
-from wrapper import StreamDiffusionWrapper
+from utils.wrapper import StreamDiffusionWrapper
 
 
 def download_image(url: str):
@@ -25,7 +25,7 @@ def run(
     warmup: int = 10,
     iterations: int = 100,
     model_id: str = "KBlueLeaf/kohaku-v2.1",
-    LoRA_list: dict = {"dasyomiku_dadaptation-000008.safetensors" : 0.7, "virtual_singer_dadaptation-000008.safetensors" : 1.0}, #{"LoRA_1" : 0.5 , "LoRA_2" : 0.7 ,...}
+    lora_dict: Optional[Dict[str, float]] = None,
     prompt: str = "Girl with panda ears wearing a hood",
     negative_prompt: str = "bad image , bad quality",
     use_lcm_lora: bool = True,
@@ -39,7 +39,7 @@ def run(
 ):
     stream = StreamDiffusionWrapper(
         model_id=model_id,
-        LoRA_list = LoRA_list,
+        lora_dict=lora_dict,
         use_lcm_lora=use_lcm_lora,
         use_tiny_vae=use_tiny_vae,
         t_index_list=[32, 45],
@@ -51,21 +51,23 @@ def run(
         is_drawing=True,
         device_ids=device_ids,
         mode="img2img",
-        use_denoising_batch = use_denoising_batch,
-        cfg_type="initialize",  #initialize, full, self , none
-        seed = seed,
+        use_denoising_batch=use_denoising_batch,
+        cfg_type="initialize",  # initialize, full, self , none
+        seed=seed,
     )
 
     stream.prepare(
-        prompt = prompt,
-        negative_prompt = negative_prompt,
+        prompt=prompt,
+        negative_prompt=negative_prompt,
         num_inference_steps=50,
         guidance_scale=1.4,
         delta=0.5,
     )
 
-    downloaded_image = download_image("https://github.com/ddpn08.png").resize((width, height))
-    
+    downloaded_image = download_image("https://github.com/ddpn08.png").resize(
+        (width, height)
+    )
+
     # warmup
     for _ in range(warmup):
         image_tensor = stream.preprocess_image(downloaded_image)
@@ -88,7 +90,8 @@ def run(
     print(f"Average time: {sum(results) / len(results)}ms")
     print(f"Average FPS: {1000 / (sum(results) / len(results))}")
     import numpy as np
-    fps_arr = 1000/np.array(results)
+
+    fps_arr = 1000 / np.array(results)
     print(f"Max FPS: {np.max(fps_arr)}")
     print(f"Min FPS: {np.min(fps_arr)}")
     print(f"Std: {np.std(fps_arr)}")

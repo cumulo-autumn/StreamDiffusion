@@ -12,9 +12,9 @@ from PIL import Image, ImageTk
 from streamdiffusion.image_utils import postprocess_image
 
 
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 
-from wrapper import StreamDiffusionWrapper
+from utils.wrapper import StreamDiffusionWrapper
 
 
 def update_image(image_data: Image.Image, label: tk.Label) -> None:
@@ -67,6 +67,8 @@ def image_generation_process(
         is_drawing=True,
         use_lcm_lora=False,
         mode="txt2img",
+        cfg_type="none",
+        use_denoising_batch=True,
     )
 
     stream.prepare(
@@ -88,7 +90,9 @@ def image_generation_process(
             return
 
 
-def _receive_images(queue: Queue, fps_queue: Queue, label: tk.Label, fps_label: tk.Label) -> None:
+def _receive_images(
+    queue: Queue, fps_queue: Queue, label: tk.Label, fps_label: tk.Label
+) -> None:
     """
     Continuously receive images from a queue and update the labels.
 
@@ -138,7 +142,9 @@ def receive_images(queue: Queue, fps_queue: Queue) -> None:
     label.grid(column=0)
     fps_label.grid(column=1)
 
-    thread = threading.Thread(target=_receive_images, args=(queue, fps_queue, label, fps_label), daemon=True)
+    thread = threading.Thread(
+        target=_receive_images, args=(queue, fps_queue, label, fps_label), daemon=True
+    )
     thread.start()
 
     try:

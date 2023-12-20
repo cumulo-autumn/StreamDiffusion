@@ -1,7 +1,7 @@
 import gc
 import os
 import traceback
-from typing import List, Literal, Optional, Union
+from typing import List, Literal, Optional, Union, Dict
 
 import numpy as np
 import torch
@@ -13,7 +13,6 @@ from streamdiffusion import StreamDiffusion
 from streamdiffusion.image_utils import postprocess_image
 
 
-
 torch.set_grad_enabled(False)
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
@@ -23,8 +22,8 @@ class StreamDiffusionWrapper:
     def __init__(
         self,
         model_id: str,
-        LoRA_list: List[str],
         t_index_list: List[int],
+        lora_dict: Optional[Dict[str, float]] = None,
         mode: Literal["img2img", "txt2img"] = "img2img",
         output_type: Literal["pil", "pt", "np", "latent"] = "pil",
         lcm_lora_id: Optional[str] = None,
@@ -45,16 +44,20 @@ class StreamDiffusionWrapper:
         use_denoising_batch: bool = True,
         cfg_type: Literal["none", "full", "self", "initialize"] = "self",
         seed: int = 2,
+        use_safety_checker: bool = False,
     ):
+        self.sd_turbo = "turbo" in model_id
+
         if mode == "txt2img":
             if cfg_type != "none":
                 raise ValueError(
                     f"txt2img mode accepts only cfg_type = 'none', but got {cfg_type}"
                 )
             if use_denoising_batch and frame_buffer_size > 1:
-                raise ValueError(
-                    "txt2img mode cannot use denoising batch with frame_buffer_size > 1."
-                )
+                if not self.sd_turbo:
+                    raise ValueError(
+                        "txt2img mode cannot use denoising batch with frame_buffer_size > 1."
+                    )
 
         if mode == "img2img":
             if not use_denoising_batch:
@@ -62,7 +65,6 @@ class StreamDiffusionWrapper:
                     "img2img mode must use denoising batch for now."
                 )
 
-        self.sd_turbo = "turbo" in model_id
         self.device = device
         self.dtype = dtype
         self.width = width
@@ -76,12 +78,12 @@ class StreamDiffusionWrapper:
             else frame_buffer_size
         )
 
-
         self.use_denoising_batch = use_denoising_batch
+        self.use_safety_checker = use_safety_checker
 
-        self.stream = self._load_model(
+        self.stream: StreamDiffusion = self._load_model(
             model_id=model_id,
-            LoRA_list = LoRA_list,
+            lora_dict=lora_dict,
             lcm_lora_id=lcm_lora_id,
             vae_id=vae_id,
             t_index_list=t_index_list,
@@ -131,6 +133,7 @@ class StreamDiffusionWrapper:
     def __call__(
         self,
         image: Optional[Union[str, Image.Image, torch.Tensor]] = None,
+        prompt: Optional[str] = None,
     ) -> Union[Image.Image, List[Image.Image]]:
         """
         Performs img2img or txt2img based on the mode.
@@ -139,6 +142,8 @@ class StreamDiffusionWrapper:
         ----------
         image : Optional[Union[str, Image.Image, torch.Tensor]]
             The image to generate from.
+        prompt : Optional[str]
+            The prompt to generate images from.
 
         Returns
         -------
@@ -148,24 +153,44 @@ class StreamDiffusionWrapper:
         if self.mode == "img2img":
             return self.img2img(image)
         else:
-            return self.txt2img()
+            return self.txt2img(prompt)
 
     def txt2img(
-        self,
+        self, prompt: Optional[str] = None
     ) -> Union[Image.Image, List[Image.Image], torch.Tensor, np.ndarray]:
         """
         Performs txt2img.
+
+        Parameters
+        ----------
+        prompt : Optional[str]
+            The prompt to generate images from.
 
         Returns
         -------
         Union[Image.Image, List[Image.Image]]
             The generated image.
         """
+        if prompt is not None:
+            self.stream.update_prompt(prompt)
+
         if self.sd_turbo:
             image_tensor = self.stream.txt2img_sd_turbo(self.batch_size)
         else:
             image_tensor = self.stream.txt2img(self.frame_buffer_size)
-        return self.postprocess_image(image_tensor, output_type=self.output_type)
+        image = self.postprocess_image(image_tensor, output_type=self.output_type)
+
+        if self.use_safety_checker:
+            safety_checker_input = self.feature_extractor(
+                image, return_tensors="pt"
+            ).to(self.device)
+            _, has_nsfw_concept = self.safety_checker(
+                images=image_tensor.to(self.dtype),
+                clip_input=safety_checker_input.pixel_values.to(self.dtype),
+            )
+            image = self.nsfw_fallback_img if has_nsfw_concept[0] else image
+
+        return image
 
     def img2img(
         self, image: Union[str, Image.Image, torch.Tensor]
@@ -187,7 +212,19 @@ class StreamDiffusionWrapper:
             image = self.preprocess_image(image)
 
         image_tensor = self.stream(image)
-        return self.postprocess_image(image_tensor, output_type=self.output_type)
+        image = self.postprocess_image(image_tensor, output_type=self.output_type)
+
+        if self.use_safety_checker:
+            safety_checker_input = self.feature_extractor(
+                image, return_tensors="pt"
+            ).to(self.device)
+            _, has_nsfw_concept = self.safety_checker(
+                images=image_tensor.to(self.dtype),
+                clip_input=safety_checker_input.pixel_values.to(self.dtype),
+            )
+            image = self.nsfw_fallback_img if has_nsfw_concept[0] else image
+
+        return image
 
     def preprocess_image(self, image: Union[str, Image.Image]) -> torch.Tensor:
         """
@@ -236,18 +273,18 @@ class StreamDiffusionWrapper:
     def _load_model(
         self,
         model_id: str,
-        LoRA_list: List[str],
         t_index_list: List[int],
+        lora_dict: Optional[Dict[str, float]] = None,
         lcm_lora_id: Optional[str] = None,
         vae_id: Optional[str] = None,
         acceleration: Literal["none", "sfast", "tensorrt"] = "tensorrt",
-        is_drawing: bool = True,
         warmup: int = 10,
+        is_drawing: bool = True,
         use_lcm_lora: bool = True,
         use_tiny_vae: bool = True,
         cfg_type: Literal["none", "full", "self", "initialize"] = "self",
         seed: int = 2,
-    ):
+    ) -> StreamDiffusion:
         """
         Loads the model.
 
@@ -258,7 +295,7 @@ class StreamDiffusionWrapper:
         3. Loads the VAE model from the vae_id if needed.
         4. Enables acceleration if needed.
         5. Prepares the model for inference.
-        6. Warms up the model.
+        6. Load the safety checker if needed.
 
         Parameters
         ----------
@@ -266,6 +303,9 @@ class StreamDiffusionWrapper:
             The model id to load.
         t_index_list : List[int]
             The t_index_list to use for inference.
+        lora_dict : Optional[Dict[str, float]], optional
+            The lora_dict to use, by default None.
+            Example: {"LoRA_1" : 0.5 , "LoRA_2" : 0.7 ,...}
         lcm_lora_id : Optional[str], optional
             The lcm_lora_id to load, by default None.
         vae_id : Optional[str], optional
@@ -280,6 +320,11 @@ class StreamDiffusionWrapper:
             Whether to use LCM-LoRA or not, by default True.
         use_tiny_vae : bool, optional
             Whether to use TinyVAE or not, by default True.
+
+        Returns
+        -------
+        StreamDiffusion
+            The loaded model.
         """
 
         try:  # Load from local directory
@@ -316,13 +361,15 @@ class StreamDiffusionWrapper:
                 else:
                     stream.load_lcm_lora()
                 stream.fuse_lora()
-                        
-            if LoRA_list is not None:
-                for LoRA_name in LoRA_list:
-                    LoRA = os.path.join(os.path.dirname(__file__), "..\Models\LoRA", LoRA_name)
-                    stream.load_lora(LoRA)
-                    stream.fuse_lora(lora_scale=LoRA_list[LoRA_name])
-                    print(f"Use LoRA: {LoRA} in weights {LoRA_list[LoRA_name]}")
+
+            if lora_dict is not None:
+                for lora_name, lora_scale in lora_dict.items():
+                    lora = os.path.join(
+                        os.path.dirname(__file__), "..\Models\LoRA", lora_name
+                    )
+                    stream.load_lora(lora)
+                    stream.fuse_lora(lora_scale=lora_scale)
+                    print(f"Use LoRA: {lora} in weights {lora_scale}")
 
         if use_tiny_vae:
             if vae_id is not None:
@@ -502,5 +549,19 @@ class StreamDiffusionWrapper:
             generator=torch.manual_seed(seed),
             seed=seed,
         )
+
+        if self.use_safety_checker:
+            from transformers import CLIPFeatureExtractor
+            from diffusers.pipelines.stable_diffusion.safety_checker import (
+                StableDiffusionSafetyChecker,
+            )
+
+            self.safety_checker = StableDiffusionSafetyChecker.from_pretrained(
+                "CompVis/stable-diffusion-safety-checker"
+            ).to(pipe.device)
+            self.feature_extractor = CLIPFeatureExtractor.from_pretrained(
+                "openai/clip-vit-base-patch32"
+            )
+            self.nsfw_fallback_img = Image.new("RGB", (512, 512), (0, 0, 0))
 
         return stream

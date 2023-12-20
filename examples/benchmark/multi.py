@@ -3,7 +3,7 @@ import os
 import sys
 import time
 from multiprocessing import Process, Queue
-from typing import List, Literal, Optional
+from typing import List, Literal, Optional, Dict
 
 import fire
 import PIL.Image
@@ -13,9 +13,9 @@ from tqdm import tqdm
 
 from streamdiffusion.image_utils import postprocess_image
 
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 
-from wrapper import StreamDiffusionWrapper
+from utils.wrapper import StreamDiffusionWrapper
 
 
 def _postprocess_image(queue: Queue) -> None:
@@ -38,7 +38,7 @@ def run(
     warmup: int = 10,
     iterations: int = 100,
     model_id: str = "KBlueLeaf/kohaku-v2.1",
-    LoRA_list: dict = {}, #{"LoRA_1" : 0.5 , "LoRA_2" : 0.7 ,...}
+    lora_dict: Optional[Dict[str, float]] = None,
     prompt: str = "Girl with brown dog ears,thick frame glasses",
     negative_prompt: str = "bad image , bad quality",
     use_lcm_lora: bool = True,
@@ -52,7 +52,7 @@ def run(
 ):
     stream = StreamDiffusionWrapper(
         model_id=model_id,
-        LoRA_list = LoRA_list,
+        lora_dict=lora_dict,
         use_lcm_lora=use_lcm_lora,
         use_tiny_vae=use_tiny_vae,
         t_index_list=[32, 45],
@@ -68,7 +68,7 @@ def run(
         mode="img2img",
         use_denoising_batch=use_denoising_batch,
         cfg_type="self",  # initialize, full, self , none
-        seed = seed,
+        seed=seed,
     )
 
     stream.prepare(

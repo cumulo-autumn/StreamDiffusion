@@ -12,9 +12,9 @@ from PIL import Image, ImageTk
 from streamdiffusion.image_utils import postprocess_image
 
 
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 
-from wrapper import StreamDiffusionWrapper
+from utils.wrapper import StreamDiffusionWrapper
 
 
 image_update_counter = 0
@@ -77,6 +77,8 @@ def image_generation_process(
         is_drawing=True,
         use_lcm_lora=False,
         mode="txt2img",
+        cfg_type="none",
+        use_denoising_batch=True,
     )
 
     stream.prepare(

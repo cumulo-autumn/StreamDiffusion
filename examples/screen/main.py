@@ -5,7 +5,7 @@ import sys
 import threading
 import time
 from time import sleep
-from typing import Dict, Literal
+from typing import Dict, Literal, Optional
 
 import fire
 import mss
@@ -16,9 +16,9 @@ from socks import UDP, receive_udp_data
 
 from streamdiffusion.image_utils import pil2tensor
 
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 
-from wrapper import StreamDiffusionWrapper
+from utils.wrapper import StreamDiffusionWrapper
 
 inputs = []
 
@@ -52,7 +52,7 @@ def result_window(server_ip: str, server_port: int):
 
 def run(
     model_id: str = "KBlueLeaf/kohaku-v2.1",
-    LoRA_list: dict = {}, #{"LoRA_1" : 0.5 , "LoRA_2" : 0.7 ,...}
+    lora_dict: Optional[Dict[str, float]] = None,
     prompt: str = "Girl with brown dog ears,thick frame glasses",
     negative_prompt: str = "bad image , bad quality",
     address: str = "127.0.0.1",
@@ -66,7 +66,7 @@ def run(
 ):
     stream = StreamDiffusionWrapper(
         model_id=model_id,
-        LoRA_list = LoRA_list,
+        lora_dict=lora_dict,
         t_index_list=[32, 45],
         frame_buffer_size=frame_buffer_size,
         width=width,
@@ -79,7 +79,7 @@ def run(
         mode="img2img",
         use_denoising_batch=use_denoising_batch,
         cfg_type="self",  # initialize, full, self
-        seed = seed,
+        seed=seed,
     )
 
     stream.prepare(

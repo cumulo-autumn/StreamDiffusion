@@ -1,20 +1,24 @@
 import os
 import sys
-from typing import Literal
+from typing import Literal, Dict, Optional
 
 import fire
 
 
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 
-from wrapper import StreamDiffusionWrapper
+from utils.wrapper import StreamDiffusionWrapper
+
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def main(
-    input: str,
-    output: str = "output.png",
+    input: str = os.path.join(CURRENT_DIR, "..", "..", "images", "inputs", "input.png"),
+    output: str = os.path.join(
+        CURRENT_DIR, "..", "..", "images", "outputs", "output.png"
+    ),
     model_id: str = "KBlueLeaf/kohaku-v2.1",
-    LoRA_list: dict = {}, #{"LoRA_1" : 0.5 , "LoRA_2" : 0.7 ,...}
+    lora_dict: Optional[Dict[str, float]] = None,
     prompt: str = "Girl with panda ears wearing a hood",
     negative_prompt: str = "",
     width: int = 512,
@@ -30,7 +34,7 @@ def main(
 
     stream = StreamDiffusionWrapper(
         model_id=model_id,
-        LoRA_list = LoRA_list,
+        lora_dict=lora_dict,
         t_index_list=[32, 40, 45],
         frame_buffer_size=1,
         width=width,
@@ -39,16 +43,16 @@ def main(
         acceleration=acceleration,
         is_drawing=True,
         mode="img2img",
-        use_denoising_batch = use_denoising_batch,
-        cfg_type = cfg_type,
-        seed = seed,
+        use_denoising_batch=use_denoising_batch,
+        cfg_type=cfg_type,
+        seed=seed,
     )
 
     stream.prepare(
         prompt=prompt,
         negative_prompt=negative_prompt,
         num_inference_steps=50,
-        guidance_scale = guidance_scale,
+        guidance_scale=guidance_scale,
     )
 
     image_tensor = stream.preprocess_image(input)
