@@ -12,7 +12,6 @@ from polygraphy import cuda
 from streamdiffusion import StreamDiffusion
 from streamdiffusion.image_utils import postprocess_image
 
-from utils_sd import register_normal_pipeline, register_faster_forward, register_parallel_pipeline, seed_everything  # 1.import package
 
 
 torch.set_grad_enabled(False)
@@ -24,6 +23,7 @@ class StreamDiffusionWrapper:
     def __init__(
         self,
         model_id: str,
+        LoRA_list: List[str],
         t_index_list: List[int],
         mode: Literal["img2img", "txt2img"] = "img2img",
         output_type: Literal["pil", "pt", "np", "latent"] = "pil",
@@ -81,6 +81,7 @@ class StreamDiffusionWrapper:
 
         self.stream = self._load_model(
             model_id=model_id,
+            LoRA_list = LoRA_list,
             lcm_lora_id=lcm_lora_id,
             vae_id=vae_id,
             t_index_list=t_index_list,
@@ -235,6 +236,7 @@ class StreamDiffusionWrapper:
     def _load_model(
         self,
         model_id: str,
+        LoRA_list: List[str],
         t_index_list: List[int],
         lcm_lora_id: Optional[str] = None,
         vae_id: Optional[str] = None,
@@ -314,6 +316,13 @@ class StreamDiffusionWrapper:
                 else:
                     stream.load_lcm_lora()
                 stream.fuse_lora()
+            
+            if LoRA_list is not None:
+                for LoRA in LoRA_list:
+                    LoRA = os.path.join(os.path.dirname(__file__), "..\Models\LoRA", LoRA)
+                    stream.load_lora(LoRA)
+                    stream.fuse_lora(lora_scale=0.5)
+                    print("Use LoRA: ", LoRA)
 
         if use_tiny_vae:
             if vae_id is not None:
