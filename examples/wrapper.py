@@ -44,9 +44,6 @@ class StreamDiffusionWrapper:
         similar_image_filter_threshold: float = 0.98,
         use_denoising_batch: bool = True,
         cfg_type: Literal["none", "full", "self", "initialize"] = "self",
-        use_faster_sd: bool = False,
-        order: int = 0,
-        mod: str =  '50ls', ##["pro","50ls","50ls2","50ls3","50ls4","100ls","75ls","s2"]
         seed: int = 2,
     ):
         if mode == "txt2img":
@@ -80,9 +77,6 @@ class StreamDiffusionWrapper:
         )
 
 
-        ################
-        # self.use_faster_sd = use_faster_sd
-
         self.use_denoising_batch = use_denoising_batch
 
         self.stream = self._load_model(
@@ -96,8 +90,6 @@ class StreamDiffusionWrapper:
             use_lcm_lora=use_lcm_lora,
             use_tiny_vae=use_tiny_vae,
             cfg_type=cfg_type,
-            use_faster_sd=use_faster_sd,
-            order=order,
             seed=seed,
         )
 
@@ -252,9 +244,6 @@ class StreamDiffusionWrapper:
         use_lcm_lora: bool = True,
         use_tiny_vae: bool = True,
         cfg_type: Literal["none", "full", "self", "initialize"] = "self",
-        use_faster_sd: bool = False,
-        order: int = 0,
-        mod: str = '50ls', ##["pro","50ls","50ls2","50ls3","50ls4","100ls","75ls","s2"]
         seed: int = 2,
     ):
         """
@@ -304,13 +293,6 @@ class StreamDiffusionWrapper:
             traceback.print_exc()
             print("Model load has failed. Doesn't exist.")
             exit()
-
-        if use_faster_sd:
-            print("Faster SD enabled.")
-            #------------------------------
-            register_parallel_pipeline(pipe) # 2. enable parallel. If memory is limited, replace it with  `register_normal_pipeline(pipe)`
-            register_faster_forward(pipe.unet,order,mod)  # 3. encoder propagation
-            #------------------------------
 
         stream = StreamDiffusion(
             pipe=pipe,
