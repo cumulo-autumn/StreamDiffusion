@@ -74,7 +74,6 @@ def image_generation_process(
         frame_buffer_size=batch_size,
         warmup=10,
         acceleration=acceleration,
-        is_drawing=True,
         use_lcm_lora=False,
         mode="txt2img",
         cfg_type="none",

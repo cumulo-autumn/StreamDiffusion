@@ -53,7 +53,7 @@ def result_window(server_ip: str, server_port: int):
 def run(
     model_id_or_path: str = "KBlueLeaf/kohaku-v2.1",
     lora_dict: Optional[Dict[str, float]] = None,
-    prompt: str = "1girl with brown dog ears, thick frame glasses",
+    prompt: str = "1girl with brown dog hair, thick glasses, smiling",
     negative_prompt: str = "low quality, bad quality, blurry, low resolution",
     address: str = "127.0.0.1",
     port: int = 8080,
@@ -63,6 +63,8 @@ def run(
     acceleration: Literal["none", "xformers", "tensorrt"] = "xformers",
     use_denoising_batch: bool = True,
     seed: int = 2,
+    guidance_scale: float = 1.4,
+    delta: float = 0.5,
 ):
     stream = StreamDiffusionWrapper(
         model_id_or_path=model_id_or_path,
@@ -86,8 +88,8 @@ def run(
         prompt=prompt,
         negative_prompt=negative_prompt,
         num_inference_steps=50,
-        guidance_scale=1.4,
-        delta=0.5,
+        guidance_scale=guidance_scale,
+        delta=delta,
     )
 
     output_window = mp.Process(target=result_window, args=(address, port))

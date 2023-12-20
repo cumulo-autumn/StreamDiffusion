@@ -18,7 +18,7 @@ def main(
     output: str = os.path.join(CURRENT_DIR, "..", "..", "images", "outputs"),
     model_id_or_path: str = "KBlueLeaf/kohaku-v2.1",
     lora_dict: Optional[Dict[str, float]] = None,
-    prompt: str = "1girl with panda ears wearing a hood",
+    prompt: str = "1girl with brown dog hair, thick glasses, smiling",
     negative_prompt: str = "low quality, bad quality, blurry, low resolution",
     width: int = 512,
     height: int = 512,
@@ -27,6 +27,7 @@ def main(
     guidance_scale: float = 1.2,
     cfg_type: Literal["none", "full", "self", "initialize"] = "initialize",
     seed: int = 2,
+    delta: float = 0.5,
 ):
     if not os.path.exists(output):
         os.makedirs(output, exist_ok=True)
@@ -43,7 +44,6 @@ def main(
         height=height,
         warmup=10,
         acceleration=acceleration,
-        is_drawing=True,
         mode="img2img",
         use_denoising_batch=use_denoising_batch,
         cfg_type=cfg_type,
@@ -56,6 +56,7 @@ def main(
         num_inference_steps=50,
         guidance_scale=guidance_scale,
         cfg_type="self",
+        delta=delta,
     )
 
     images = glob.glob(os.path.join(input, "*"))

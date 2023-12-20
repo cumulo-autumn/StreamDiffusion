@@ -19,15 +19,16 @@ def main(
     ),
     model_id_or_path: str = "KBlueLeaf/kohaku-v2.1",
     lora_dict: Optional[Dict[str, float]] = None,
-    prompt: str = "1girl with brown dog ears, thick frame glasses",
+    prompt: str = "1girl with brown dog hair, thick glasses, smiling",
     negative_prompt: str = "low quality, bad quality, blurry, low resolution",
     width: int = 512,
     height: int = 512,
     acceleration: Literal["none", "xformers", "tensorrt"] = "xformers",
     use_denoising_batch: bool = True,
     guidance_scale: float = 1.2,
-    cfg_type: Literal["none", "full", "self", "initialize"] = "initialize",
+    cfg_type: Literal["none", "full", "self", "initialize"] = "self",
     seed: int = 2,
+    delta: float = 0.5,
 ):
     if guidance_scale <= 1.0:
         cfg_type = "none"
@@ -35,13 +36,12 @@ def main(
     stream = StreamDiffusionWrapper(
         model_id_or_path=model_id_or_path,
         lora_dict=lora_dict,
-        t_index_list=[32, 40, 45],
+        t_index_list=[22, 32, 45],
         frame_buffer_size=1,
         width=width,
         height=height,
         warmup=10,
         acceleration=acceleration,
-        is_drawing=True,
         mode="img2img",
         use_denoising_batch=use_denoising_batch,
         cfg_type=cfg_type,
@@ -53,6 +53,7 @@ def main(
         negative_prompt=negative_prompt,
         num_inference_steps=50,
         guidance_scale=guidance_scale,
+        delta=delta,
     )
 
     image_tensor = stream.preprocess_image(input)
