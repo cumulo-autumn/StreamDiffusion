@@ -9,12 +9,7 @@ StreamDiffusion を用いた GUI を提供します。
 
 ## 使用方法
 
-lnux os や mac os では以下のコマンドを用いて依存関係をインストールする必要があります。
-
-```bash
-chmod +x ./start.sh && ./start.sh
-```
-windows では以下のコマンドを用いて依存関係をインストールする必要があります。
+以下のコマンドを順番に実行してください。
 
 ```bash
 pip install -r requirements.txt
