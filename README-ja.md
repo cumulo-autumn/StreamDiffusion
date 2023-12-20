@@ -51,7 +51,7 @@ CUDA 12.1
 pip3 install torch==2.1.0 torchvision==0.16.0 xformers --index-url https://download.pytorch.org/whl/cu121
 ```
 
-詳しくは[こちら](https://pytorch.org/) 
+詳しくは[こちら](https://pytorch.org/)
 
 
 ### Step2: StreamDiffusion のインストール
@@ -103,7 +103,7 @@ def download_image(url: str):
 def run(
     wamup: int = 10,
     iterations: int = 50,
-    prompt: str = "Girl with panda ears wearing a hood",
+    prompt: str = "1girl with brown dog ears, thick frame glasses",
     lcm_lora: bool = True,
     tiny_vae: bool = True,
     acceleration: Optional[Literal["xformers", "sfast", "tensorrt"]] = None,

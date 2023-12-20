@@ -21,7 +21,7 @@ def main(
     ),
     model_id: str = "KBlueLeaf/kohaku-v2.1",
     lora_dict: Optional[Dict[str, float]] = None,
-    prompt: str = "Girl with panda ears wearing a hood",
+    prompt: str = "1girl with brown dog ears, thick frame glasses",
     scale: float = 1.0,
     acceleration: Literal["none", "xformers", "tensorrt"] = "xformers",
     use_denoising_batch: bool = True,

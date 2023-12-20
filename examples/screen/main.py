@@ -53,7 +53,7 @@ def result_window(server_ip: str, server_port: int):
 def run(
     model_id_or_path: str = "KBlueLeaf/kohaku-v2.1",
     lora_dict: Optional[Dict[str, float]] = None,
-    prompt: str = "Girl with brown dog ears,thick frame glasses",
+    prompt: str = "1girl with brown dog ears, thick frame glasses",
     negative_prompt: str = "bad image , bad quality",
     address: str = "127.0.0.1",
     port: int = 8080,

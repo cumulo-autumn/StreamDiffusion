@@ -10,7 +10,7 @@
 [ramune](https://github.com/YN35/),
 [teftef](https://github.com/teftef6220/),
 [Tonimono](https://github.com/mili-inch/),
-[Verb](https://github.com/discus0434), 
+[Verb](https://github.com/discus0434),
 
 (*alphabetical order)
 
@@ -89,7 +89,7 @@ torch.backends.cudnn.allow_tf32 = True
 
 
 def run(
-    prompt: str = "Girl with dog hair, thick frame glasses",
+    prompt: str = "1girl with dog hair, thick frame glasses",
     warmup: int = 10,
     iterations: int = 50,
     lcm_lora: bool = True,

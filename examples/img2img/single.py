@@ -19,7 +19,7 @@ def main(
     ),
     model_id_or_path: str = "KBlueLeaf/kohaku-v2.1",
     lora_dict: Optional[Dict[str, float]] = None,
-    prompt: str = "Girl with panda ears wearing a hood",
+    prompt: str = "1girl with brown dog ears, thick frame glasses",
     negative_prompt: str = "",
     width: int = 512,
     height: int = 512,

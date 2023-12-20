@@ -18,7 +18,7 @@ def main(
     output: str = os.path.join(CURRENT_DIR, "..", "..", "images", "outputs"),
     model_id_or_path: str = "KBlueLeaf/kohaku-v2.1",
     lora_dict: Optional[Dict[str, float]] = None,
-    prompt: str = "Girl with panda ears wearing a hood",
+    prompt: str = "1girl with panda ears wearing a hood",
     width: int = 512,
     height: int = 512,
     acceleration: Literal["none", "xformers", "tensorrt"] = "xformers",
