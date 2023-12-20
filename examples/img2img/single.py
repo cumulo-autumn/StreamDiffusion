@@ -20,7 +20,7 @@ def main(
     model_id_or_path: str = "KBlueLeaf/kohaku-v2.1",
     lora_dict: Optional[Dict[str, float]] = None,
     prompt: str = "1girl with brown dog ears, thick frame glasses",
-    negative_prompt: str = "",
+    negative_prompt: str = "low quality, bad quality, blurry, low resolution",
     width: int = 512,
     height: int = 512,
     acceleration: Literal["none", "xformers", "tensorrt"] = "xformers",

@@ -54,7 +54,7 @@ def run(
     model_id_or_path: str = "KBlueLeaf/kohaku-v2.1",
     lora_dict: Optional[Dict[str, float]] = None,
     prompt: str = "1girl with brown dog ears, thick frame glasses",
-    negative_prompt: str = "bad image , bad quality",
+    negative_prompt: str = "low quality, bad quality, blurry, low resolution",
     address: str = "127.0.0.1",
     port: int = 8080,
     frame_buffer_size: int = 1,
