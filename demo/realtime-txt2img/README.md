@@ -19,7 +19,7 @@ or
 pip install -r requirements.txt
 cd view
 npm i
-npm start &
+npm run build
 cd ../server
 python main.py
 ```
