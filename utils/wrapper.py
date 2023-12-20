@@ -17,6 +17,8 @@ torch.set_grad_enabled(False)
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
 
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 
 class StreamDiffusionWrapper:
     def __init__(
@@ -364,9 +366,7 @@ class StreamDiffusionWrapper:
 
             if lora_dict is not None:
                 for lora_name, lora_scale in lora_dict.items():
-                    lora = os.path.join(
-                        os.path.dirname(__file__), "..\Models\LoRA", lora_name
-                    )
+                    lora = os.path.join(CURRENT_DIR, "..", "models", "LoRA", lora_name)
                     stream.load_lora(lora)
                     stream.fuse_lora(lora_scale=lora_scale)
                     print(f"Use LoRA: {lora} in weights {lora_scale}")
