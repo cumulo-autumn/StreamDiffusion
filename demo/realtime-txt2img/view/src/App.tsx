@@ -38,7 +38,7 @@ function App() {
   const fetchImage = useCallback(
     async (index: number) => {
       try {
-        const response = await fetch("http://127.0.0.1:9090/api/predict", {
+        const response = await fetch("api/predict", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ prompt: inputPrompt }),
@@ -98,7 +98,7 @@ function App() {
         <Grid
           container
           spacing={1}
-          style={{ maxWidth: "50%", maxHeight: "70%" }}
+          style={{ maxWidth: "60rem", maxHeight: "70%" }}
         >
           {images.map((image, index) => (
             <Grid item xs={3} key={index}>
@@ -106,6 +106,8 @@ function App() {
                 src={image}
                 alt={`Generated ${index}`}
                 style={{
+                  display: "block",
+                  margin: "0 auto",
                   maxWidth: "100%",
                   maxHeight: "150px",
                   borderRadius: "10px",
@@ -121,7 +123,8 @@ function App() {
           style={{
             marginBottom: "20px",
             marginTop: "20px",
-            width: "640px",
+            width: "100%",
+            maxWidth: "50rem",
             color: "#ffffff",
             borderColor: "#ffffff",
             borderRadius: "10px",
