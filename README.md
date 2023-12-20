@@ -1,7 +1,21 @@
 # StreamDiffusion
 
-![](https://img.shields.io/badge/%F0%9F%A4%97%20-Hugging%20Face%20Spaces-blue?style=for-the-badge)
-![](https://img.shields.io/badge/Open%20in%20Colab-blue?style=for-the-badge&logo=googlecolab&labelColor=5c5c5c)
+**[StreamDiffusion: A Pipeline-level Solution for Real-time Interactive Generation](https://arxiv.org/xxx)**
+</br>
+[Aki](https://github.com/cumulo-autumn/),
+[Ararat](https://github.com/AttaQ/),
+[Chenfeng Xu](https://github.com/chenfengxu714/),
+[ddPn08](https://github.com/ddPn08/),
+[kizamimi](https://github.com/kizamimi/),
+[ramune](https://github.com/YN35/),
+[teftef](https://github.com/teftef6220/),
+[Tonimono](https://github.com/mili-inch/),
+[Verb](https://github.com/discus0434),
+
+
+[![arXiv](https://img.shields.io/badge/arXiv-2307.04725-b31b1b.svg)](https://arxiv.org/xxxx)
+[![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-yellow)](xxxx)
+
 
 ## Installation
 
@@ -33,12 +47,13 @@ pip3 install torch==2.1.0 torchvision==0.16.0 xformers --index-url https://downl
 details: https://pytorch.org/
 
 ### Step2: Install StreamDiffusion
+
 #### For User
 Install StreamDiffusion
 ```
 pip install git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=stream-diffusion
 ```
-Enable tensorrt
+Install tensorrt extension
 ```
 python -m streamdiffusion.tools.install-tensorrt
 ```
