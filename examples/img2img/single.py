@@ -14,7 +14,7 @@ def main(
     input: str,
     output: str = "output.png",
     model_id: str = "KBlueLeaf/kohaku-v2.1",
-    LoRA_list: list = [],
+    LoRA_list: dict = {}, #{"LoRA_1" : 0.5 , "LoRA_2" : 0.7 ,...}
     prompt: str = "Girl with panda ears wearing a hood",
     negative_prompt: str = "",
     width: int = 512,

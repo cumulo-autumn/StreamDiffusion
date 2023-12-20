@@ -38,7 +38,7 @@ def run(
     warmup: int = 10,
     iterations: int = 100,
     model_id: str = "KBlueLeaf/kohaku-v2.1",
-    LoRA_list: list = [],
+    LoRA_list: dict = {}, #{"LoRA_1" : 0.5 , "LoRA_2" : 0.7 ,...}
     prompt: str = "Girl with brown dog ears,thick frame glasses",
     negative_prompt: str = "bad image , bad quality",
     use_lcm_lora: bool = True,

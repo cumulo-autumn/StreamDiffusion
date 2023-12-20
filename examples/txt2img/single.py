@@ -11,9 +11,9 @@ from wrapper import StreamDiffusionWrapper
 
 
 def main(
-    output: str = "output.png",
+    output: str = "Output_images/output.png",
     model_id: str = "KBlueLeaf/kohaku-v2.1",
-    LoRA_list: list = [],
+    LoRA_list: dict = {}, #{"LoRA_1" : 0.5 , "LoRA_2" : 0.7 ,...}
     prompt: str = "Girl with panda ears wearing a hood",
     width: int = 512,
     height: int = 512,

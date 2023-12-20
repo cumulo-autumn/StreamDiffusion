@@ -25,7 +25,7 @@ def run(
     warmup: int = 10,
     iterations: int = 100,
     model_id: str = "KBlueLeaf/kohaku-v2.1",
-    LoRA_list: list = [],
+    LoRA_list: dict = {"dasyomiku_dadaptation-000008.safetensors" : 0.7, "virtual_singer_dadaptation-000008.safetensors" : 1.0}, #{"LoRA_1" : 0.5 , "LoRA_2" : 0.7 ,...}
     prompt: str = "Girl with panda ears wearing a hood",
     negative_prompt: str = "bad image , bad quality",
     use_lcm_lora: bool = True,

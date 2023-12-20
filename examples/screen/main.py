@@ -52,7 +52,7 @@ def result_window(server_ip: str, server_port: int):
 
 def run(
     model_id: str = "KBlueLeaf/kohaku-v2.1",
-    LoRA_list: list = [],
+    LoRA_list: dict = {}, #{"LoRA_1" : 0.5 , "LoRA_2" : 0.7 ,...}
     prompt: str = "Girl with brown dog ears,thick frame glasses",
     negative_prompt: str = "bad image , bad quality",
     address: str = "127.0.0.1",

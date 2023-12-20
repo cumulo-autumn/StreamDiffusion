@@ -14,9 +14,9 @@ from wrapper import StreamDiffusionWrapper
 
 def main(
     input: str,
-    output: str = "output",
+    output: str = "Output_images/output.png",
     model_id: str = "KBlueLeaf/kohaku-v2.1",
-    LoRA_list: list = [],
+    LoRA_list: dict = {}, #{"LoRA_1" : 0.5 , "LoRA_2" : 0.7 ,...}
     prompt: str = "Girl with panda ears wearing a hood",
     scale: float = 1.0,
     acceleration: Literal["none", "xformers", "tensorrt"] = "xformers",
