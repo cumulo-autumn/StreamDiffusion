@@ -21,7 +21,7 @@ cd view
 npm i
 npm start &
 cd ../server
-python3 main.py
+python main.py
 ```
 
 ## Docker
