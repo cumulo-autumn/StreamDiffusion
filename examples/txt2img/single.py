@@ -13,12 +13,12 @@ CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def main(
+    prompt: str = "1girl with brown dog hair, thick glasses, smiling",
     output: str = os.path.join(
         CURRENT_DIR, "..", "..", "images", "outputs", "output.png"
     ),
     model_id_or_path: str = "KBlueLeaf/kohaku-v2.1",
     lora_dict: Optional[Dict[str, float]] = None,
-    prompt: str = "1girl with brown dog hair, thick glasses, smiling",
     width: int = 512,
     height: int = 512,
     acceleration: Literal["none", "xformers", "tensorrt"] = "xformers",
