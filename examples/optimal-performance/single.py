@@ -39,7 +39,7 @@ def image_generation_process(
     queue: Queue,
     fps_queue: Queue,
     prompt: str,
-    model_name: str,
+    model_id_or_path: str,
     acceleration: Literal["none", "xformers", "tensorrt"] = "tensorrt",
 ) -> None:
     """
@@ -53,13 +53,13 @@ def image_generation_process(
         The queue to put the calculated fps.
     prompt : str
         The prompt to generate images from.
-    model_name : str
+    model_id_or_path : str
         The name of the model to use for image generation.
     acceleration : Literal["none", "xformers", "tensorrt"]
         The type of acceleration to use for image generation.
     """
     stream = StreamDiffusionWrapper(
-        model_id=model_name,
+        model_id_or_path=model_id_or_path,
         t_index_list=[0],
         frame_buffer_size=1,
         warmup=10,
@@ -155,7 +155,7 @@ def receive_images(queue: Queue, fps_queue: Queue) -> None:
 
 def main(
     prompt: str = "cat with sunglasses and a hat, photoreal, 8K",
-    model_name: str = "stabilityai/sd-turbo",
+    model_id_or_path: str = "stabilityai/sd-turbo",
     acceleration: Literal["none", "xformers", "tensorrt"] = "tensorrt",
 ) -> None:
     """
@@ -165,7 +165,7 @@ def main(
     fps_queue = Queue()
     process1 = Process(
         target=image_generation_process,
-        args=(queue, fps_queue, prompt, model_name, acceleration),
+        args=(queue, fps_queue, prompt, model_id_or_path, acceleration),
     )
     process1.start()
 

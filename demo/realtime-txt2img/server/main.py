@@ -60,7 +60,7 @@ class Api:
         self.config = config
         self.stream_diffusion = StreamDiffusionWrapper(
             mode=config.mode,
-            model_id=config.model_id,
+            model_id_or_path=config.model_id_or_path,
             lcm_lora_id=config.lcm_lora_id,
             vae_id=config.vae_id,
             device=config.device,
