@@ -55,14 +55,16 @@ class Api:
         """
         self.config = config
         self.stream_diffusion = StreamDiffusionWrapper(
+            mode=config.mode,
             model_id=config.model_id,
             lcm_lora_id=config.lcm_lora_id,
             vae_id=config.vae_id,
             device=config.device,
             dtype=config.dtype,
+            acceleration=config.acceleration,
             t_index_list=config.t_index_list,
             warmup=config.warmup,
-            safety_checker=config.safety_checker,
+            use_safety_checker=config.use_safety_checker,
         )
         self.app = FastAPI()
         self.app.add_api_route(
@@ -85,8 +87,6 @@ class Api:
         self._predict_lock = asyncio.Lock()
         self._update_prompt_lock = asyncio.Lock()
 
-        self.last_prompt: str = ""
-
     async def _predict(self, inp: PredictInputModel) -> PredictResponseModel:
         """
         Predict an image and return.
@@ -102,7 +102,9 @@ class Api:
             The prediction result.
         """
         async with self._predict_lock:
-            return PredictResponseModel(base64_image=self._pil_to_base64(self.stream_diffusion(inp.prompt)))
+            return PredictResponseModel(
+                base64_image=self._pil_to_base64(self.stream_diffusion(prompt=inp.prompt))
+            )
 
     def _pil_to_base64(self, image: Image.Image, format: str = "JPEG") -> bytes:
         """

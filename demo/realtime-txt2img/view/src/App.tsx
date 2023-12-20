@@ -38,7 +38,7 @@ function App() {
   const fetchImage = useCallback(
     async (index: number) => {
       try {
-        const response = await fetch("/api/predict", {
+        const response = await fetch("http://127.0.0.1:9090/api/predict", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ prompt: inputPrompt }),
@@ -63,7 +63,7 @@ function App() {
     const newPrompt = event.target.value;
     const editDistance = calculateEditDistance(lastPrompt, newPrompt);
 
-    if (editDistance >= 2) {
+    if (editDistance >= 4) {
       setInputPrompt(newPrompt);
       setLastPrompt(newPrompt);
       for (let i = 0; i < 16; i++) {
