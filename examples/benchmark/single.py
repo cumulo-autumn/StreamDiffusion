@@ -24,7 +24,7 @@ def download_image(url: str):
 def run(
     warmup: int = 10,
     iterations: int = 100,
-    model_id: str = "KBlueLeaf/kohaku-v2.1",
+    model_id_or_path: str = "KBlueLeaf/kohaku-v2.1",
     lora_dict: Optional[Dict[str, float]] = None,
     prompt: str = "Girl with panda ears wearing a hood",
     negative_prompt: str = "bad image , bad quality",
@@ -38,7 +38,7 @@ def run(
     seed: int = 2,
 ):
     stream = StreamDiffusionWrapper(
-        model_id=model_id,
+        model_id_or_path=model_id_or_path,
         lora_dict=lora_dict,
         use_lcm_lora=use_lcm_lora,
         use_tiny_vae=use_tiny_vae,

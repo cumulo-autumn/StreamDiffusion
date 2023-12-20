@@ -11,10 +11,14 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from utils.wrapper import StreamDiffusionWrapper
 
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 
 def main(
     input: str,
-    output: str = "Output_images/output.png",
+    output: str = os.path.join(
+        CURRENT_DIR, "..", "..", "images", "outputs", "output.mp4"
+    ),
     model_id: str = "KBlueLeaf/kohaku-v2.1",
     lora_dict: Optional[Dict[str, float]] = None,
     prompt: str = "Girl with panda ears wearing a hood",
@@ -63,7 +67,7 @@ def main(
         video_result[i] = output_image.permute(1, 2, 0)
 
     video_result = video_result * 255
-    write_video(f"{output}.mp4", video_result, fps=fps)
+    write_video(output, video_result, fps=fps)
 
 
 if __name__ == "__main__":

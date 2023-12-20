@@ -15,7 +15,7 @@ def main(
     output: str = os.path.join(
         CURRENT_DIR, "..", "..", "images", "outputs", "output.png"
     ),
-    model_id: str = "KBlueLeaf/kohaku-v2.1",
+    model_id_or_path: str = "KBlueLeaf/kohaku-v2.1",
     lora_dict: Optional[Dict[str, float]] = None,
     prompt: str = "Girl with panda ears wearing a hood",
     width: int = 512,
@@ -27,7 +27,7 @@ def main(
     os.makedirs(output, exist_ok=True)
 
     stream = StreamDiffusionWrapper(
-        model_id=model_id,
+        model_id_or_path=model_id_or_path,
         lora_dict=lora_dict,
         t_index_list=[0, 16, 32, 45],
         frame_buffer_size=frame_buffer_size,

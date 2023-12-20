@@ -1,5 +1,6 @@
 import gc
 import os
+from pathlib import Path
 import traceback
 from typing import List, Literal, Optional, Union, Dict
 
@@ -17,13 +18,11 @@ torch.set_grad_enabled(False)
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
 
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-
 
 class StreamDiffusionWrapper:
     def __init__(
         self,
-        model_id: str,
+        model_id_or_path: str,
         t_index_list: List[int],
         lora_dict: Optional[Dict[str, float]] = None,
         mode: Literal["img2img", "txt2img"] = "img2img",
@@ -48,7 +47,7 @@ class StreamDiffusionWrapper:
         seed: int = 2,
         use_safety_checker: bool = False,
     ):
-        self.sd_turbo = "turbo" in model_id
+        self.sd_turbo = "turbo" in model_id_or_path
 
         if mode == "txt2img":
             if cfg_type != "none":
@@ -84,7 +83,7 @@ class StreamDiffusionWrapper:
         self.use_safety_checker = use_safety_checker
 
         self.stream: StreamDiffusion = self._load_model(
-            model_id=model_id,
+            model_id_or_path=model_id_or_path,
             lora_dict=lora_dict,
             lcm_lora_id=lcm_lora_id,
             vae_id=vae_id,
@@ -274,7 +273,7 @@ class StreamDiffusionWrapper:
 
     def _load_model(
         self,
-        model_id: str,
+        model_id_or_path: str,
         t_index_list: List[int],
         lora_dict: Optional[Dict[str, float]] = None,
         lcm_lora_id: Optional[str] = None,
@@ -292,7 +291,7 @@ class StreamDiffusionWrapper:
 
         This method does the following:
 
-        1. Loads the model from the model_id.
+        1. Loads the model from the model_id_or_path.
         2. Loads and fuses the LCM-LoRA model from the lcm_lora_id if needed.
         3. Loads the VAE model from the vae_id if needed.
         4. Enables acceleration if needed.
@@ -301,7 +300,7 @@ class StreamDiffusionWrapper:
 
         Parameters
         ----------
-        model_id : str
+        model_id_or_path : str
             The model id to load.
         t_index_list : List[int]
             The t_index_list to use for inference.
@@ -331,12 +330,12 @@ class StreamDiffusionWrapper:
 
         try:  # Load from local directory
             pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_pretrained(
-                model_id,
+                model_id_or_path,
             ).to(device=self.device, dtype=self.dtype)
 
         except ValueError:  # Load from huggingface
             pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file(
-                os.path.join(CURRENT_DIR, "..", "models", "Model", model_id)
+                model_id_or_path,
             ).to(device=self.device, dtype=self.dtype)
         except Exception:  # No model found
             traceback.print_exc()
@@ -366,10 +365,9 @@ class StreamDiffusionWrapper:
 
             if lora_dict is not None:
                 for lora_name, lora_scale in lora_dict.items():
-                    lora = os.path.join(CURRENT_DIR, "..", "models", "LoRA", lora_name)
-                    stream.load_lora(lora)
+                    stream.load_lora(lora_name)
                     stream.fuse_lora(lora_scale=lora_scale)
-                    print(f"Use LoRA: {lora} in weights {lora_scale}")
+                    print(f"Use LoRA: {lora_name} in weights {lora_scale}")
 
         if use_tiny_vae:
             if vae_id is not None:
@@ -402,26 +400,34 @@ class StreamDiffusionWrapper:
                 )
 
                 def create_prefix(
+                    model_id_or_path: str,
                     max_batch_size: int,
                     min_batch_size: int,
                 ):
-                    return f"{model_id}--lcm_lora-{use_lcm_lora}--tiny_vae-{use_tiny_vae}--max_batch-{max_batch_size}--min_batch-{min_batch_size}--mode-{self.mode}"
+                    maybe_path = Path(model_id_or_path)
+                    if maybe_path.exists():
+                        return f"{maybe_path.stem}--lcm_lora-{use_lcm_lora}--tiny_vae-{use_tiny_vae}--max_batch-{max_batch_size}--min_batch-{min_batch_size}--mode-{self.mode}"
+                    else:
+                        return f"{model_id_or_path}--lcm_lora-{use_lcm_lora}--tiny_vae-{use_tiny_vae}--max_batch-{max_batch_size}--min_batch-{min_batch_size}--mode-{self.mode}"
 
                 engine_dir = os.path.join("engines")
                 unet_path = os.path.join(
                     engine_dir,
                     create_prefix(
-                        stream.trt_unet_batch_size, stream.trt_unet_batch_size
+                        model_id_or_path=model_id_or_path,
+                        max_batch_size=stream.trt_unet_batch_size,
+                        min_batch_size=stream.trt_unet_batch_size,
                     ),
                     "unet.engine",
                 )
                 vae_encoder_path = os.path.join(
                     engine_dir,
                     create_prefix(
-                        self.batch_size
+                        model_id_or_path=model_id_or_path,
+                        max_batch_size=self.batch_size
                         if self.mode == "txt2img"
                         else stream.frame_bff_size,
-                        self.batch_size
+                        min_batch_size=self.batch_size
                         if self.mode == "txt2img"
                         else stream.frame_bff_size,
                     ),
@@ -430,10 +436,11 @@ class StreamDiffusionWrapper:
                 vae_decoder_path = os.path.join(
                     engine_dir,
                     create_prefix(
-                        self.batch_size
+                        model_id_or_path=model_id_or_path,
+                        max_batch_size=self.batch_size
                         if self.mode == "txt2img"
                         else stream.frame_bff_size,
-                        self.batch_size
+                        min_batch_size=self.batch_size
                         if self.mode == "txt2img"
                         else stream.frame_bff_size,
                     ),
