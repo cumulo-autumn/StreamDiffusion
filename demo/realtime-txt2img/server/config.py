@@ -36,7 +36,7 @@ class Config:
     # Data type
     dtype: torch.dtype = torch.float16
     # acceleration
-    acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers"
+    acceleration: Literal["none", "xformers", "tensorrt"] = "xformers"
 
     ####################################################################
     # Inference configuration

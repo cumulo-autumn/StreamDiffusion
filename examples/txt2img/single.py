@@ -17,7 +17,7 @@ def main(
     prompt: str = "Girl with panda ears wearing a hood",
     width: int = 512,
     height: int = 512,
-    acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
+    acceleration: Literal["none", "xformers", "tensorrt"] = "xformers",
     use_denoising_batch: bool = True,
     seed: int = 2,
 ):

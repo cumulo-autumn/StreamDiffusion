@@ -17,7 +17,7 @@ def main(
     width: int = 512,
     height: int = 512,
     frame_buffer_size: int = 3,
-    acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
+    acceleration: Literal["none", "xformers", "tensorrt"] = "xformers",
     seed: int = 2,
 ):
     os.makedirs(output, exist_ok=True)
