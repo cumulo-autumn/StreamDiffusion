@@ -336,7 +336,7 @@ class StreamDiffusionWrapper:
 
         except ValueError:  # Load from huggingface
             pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file(
-                model_id
+                os.path.join(CURRENT_DIR, "..", "models", "Model", model_id)
             ).to(device=self.device, dtype=self.dtype)
         except Exception:  # No model found
             traceback.print_exc()
