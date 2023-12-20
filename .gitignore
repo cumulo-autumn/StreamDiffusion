@@ -9,6 +9,7 @@ output/
 result_lcm.png
 model.ckpt
 *.png
+!assets/img2img_example.png
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
