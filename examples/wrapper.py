@@ -285,7 +285,7 @@ class StreamDiffusionWrapper:
         if use_faster_sd:
             print("Faster SD enabled.")
             #------------------------------
-            register_parallel_pipeline(pipe) # 2. enable parallel. If memory is limited, replace it with  `register_normal_pipeline(pipe)`
+            register_normal_pipeline(pipe) # 2. enable parallel. If memory is limited, replace it with  `register_normal_pipeline(pipe)`
             register_faster_forward(pipe.unet,order,mod)  # 3. encoder propagation
             #------------------------------
 
