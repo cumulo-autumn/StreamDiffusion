@@ -1,7 +1,7 @@
 # Txt2Img Example
 
 <p align="center">
-  <img src="./assets/example.gif" width=80%>
+  <img src="../../assets/demo.gif" width=80%>
 </p>
 
 StreamDiffusion を用いた GUI を提供します。
