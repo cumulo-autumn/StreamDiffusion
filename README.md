@@ -33,29 +33,26 @@ pip3 install torch==2.1.0 torchvision==0.16.0 xformers --index-url https://downl
 details: https://pytorch.org/
 
 ### Step2: Install StreamDiffusion
+#### For User
+Install StreamDiffusion
 ```
 pip install git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=stream-diffusion
 ```
-OR
+Enable tensorrt
 ```
-git clone https://github.com/cumulo-autumn/StreamDiffusion.git
-python -m pip install .
-```
-OR [if you want to use tensorrt]
-```
-git clone https://github.com/cumulo-autumn/StreamDiffusion.git
-pip install .[tensorrt]
 python -m streamdiffusion.tools.install-tensorrt
 ```
-OR [if you are a developer]
+
+#### For Developer
 ```
 git clone https://github.com/cumulo-autumn/StreamDiffusion.git
 python setup.py develop easy_install stream-diffusion[tensorrt]
 python -m streamdiffusion.tools.install-tensorrt
 ```
+
 ## Quick Start
 
-You can try StreamDiffusion in `examples` directory.
+You can try StreamDiffusion in [`examples`](./examples) directory.
 
 ## Usage
 
