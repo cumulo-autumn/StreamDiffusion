@@ -47,6 +47,7 @@ def run(
     acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
     device_ids: Optional[List[int]] = None,
     use_denoising_batch: bool = True,
+    seed: int = 2,
 ):
     stream = StreamDiffusionWrapper(
         model_id=model_id,
@@ -65,6 +66,7 @@ def run(
         mode="img2img",
         use_denoising_batch=use_denoising_batch,
         cfg_type="self",  # initialize, full, self , none
+        seed = seed,
     )
 
     stream.prepare(

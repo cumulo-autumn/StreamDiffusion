@@ -22,6 +22,7 @@ def main(
     use_denoising_batch: bool = True,
     guidance_scale: float = 1.2,
     cfg_type: Literal["none", "full", "self", "initialize"] = "initialize",
+    seed: int = 2,
 ):
     if guidance_scale <= 1.0:
         cfg_type = "none"
@@ -38,6 +39,7 @@ def main(
         mode="img2img",
         use_denoising_batch = use_denoising_batch,
         cfg_type = cfg_type,
+        seed = seed,
     )
 
     stream.prepare(

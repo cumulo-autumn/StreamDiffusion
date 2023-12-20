@@ -17,6 +17,7 @@ def main(
     height: int = 512,
     frame_buffer_size: int = 3,
     acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
+    seed: int = 2,
 ):
     os.makedirs(output, exist_ok=True)
 
@@ -32,6 +33,7 @@ def main(
         mode="txt2img",
         use_denoising_batch=False,
         cfg_type="none",
+        seed = seed,
     )
 
     stream.prepare(

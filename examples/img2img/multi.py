@@ -22,6 +22,7 @@ def main(
     use_denoising_batch: bool = True,
     guidance_scale: float = 1.2,
     cfg_type: Literal["none", "full", "self", "initialize"] = "initialize",
+    seed: int = 2,
 ):
     if not os.path.exists(output):
         os.makedirs(output, exist_ok=True)
@@ -41,6 +42,7 @@ def main(
         mode="img2img",
         use_denoising_batch = use_denoising_batch,
         cfg_type = cfg_type,
+        seed = seed,
     )
 
     stream.prepare(

@@ -21,6 +21,7 @@ def main(
     use_faster_sd: bool = True,
     order: int =5,
     mod: str = '50ls', ##["pro","50ls","50ls2","50ls3","50ls4","100ls","75ls","s2"]
+    seed: int = 2,
 ):
     stream = StreamDiffusionWrapper(
         model_id=model_id,
@@ -37,6 +38,7 @@ def main(
         use_faster_sd=use_faster_sd,
         order=order,
         mod=mod,
+        seed = seed,
     )
 
     stream.prepare(

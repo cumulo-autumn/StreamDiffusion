@@ -21,6 +21,7 @@ def main(
     acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers",
     use_denoising_batch: bool = True,
     enable_similar_image_filter: bool = True,
+    seed: int = 2,
 ):
     video_info = read_video(input)
     video = video_info[0] / 255
@@ -42,6 +43,7 @@ def main(
         enable_similar_image_filter=enable_similar_image_filter,
         similar_image_filter_threshold=0.98,
         use_denoising_batch=use_denoising_batch,
+        seed = seed,
     )
 
     stream.prepare(

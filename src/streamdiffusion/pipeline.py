@@ -128,8 +128,10 @@ class StreamDiffusion:
         guidance_scale: float = 1.2,
         delta: float = 1.0,
         generator: Optional[torch.Generator] = torch.Generator(),
+        seed: int = 2,
     ) -> None:
         self.generator = generator
+        self.generator.manual_seed(seed)
         # initialize x_t_latent (it can be any random tensor)
         if self.denoising_steps_num > 1:
             self.x_t_latent_buffer = torch.zeros(

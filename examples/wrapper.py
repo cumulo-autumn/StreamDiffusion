@@ -47,6 +47,7 @@ class StreamDiffusionWrapper:
         use_faster_sd: bool = False,
         order: int = 0,
         mod: str =  '50ls', ##["pro","50ls","50ls2","50ls3","50ls4","100ls","75ls","s2"]
+        seed: int = 2,
     ):
         if mode == "txt2img":
             if cfg_type != "none":
@@ -97,6 +98,7 @@ class StreamDiffusionWrapper:
             cfg_type=cfg_type,
             use_faster_sd=use_faster_sd,
             order=order,
+            seed=seed,
         )
 
         if device_ids is not None:
@@ -253,6 +255,7 @@ class StreamDiffusionWrapper:
         use_faster_sd: bool = False,
         order: int = 0,
         mod: str = '50ls', ##["pro","50ls","50ls2","50ls3","50ls4","100ls","75ls","s2"]
+        seed: int = 2,
     ):
         """
         Loads the model.
@@ -505,7 +508,8 @@ class StreamDiffusionWrapper:
             guidance_scale=1.1
             if stream.cfg_type in ["full", "self", "initialize"]
             else 1.0,
-            generator=torch.manual_seed(2),
+            generator=torch.manual_seed(seed),
+            seed=seed,
         )
 
         return stream
