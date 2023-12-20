@@ -69,6 +69,7 @@ class Api:
             t_index_list=config.t_index_list,
             warmup=config.warmup,
             use_safety_checker=config.use_safety_checker,
+            cfg_type="none",
         )
         self.app = FastAPI()
         self.app.add_api_route(
