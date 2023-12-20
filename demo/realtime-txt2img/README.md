@@ -18,6 +18,7 @@ or
 ```bash
 pip install -r requirements.txt
 cd view
+npm i
 npm start &
 cd ../server
 python3 main.py
