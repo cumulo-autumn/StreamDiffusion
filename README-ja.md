@@ -17,7 +17,7 @@ StreamDiffusionは、リアルタイム画像生成を実現するために最�
 [![arXiv](https://img.shields.io/badge/arXiv-2307.04725-b31b1b.svg)](https://arxiv.org/abs/2312.12491)
 [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-yellow)](https://huggingface.co/papers/2312.12491)
 
-StreamDiffusionの開発にあたり、丁寧なサポート、有意義なフィードバックと議論をしていただいた [Taku Fujimoto](https://twitter.com/AttaQjp) 様と [Radamés Ajna](https://twitter.com/radamar) 様、そして Huggingface チームに心より感謝いたします。
+StreamDiffusionの開発にあたり、丁寧なサポート、有意義なフィードバックと議論をしていただいた [Taku Fujimoto](https://twitter.com/AttaQjp) 様と [Radamés Ajna](https://twitter.com/radamar) 様、そして Hugging Face チームに心より感謝いたします。
 
 ## 主な特徴
 
@@ -33,7 +33,7 @@ StreamDiffusionの開発にあたり、丁寧なサポート、有意義なフ�
 4. **IO Queues** - [詳細](#io-queues-link)
    - 入出力操作を効率的に管理し、よりスムーズな実行を実現します。
 
-5. **Pre-computation for KV-Caches** - [詳細](#pre-computation-for-kv-caches-link)
+5. **Pre-Computation for KV-Caches** - [詳細](#pre-computation-for-kv-caches-link)
    - 高速処理のためのキャッシュ戦略を最適化します。
 
 6. **Model Acceleration Tools**
@@ -177,7 +177,7 @@ def download_image(url: str):
 
 
 def run(
-    wamup: int = 10,
+    warmup: int = 10,
     iterations: int = 50,
     prompt: str = "1girl with brown dog ears, thick frame glasses",
     lcm_lora: bool = True,
@@ -223,7 +223,7 @@ def run(
     input_tensor = pil2tensor(image)
 
     # warmup
-    for _ in range(wamup):
+    for _ in range(warmup):
         stream(input_tensor.detach().clone().to(device=stream.device, dtype=stream.dtype))
 
     results = []
@@ -267,9 +267,9 @@ if __name__ == "__main__":
 
 この GitHubリポジトリ にある動画と画像のデモは、[kohakuV2](https://civitai.com/models/136268/kohaku-v2)と[SD-Turbo](https://arxiv.org/abs/2311.17042)を使用して生成されました。
 
-KohakuV2 モデルを提供していただいたKohaku BlueLeaf 様 ([@KBlueleaf](https://twitter.com/KBlueleaf))、[SD-Turbo](https://arxiv.org/abs/2311.17042)を提供していただいた[StabilityAI](https://ja.stability.ai/)様に心より感謝いたします。
+KohakuV2 モデルを提供していただいたKohaku BlueLeaf 様 ([@KBlueleaf](https://twitter.com/KBlueleaf))、[SD-Turbo](https://arxiv.org/abs/2311.17042)を提供していただいた[Stability AI](https://ja.stability.ai/)様に心より感謝いたします。
 
-KohakuV2 モデルは [Civitai](https://civitai.com/models/136268/kohaku-v2) と [HuggingFace](https://huggingface.co/stabilityai/sd-turbo) からダウンロードでき、[SD-Turbo](https://arxiv.org/abs/2311.17042) は Hugging Faceで使用可能です。。
+KohakuV2 モデルは [Civitai](https://civitai.com/models/136268/kohaku-v2) と [Hugging Face](https://huggingface.co/stabilityai/sd-turbo) からダウンロードでき、[SD-Turbo](https://arxiv.org/abs/2311.17042) は Hugging Faceで使用可能です。。
 
 
 # Contributors
