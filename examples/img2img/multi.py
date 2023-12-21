@@ -68,7 +68,7 @@ def main(
         The delta multiplier of virtual residual noise,
         by default 1.0.
     """
-    
+
     if not os.path.exists(output):
         os.makedirs(output, exist_ok=True)
 
