@@ -7,7 +7,7 @@
 
 # StreamDiffusion: A Pipeline-Level Solution for Real-Time Interactive Generation
 
-**Authors:** [Akio Kodaira*](https://www.linkedin.com/feed/), [Chenfeng Xu*](https://www.chenfengx.com/), Toshiki Hazama, Takanori Yoshimoto, [Kohei Ohno](https://www.linkedin.com/in/kohei--ohno/), Shogo Mitsuhori, Soichi Sugano, Hanying Cho, [Zhijian Liu](https://scholar.google.com/citations?hl=en&user=3coYSTUAAAAJ), [Kurt Keutzer](https://scholar.google.com/citations?hl=en&user=ID9QePIAAAAJ) (*Corresponding Author)
+**Authors:** [Akio Kodaira](https://www.linkedin.com/feed/), [Chenfeng Xu](https://www.chenfengx.com/), Toshiki Hazama, Takanori Yoshimoto, [Kohei Ohno](https://www.linkedin.com/in/kohei--ohno/), [Shogo Mitsuhori](https://me.ddpn.world/), Soichi Sugano, Hanying Cho, [Zhijian Liu](https://zhijianliu.com/), [Kurt Keutzer](https://scholar.google.com/citations?hl=en&user=ID9QePIAAAAJ)
 
 StreamDiffusion is an innovative diffusion pipeline designed for real-time interactive generation. It introduces significant performance enhancements to current diffusion-based image generation techniques.
 
