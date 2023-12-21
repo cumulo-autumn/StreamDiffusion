@@ -26,7 +26,7 @@ def main(
     enable_similar_image_filter: bool = True,
     seed: int = 2,
 ):
-    
+
     """
     Process for generating images based on a prompt using a specified model.
 
@@ -88,7 +88,7 @@ def main(
 
     video_result = torch.zeros(video.shape[0], width, height, 3)
 
-    for _ in range(stream.batch_size - 1):
+    for _ in range(stream.batch_size):
         stream(image=video[0].permute(2, 0, 1))
 
     for i in tqdm(range(video.shape[0])):

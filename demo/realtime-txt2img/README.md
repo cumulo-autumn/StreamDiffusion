@@ -32,3 +32,17 @@ docker run -ti -p 9090:9090 -e HF_HOME=/data -v ~/.cache/huggingface:/data  --gp
 ```
 
 `-e HF_HOME=/data -v ~/.cache/huggingface:/data` is used to mount your local huggingface cache to the container, so that you don't need to download the model again.
+
+# Acknowledgements
+
+</br>
+
+The video and image demos in this github repository were generated using [kohakuV2](https://civitai.com/models/136268/kohaku-v2) and [SD-Turbo](https://arxiv.org/abs/2311.17042). 
+
+
+Thanks to Kohaku BlueLeaf ([@KBlueleaf](https://twitter.com/KBlueleaf)) for providing the model.
+Thanks to [StabilityAI](https://ja.stability.ai/) for providing [SD-Turbo](https://arxiv.org/abs/2311.17042).
+
+Can download model in [Civitai](https://civitai.com/models/136268/kohaku-v2) and [HuggingFace](https://huggingface.co/KBlueLeaf/kohaku-v2.1/tree/main).
+Can use [SD-Turbo](https://arxiv.org/abs/2311.17042) in [HuggingFace](https://huggingface.co/stabilityai/sd-turbo).
+

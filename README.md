@@ -1,5 +1,11 @@
 # StreamDiffusion
 
+<p align="center">
+  <img src="./assets/demo_07.gif" width=80%>
+  <img src="./assets/demo_09.gif" width=80%>
+</p>
+
+
 **[StreamDiffusion: A Pipeline-level Solution for Real-time Interactive Generation](https://arxiv.org/abs/2312.12491)**
 </br>
 [Akio Kodaira*](https://www.linkedin.com/feed/),
@@ -71,9 +77,9 @@ python -m streamdiffusion.tools.install-tensorrt
 
 You can try StreamDiffusion in [`examples`](./examples) directory.
 
-| ![画像1](./assets/demo_02.gif) | ![画像2](./assets/demo_03.gif) |
+| ![画像3](./assets/demo_02.gif) | ![画像4](./assets/demo_03.gif) |
 |:--------------------:|:--------------------:|
-| ![画像3](./assets/demo_04.gif) | ![画像4](./assets/demo_05.gif) |
+| ![画像5](./assets/demo_04.gif) | ![画像6](./assets/demo_05.gif) |
 
 ## Usage
 
@@ -183,6 +189,7 @@ if __name__ == "__main__":
 
 # Acknowledgements
 </br>
+
 [Aki](https://github.com/cumulo-autumn/),
 [Ararat](https://github.com/AttaQ/),
 [Chenfeng Xu](https://github.com/chenfengxu714/),
@@ -193,11 +200,11 @@ if __name__ == "__main__":
 [Tonimono](https://github.com/mili-inch/),
 [Verb](https://github.com/discus0434),
 
+(*alphabetical order)
+
 </br>
 
-The video and image demos in this github repository were generated using [kohakuV2](https://civitai.com/models/136268/kohaku-v2). Thanks to [@KBlueleaf](https://twitter.com/KBlueleaf) for providing the model.
 
-Can download model in [Civitai](https://civitai.com/models/136268/kohaku-v2) and [HuggingFace](https://huggingface.co/KBlueLeaf/kohaku-v2.1/tree/main)
+The video and image demos in this github repository were generated using [kohakuV2](https://civitai.com/models/136268/kohaku-v2). Thanks to Kohaku BlueLeaf ([@KBlueleaf](https://twitter.com/KBlueleaf)) for providing the model.
 
-
-(*alphabetical order)
+Can download model in [Civitai](https://civitai.com/models/136268/kohaku-v2) and [HuggingFace](https://huggingface.co/KBlueLeaf/kohaku-v2.1/tree/main).
