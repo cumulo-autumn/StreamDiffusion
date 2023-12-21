@@ -42,6 +42,7 @@ class StreamDiffusionWrapper:
         use_tiny_vae: bool = True,
         enable_similar_image_filter: bool = False,
         similar_image_filter_threshold: float = 0.98,
+        similar_image_filter_max_skip_frame: int = 10,
         use_denoising_batch: bool = True,
         cfg_type: Literal["none", "full", "self", "initialize"] = "self",
         seed: int = 2,
@@ -103,7 +104,7 @@ class StreamDiffusionWrapper:
             )
 
         if enable_similar_image_filter:
-            self.stream.enable_similar_image_filter(similar_image_filter_threshold)
+            self.stream.enable_similar_image_filter(similar_image_filter_threshold, similar_image_filter_max_skip_frame)
 
     def prepare(
         self,

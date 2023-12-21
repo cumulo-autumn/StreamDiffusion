@@ -112,9 +112,10 @@ class StreamDiffusion:
             safe_fusing=safe_fusing,
         )
 
-    def enable_similar_image_filter(self, threshold: float = 0.98) -> None:
+    def enable_similar_image_filter(self, threshold: float = 0.98, max_skip_frame: float = 10) -> None:
         self.similar_image_filter = True
         self.similar_filter.set_threshold(threshold)
+        self.similar_filter.set_max_skip_frame(max_skip_frame)
 
     def disable_similar_image_filter(self) -> None:
         self.similar_image_filter = False

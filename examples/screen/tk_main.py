@@ -27,12 +27,10 @@ def screen(
     global stop_capture
     with mss.mss() as sct:
         while True:
-            # print("captured")
             img = sct.grab(monitor)
             img = PIL.Image.frombytes("RGB", img.size, img.bgra, "raw", "BGRX")
             img.resize((height, width))
             inputs.append(pil2tensor(img))
-            # print(len(inputs))
             if stop_capture:
                 return
 
@@ -53,6 +51,10 @@ def image_generation_process(
     cfg_type: Literal["none", "full", "self", "initialize"],
     guidance_scale: float,
     delta: float,
+    do_add_noise: bool,
+    enable_similar_image_filter: bool,
+    similar_image_filter_threshold: float,
+    similar_image_filter_max_skip_frame: float,
 ) -> None:
     """
     Process for generating images based on a prompt using a specified model.
@@ -81,9 +83,10 @@ def image_generation_process(
         height=height,
         warmup=10,
         acceleration=acceleration,
-        do_add_noise=False,
-        enable_similar_image_filter=False,
-        similar_image_filter_threshold=0.98,
+        do_add_noise=do_add_noise,
+        enable_similar_image_filter=enable_similar_image_filter,
+        similar_image_filter_threshold=similar_image_filter_threshold,
+        similar_image_filter_max_skip_frame=similar_image_filter_max_skip_frame,
         mode="img2img",
         use_denoising_batch=use_denoising_batch,
         cfg_type=cfg_type,
@@ -144,6 +147,10 @@ def main(
     cfg_type: Literal["none", "full", "self", "initialize"] = "self",
     guidance_scale: float = 1.4,
     delta: float = 0.5,
+    do_add_noise: bool = False,
+    enable_similar_image_filter: bool = True,
+    similar_image_filter_threshold: float = 0.99,
+    similar_image_filter_max_skip_frame: float = 10,
 ) -> None:
     """
     Main function to start the image generation and viewer processes.
@@ -168,6 +175,10 @@ def main(
             cfg_type,
             guidance_scale,
             delta,
+            do_add_noise,
+            enable_similar_image_filter,
+            similar_image_filter_threshold,
+            similar_image_filter_max_skip_frame,
               ),
     )
     process1.start()
