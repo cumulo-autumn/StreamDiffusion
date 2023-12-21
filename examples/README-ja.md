@@ -65,8 +65,6 @@ python optimal-performance/single.py
 
 ## `screen/`
 
-**This script only works on Windows.**
-
 スクリーンキャプチャを用いたリアルタイムの image-to-image です。**Windowsでのみ動作します。**
 
 動作のために、以下のコマンドを用いて依存関係をインストールする必要があります。
@@ -82,8 +80,6 @@ python screen/main.py
 ```
 
 ## `txt2img/`
-
-text-to-image
 
 `txt2img/multi.py` は Prompt から複数の画像を生成し、`txt2img/single.py` は一枚の画像を生成します。
 
