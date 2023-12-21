@@ -41,9 +41,9 @@ StreamDiffusionの開発にあたり、丁寧なサポート、有意義なフ�
 
 **GPU: RTX 4090**, **CPU: Core i9-13900K**, **OS: Ubuntu 22.04.3 LTS**　環境で StreamDiffusion pipeline を用いて 画像を生成した場合、以下のような結果が得られました。
 
-|model                | Denoising Step      |  fps on Txt2Img      |  fps on Img2Img      | 
+|model                | Denoising Step      |  fps on Txt2Img      |  fps on Img2Img      |
 |:-------------------:|:-------------------:|:--------------------:|:--------------------:|
-|SR-turbo             | 1              | 106.16                    | 93.897               | 
+|SR-turbo             | 1              | 106.16                    | 93.897               |
 |LCM-LoRA <br>+<br> kohakuV2| 4        | 38.023                    | 37.133               |
 
 _Feel free to explore each feature by following the provided links to learn more about StreamDiffusion's capabilities. If you find it helpful, please consider citing our work:_
@@ -208,7 +208,7 @@ while True:
 
 ## オプション
 
-## Stochastic Similarity Filter
+### Stochastic Similarity Filter
 
 ![demo](assets/demo_06.gif)
 
@@ -216,23 +216,27 @@ Stochastic Similarity Filterは動画入力時、前フレームからあまり�
 
 ```python
 stream = StreamDiffusion(
-        pipe,
-        [32, 45],
-        torch_dtype=torch.float16,
-    )
-stream.enable_similar_image_filter(similar_image_filter_threshold,similar_image_filter_max_skip_frame)
+    pipe,
+    [32, 45],
+    torch_dtype=torch.float16,
+)
+stream.enable_similar_image_filter(
+    similar_image_filter_threshold,
+    similar_image_filter_max_skip_frame,
+)
 ```
 
 関数で設定できる引数として以下がある。
-### similar_image_filter_threshold
+
+#### `similar_image_filter_threshold`
 
 - 処理を休止する前フレームと現フレームの類似度の閾値
 
-### similar_image_filter_max_skip_frame
+#### `similar_image_filter_max_skip_frame`
 
 - 休止中に変換を再開する最大の間隔
 
-## Residual CFG (RCFG)
+### Residual CFG (RCFG)
 
 ![rcfg](assets/cfg_conparision.png)
 
@@ -256,22 +260,22 @@ cfg_type = "self"
 cfg_type = "initialize"
 
 stream = StreamDiffusion(
-        pipe,
-        [32, 45],
-        torch_dtype=torch.float16,
-        cfg_type = cfg_type
-    )
+    pipe,
+    [32, 45],
+    torch_dtype=torch.float16,
+    cfg_type=cfg_type,
+)
 
 stream.prepare(
-        prompt = "1girl, purple hair",
-        guidance_scale = guidance_scale,
-        delta = delta,
-    )
+    prompt="1girl, purple hair",
+    guidance_scale=guidance_scale,
+    delta=delta,
+)
 ```
 
 deltaはRCFGの効きをマイルドにする効果を持つ
 
-# 開発チーム
+## 開発チーム
 
 [Aki](https://github.com/cumulo-autumn/),
 [Ararat](https://github.com/AttaQ/),
@@ -286,7 +290,7 @@ deltaはRCFGの効きをマイルドにする効果を持つ
 (*alphabetical order)
 </br>
 
-# 謝辞
+## 謝辞
 
 この GitHubリポジトリ にある動画と画像のデモは、[LCM-LoRA](https://huggingface.co/latent-consistency/lcm-lora-sdv1-5) + [kohakuV2](https://civitai.com/models/136268/kohaku-v2)と[SD-Turbo](https://arxiv.org/abs/2311.17042)を使用して生成されました。
 
@@ -295,7 +299,7 @@ LCM-LoRAを提供していただいた[LCM-LoRA authors](https://latent-consiste
 KohakuV2 モデルは [Civitai](https://civitai.com/models/136268/kohaku-v2) と [Hugging Face](https://huggingface.co/stabilityai/sd-turbo) からダウンロードでき、[SD-Turbo](https://arxiv.org/abs/2311.17042) は Hugging Faceで使用可能です。。
 
 
-# Contributors
+## Contributors
 
 <!-- <a href="https://github.com/cumulo-autumn/StreamDiffusion/tree/dev/refactor-examples/graphs/contributors" target="_blank">
   <img src="https://contrib.rocks/image?repo=cumulo-autumn/StreamDiffusion" />
