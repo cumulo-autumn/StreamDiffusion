@@ -1,11 +1,9 @@
-# StreamDiffusion
+# StreamDiffusion: A Pipeline-Level Solution for Real-Time Interactive Generation
 
 <p align="center">
   <img src="./assets/demo_07.gif" width=90%>
   <img src="./assets/demo_09.gif" width=90%>
 </p>
-
-# StreamDiffusion: A Pipeline-Level Solution for Real-Time Interactive Generation
 
 **Authors:** [Akio Kodaira*](https://www.linkedin.com/feed/), [Chenfeng Xu*](https://www.chenfengx.com/), Toshiki Hazama, Takanori Yoshimoto, [Kohei Ohno](https://www.linkedin.com/in/kohei--ohno/), Shogo Mitsuhori, Soichi Sugano, Hanying Cho, [Zhijian Liu](https://scholar.google.com/citations?hl=en&user=3coYSTUAAAAJ), [Kurt Keutzer](https://scholar.google.com/citations?hl=en&user=ID9QePIAAAAJ) (*Corresponding Author)
 
@@ -34,52 +32,11 @@ StreamDiffusion is an innovative diffusion pipeline designed for real-time inter
 6. **Model Acceleration Tools**
    - Utilizes various tools for model optimization and performance boost.
 
-Feel free to explore each feature by following the provided links to learn more about StreamDiffusion's capabilities. If you find it helpful, please consider citing our work: 
+Feel free to explore each feature by following the provided links to learn more about StreamDiffusion's capabilities. If you find it helpful, please consider citing our work:
 
 ```bash
 @article{kodaira2023streamdiffusion,
-      title={StreamDiffusion: A Pipeline-level Solution for Real-time Interactive Generation}, 
-      author={Akio Kodaira and Chenfeng Xu and Toshiki Hazama and Takanori Yoshimoto and Kohei Ohno and Shogo Mitsuhori and Soichi Sugano and Hanying Cho and Zhijian Liu and Kurt Keutzer},
-      year={2023},
-      eprint={2312.12491},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV}
-}
-```
-
-
-
-# StreamDiffusion: A Pipeline-Level Solution for Real-Time Interactive Generation
-
-**Authors:** Akio Kodaira, Chenfeng Xu, Toshiki Hazama, Takanori Yoshimoto, Kohei Ohno, Shogo Mitsuhori, Soichi Sugano, Hanying Cho, Zhijian Liu, Kurt Keutzer
-
-StreamDiffusion is an innovative diffusion pipeline designed for real-time interactive generation. It introduces significant performance enhancements to current diffusion-based image generation techniques.
-
-## Key Features
-
-1. **Stream Batching** - [Learn More](#stream-batching-link)
-   - Streamlined data processing through efficient batch operations.
-
-2. **Residual Classifier-Free Guidance** - [Learn More](#residual-classifier-free-guidance-link)
-   - Improved guidance mechanism that minimizes computational redundancy.
-
-3. **Stochastic Similarity Filtering** - [Learn More](#stochastic-similarity-filtering-link)
-   - Enhances image quality through advanced filtering techniques.
-
-4. **IO Queues** - [Learn More](#io-queues-link)
-   - Efficiently manages input and output operations for smoother execution.
-
-5. **Pre-computation for KV-Caches** - [Learn More](#pre-computation-for-kv-caches-link)
-   - Optimizes caching strategies for accelerated processing.
-
-6. **Model Acceleration Tools**
-   - Utilizes various tools for model optimization and performance boost.
-
-Feel free to explore each feature by following the provided links to learn more about StreamDiffusion's capabilities. If you find it helpful, please consider citing our work: 
-
-```bash
-@article{kodaira2023streamdiffusion,
-      title={StreamDiffusion: A Pipeline-level Solution for Real-time Interactive Generation}, 
+      title={StreamDiffusion: A Pipeline-level Solution for Real-time Interactive Generation},
       author={Akio Kodaira and Chenfeng Xu and Toshiki Hazama and Takanori Yoshimoto and Kohei Ohno and Shogo Mitsuhori and Soichi Sugano and Hanying Cho and Zhijian Liu and Kurt Keutzer},
       year={2023},
       eprint={2312.12491},
