@@ -141,9 +141,7 @@ There is an interactive txt2img demo in [`demo/realtime-txt2img`](./demo/realtim
   <img src="./assets/demo_01.gif" width=100%>
 </p>
 
-## Usage Examples
-
-### Minimum
+## Usage Example
 
 ```python
 import torch

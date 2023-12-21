@@ -147,8 +147,6 @@ docker run --gpus all -it -v $(pwd):/home/ubuntu/streamdiffusion stream-diffusio
 
 ## 使用例
 
-### 最小限の構成
-
 ```python
 import torch
 from diffusers import AutoencoderTiny, StableDiffusionPipeline
