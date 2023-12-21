@@ -210,11 +210,11 @@ while True:
 
 ## Stochastic Similarity Filter
 
-![demo](assets\demo_06.gif)
+![demo](assets/demo_06.gif)
 
 Stochastic Similarity Filterは動画入力時、前フレームからあまり変化しないときの変換処理を減らすことで、上のGIFの赤枠の様にGPUの負荷を軽減する。使用方法は以下のとおりである。
 
-```
+```python
 stream = StreamDiffusion(
         pipe,
         [32, 45],
@@ -234,7 +234,7 @@ stream.enable_similar_image_filter(similar_image_filter_threshold,similar_image_
 
 ## Residual CFG (RCFG)
 
-![rcfg](assets\cfg_conparision.png)
+![rcfg](assets/cfg_conparision.png)
 
 RCFGはCFG使用しない場合と比較し、競争力のある計算量で近似的にCFGを実現させる方法である。StreamDiffusionの引数cfg_typeから指定可能である。
 
@@ -242,7 +242,7 @@ RCFGは二種類あり、negative promptの指定項目なしのRCFG Self-Negati
 
 The usage is as follows:
 
-```
+```python
 # CFG なし
 cfg_type = "none"
 
