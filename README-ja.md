@@ -216,11 +216,14 @@ Stochastic Similarity Filterは動画入力時、前フレームからあまり�
 
 ```python
 stream = StreamDiffusion(
-        pipe,
-        [32, 45],
-        torch_dtype=torch.float16,
-    )
-stream.enable_similar_image_filter(similar_image_filter_threshold,similar_image_filter_max_skip_frame)
+    pipe,
+    [32, 45],
+    torch_dtype=torch.float16,
+)
+stream.enable_similar_image_filter(
+    similar_image_filter_threshold,
+    similar_image_filter_max_skip_frame,
+)
 ```
 
 関数で設定できる引数として以下がある。
@@ -257,17 +260,17 @@ cfg_type = "self"
 cfg_type = "initialize"
 
 stream = StreamDiffusion(
-        pipe,
-        [32, 45],
-        torch_dtype=torch.float16,
-        cfg_type = cfg_type
-    )
+    pipe,
+    [32, 45],
+    torch_dtype=torch.float16,
+    cfg_type=cfg_type,
+)
 
 stream.prepare(
-        prompt = "1girl, purple hair",
-        guidance_scale = guidance_scale,
-        delta = delta,
-    )
+    prompt="1girl, purple hair",
+    guidance_scale=guidance_scale,
+    delta=delta,
+)
 ```
 
 deltaはRCFGの効きをマイルドにする効果を持つ

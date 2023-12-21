@@ -214,11 +214,14 @@ Stochastic Similarity Filter reduces processing during video input by minimizing
 
 ```python
 stream = StreamDiffusion(
-        pipe,
-        [32, 45],
-        torch_dtype=torch.float16,
-    )
-stream.enable_similar_image_filter(similar_image_filter_threshold,similar_image_filter_max_skip_frame)
+    pipe,
+    [32, 45],
+    torch_dtype=torch.float16,
+)
+stream.enable_similar_image_filter(
+    similar_image_filter_threshold,
+    similar_image_filter_max_skip_frame,
+)
 ```
 
 There are the following parameters that can be set as arguments in the function:
@@ -249,16 +252,16 @@ cfg_type = "self"
 # RCFG Onetime-Negative
 cfg_type = "initialize"
 stream = StreamDiffusion(
-        pipe,
-        [32, 45],
-        torch_dtype=torch.float16,
-        cfg_type = cfg_type
-    )
+    pipe,
+    [32, 45],
+    torch_dtype=torch.float16,
+    cfg_type=cfg_type,
+)
 stream.prepare(
-        prompt = "1girl, purple hair",
-        guidance_scale = guidance_scale,
-        delta = delta,
-    )
+    prompt="1girl, purple hair",
+    guidance_scale=guidance_scale,
+    delta=delta,
+)
 ```
 
 The delta has a moderating effect on the effectiveness of RCFG.
