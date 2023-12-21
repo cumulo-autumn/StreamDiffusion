@@ -65,13 +65,45 @@ def image_generation_process(
         The queue to put the generated images in.
     fps_queue : Queue
         The queue to put the calculated fps.
-    prompt : str
-        The prompt to generate images from.
     model_id_or_path : str
         The name of the model to use for image generation.
+    prompt : str
+        The prompt to generate images from.
+    negative_prompt : str, optional
+        The negative prompt to use.
     acceleration : Literal["none", "xformers", "tensorrt"]
         The type of acceleration to use for image generation.
+    width : int, optional
+        The width of the image, by default 512.
+    height : int, optional
+        The height of the image, by default 512.
+    acceleration : Literal["none", "xformers", "tensorrt"], optional
+        The acceleration method, by default "tensorrt".
+    use_denoising_batch : bool, optional
+        Whether to use denoising batch or not, by default True.
+    seed : int, optional
+        The seed, by default 2.
+    cfg_type : Literal["none", "full", "self", "initialize"],
+    optional
+        The cfg_type for img2img mode, by default "self".
+        You cannot use anything other than "none" for txt2img mode.
+    guidance_scale : float, optional
+        The CFG scale, by default 1.2.
+    delta : float, optional
+        The delta multiplier of virtual residual noise,
+        by default 1.0.
+    do_add_noise : bool, optional
+        Whether to add noise for following denoising steps or not,
+        by default True.
+    enable_similar_image_filter : bool, optional
+        Whether to enable similar image filter or not,
+        by default False.
+    similar_image_filter_threshold : float, optional
+        The threshold for similar image filter, by default 0.98.
+    similar_image_filter_max_skip_frame : int, optional
+        The max skip frame for similar image filter, by default 10.
     """
+    
     global inputs
     global stop_capture
     stream = StreamDiffusionWrapper(

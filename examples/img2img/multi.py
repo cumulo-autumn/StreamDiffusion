@@ -25,10 +25,50 @@ def main(
     acceleration: Literal["none", "xformers", "tensorrt"] = "xformers",
     use_denoising_batch: bool = True,
     guidance_scale: float = 1.2,
-    cfg_type: Literal["none", "full", "self", "initialize"] = "initialize",
+    cfg_type: Literal["none", "full", "self", "initialize"] = "self",
     seed: int = 2,
     delta: float = 0.5,
 ):
+    """
+    Initializes the StreamDiffusionWrapper.
+
+    Parameters
+    ----------
+    input : str, optional
+        The input directory to load images from.
+    output : str, optional
+        The output directory to save images to.
+    model_id_or_path : str
+        The model id or path to load.
+    lora_dict : Optional[Dict[str, float]], optional
+        The lora_dict to load, by default None.
+        Keys are the LoRA names and values are the LoRA scales.
+        Example: {"LoRA_1" : 0.5 , "LoRA_2" : 0.7 ,...}
+    prompt : str
+        The prompt to generate images from.
+    negative_prompt : str, optional
+        The negative prompt to use.
+    width : int, optional
+        The width of the image, by default 512.
+    height : int, optional
+        The height of the image, by default 512.
+    acceleration : Literal["none", "xformers", "tensorrt"], optional
+        The acceleration method, by default "tensorrt".
+    use_denoising_batch : bool, optional
+        Whether to use denoising batch or not, by default True.
+    guidance_scale : float, optional
+        The CFG scale, by default 1.2.
+    cfg_type : Literal["none", "full", "self", "initialize"],
+    optional
+        The cfg_type for img2img mode, by default "self".
+        You cannot use anything other than "none" for txt2img mode.
+    seed : int, optional
+        The seed, by default 2.
+    delta : float, optional
+        The delta multiplier of virtual residual noise,
+        by default 1.0.
+    """
+    
     if not os.path.exists(output):
         os.makedirs(output, exist_ok=True)
 
@@ -55,7 +95,6 @@ def main(
         negative_prompt=negative_prompt,
         num_inference_steps=50,
         guidance_scale=guidance_scale,
-        cfg_type="self",
         delta=delta,
     )
 

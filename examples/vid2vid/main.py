@@ -28,6 +28,34 @@ def main(
     enable_similar_image_filter: bool = True,
     seed: int = 2,
 ):
+    
+    """
+    Process for generating images based on a prompt using a specified model.
+
+    Parameters
+    ----------
+    output : str, optional
+        The output image file to save images to.
+    model_id_or_path : str
+        The name of the model to use for image generation.
+    lora_dict : Optional[Dict[str, float]], optional
+        The lora_dict to load, by default None.
+        Keys are the LoRA names and values are the LoRA scales.
+        Example: {"LoRA_1" : 0.5 , "LoRA_2" : 0.7 ,...}
+    prompt : str
+        The prompt to generate images from.
+    width : int, optional
+        The width of the image, by default 512.
+    height : int, optional
+        The height of the image, by default 512.
+    acceleration : Literal["none", "xformers", "tensorrt"]
+        The type of acceleration to use for image generation.
+    use_denoising_batch : bool, optional
+        Whether to use denoising batch or not, by default False.
+    seed : int, optional
+        The seed, by default 2.
+    """
+    
     video_info = read_video(input)
     video = video_info[0] / 255
     fps = video_info[2]["video_fps"]

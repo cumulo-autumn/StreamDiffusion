@@ -14,9 +14,7 @@ CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def main(
     input: str = os.path.join(CURRENT_DIR, "..", "..", "images", "inputs", "input.png"),
-    output: str = os.path.join(
-        CURRENT_DIR, "..", "..", "images", "outputs", "output.png"
-    ),
+    output: str = os.path.join(CURRENT_DIR, "..", "..", "images", "outputs", "output.png"),
     model_id_or_path: str = "KBlueLeaf/kohaku-v2.1",
     lora_dict: Optional[Dict[str, float]] = None,
     prompt: str = "1girl with brown dog hair, thick glasses, smiling",
@@ -30,6 +28,46 @@ def main(
     seed: int = 2,
     delta: float = 0.5,
 ):
+    """
+    Initializes the StreamDiffusionWrapper.
+
+    Parameters
+    ----------
+    input : str, optional
+        The input image file to load images from.
+    output : str, optional
+        The output image file to save images to.
+    model_id_or_path : str
+        The model id or path to load.
+    lora_dict : Optional[Dict[str, float]], optional
+        The lora_dict to load, by default None.
+        Keys are the LoRA names and values are the LoRA scales.
+        Example: {"LoRA_1" : 0.5 , "LoRA_2" : 0.7 ,...}
+    prompt : str
+        The prompt to generate images from.
+    negative_prompt : str, optional
+        The negative prompt to use.
+    width : int, optional
+        The width of the image, by default 512.
+    height : int, optional
+        The height of the image, by default 512.
+    acceleration : Literal["none", "xformers", "tensorrt"], optional
+        The acceleration method, by default "tensorrt".
+    use_denoising_batch : bool, optional
+        Whether to use denoising batch or not, by default True.
+    guidance_scale : float, optional
+        The CFG scale, by default 1.2.
+    cfg_type : Literal["none", "full", "self", "initialize"],
+    optional
+        The cfg_type for img2img mode, by default "self".
+        You cannot use anything other than "none" for txt2img mode.
+    seed : int, optional
+        The seed, by default 2.
+    delta : float, optional
+        The delta multiplier of virtual residual noise,
+        by default 1.0.
+    """
+
     if guidance_scale <= 1.0:
         cfg_type = "none"
 
