@@ -4,6 +4,22 @@ Examples of StreamDiffusion.
 
 If you want to maximize performance, you need to install with following steps explained in [README.md](../README.md) in the root directory, and use `--acceleration tensorrt` option at the end of each command. At default, StreamDiffusion uses `xformers` for acceleration, which is not the fastest option.
 
+## `screen/`
+
+Take a screen capture and process it. **This script only works on Windows.**
+
+You need to install extra dependencies for this script as follows:
+
+```bash
+pip install -r screen/requirements.txt
+```
+
+### Usage
+
+```bash
+python screen/main.py
+```
+
 ## `benchmark/`
 
 Just measure the performance of StreamDiffusion.
@@ -16,8 +32,26 @@ Just measure the performance of StreamDiffusion.
 python benchmark/multi.py
 ```
 
+With TensorRT acceleration:
+
 ```bash
 python benchmark/multi.py --acceleration tensorrt
+```
+
+## `optimal-performance`
+
+Using SD-Turbo and TensorRT, perform text-to-image with optimal performance.
+
+`optimal-performance/multi.py` is optimized for RTX4090 and performs batch processing, while `optimal-performance/single.py` does not.
+
+### Usage
+
+```bash
+python optimal-performance/multi.py
+```
+
+```bash
+python optimal-performance/single.py
 ```
 
 ## `img2img/`
@@ -38,38 +72,6 @@ Image-to-image for multiple images:
 
 ```bash
 python img2img/multi.py --input ./input --output-dir ./output
-```
-
-## `optimal-performance`
-
-Using SD-Turbo and TensorRT, perform text-to-image with optimal performance.
-
-`optimal-performance/multi.py` is optimized for RTX4090 and performs batch processing, while `optimal-performance/single.py` does not.
-
-### Usage
-
-```bash
-python optimal-performance/multi.py
-```
-
-```bash
-python optimal-performance/single.py
-```
-
-## `screen/`
-
-Take a screen capture and process it. **This script only works on Windows.**
-
-You need to install extra dependencies for this script as follows:
-
-```bash
-pip install -r screen/requirements.txt
-```
-
-### Usage
-
-```bash
-python screen/main.py
 ```
 
 ## `txt2img/`
