@@ -38,7 +38,7 @@ With TensorRT acceleration:
 python benchmark/multi.py --acceleration tensorrt
 ```
 
-## `optimal-performance`
+## `optimal-performance/`
 
 Using SD-Turbo and TensorRT, perform text-to-image with optimal performance.
 
