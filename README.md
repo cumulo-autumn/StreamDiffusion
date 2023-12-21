@@ -1,6 +1,6 @@
 # StreamDiffusion
 
-**[StreamDiffusion: A Pipeline-level Solution for Real-time Interactive Generation](https://arxiv.org/xxx)**
+**[StreamDiffusion: A Pipeline-level Solution for Real-time Interactive Generation](https://arxiv.org/abs/2312.12491)**
 </br>
 [Aki](https://github.com/cumulo-autumn/),
 [Ararat](https://github.com/AttaQ/),
@@ -14,8 +14,8 @@
 
 (*alphabetical order)
 
-[![arXiv](https://img.shields.io/badge/arXiv-2307.04725-b31b1b.svg)](https://arxiv.org/xxxx)
-[![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-yellow)](xxxx)
+[![arXiv](https://img.shields.io/badge/arXiv-2307.04725-b31b1b.svg)](https://arxiv.org/abs/2312.12491)
+[![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-yellow)](https://huggingface.co/papers/2312.12491)
 
 
 ## Installation
