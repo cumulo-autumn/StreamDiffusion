@@ -58,7 +58,7 @@ COPY --chown=user:user . .
 # change dir since pip needs to seed whl folder
 RUN cd server && pip install --no-cache-dir --upgrade -r requirements.txt 
 RUN --mount=type=secret,id=GITHUB_TOKEN,mode=0444,required=true \
-    pip install git+https://$(cat /run/secrets/GITHUB_TOKEN)@github.com/cumulo-autumn/StreamDiffusion.git@main#egg=stream-diffusion[tensorrt]
+    pip install git+https://$(cat /run/secrets/GITHUB_TOKEN)@github.com/cumulo-autumn/StreamDiffusion.git@main#egg=streamdiffusion[tensorrt]
 RUN python -m streamdiffusion.tools.install-tensorrt
 
 COPY --from=frontend /app/build ./view/build

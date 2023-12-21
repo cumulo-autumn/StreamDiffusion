@@ -51,8 +51,8 @@ Feel free to explore each feature by following the provided links to learn more 
 
 ### Step0: Make environment
 ```
-conda create -n stream-diffusion python=3.10
-conda activate stream-diffusion
+conda create -n streamdiffusion python=3.10
+conda activate streamdiffusion
 ```
 OR
 ```
@@ -91,7 +91,7 @@ python -m streamdiffusion.tools.install-tensorrt
 #### For Developer
 ```
 git clone https://github.com/cumulo-autumn/StreamDiffusion.git
-python setup.py develop easy_install stream-diffusion[tensorrt]
+python setup.py develop easy_install streamdiffusion[tensorrt]
 python -m streamdiffusion.tools.install-tensorrt
 ```
 

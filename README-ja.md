@@ -1,21 +1,32 @@
 # StreamDiffusion
 
-**[StreamDiffusion: A Pipeline-level Solution for Real-time Interactive Generation](https://arxiv.org/xxx)**
-</br>
-[Aki](https://github.com/cumulo-autumn/),
-[Ararat](https://github.com/AttaQ/),
-[Chenfeng Xu](https://github.com/chenfengxu714/),
-[ddPn08](https://github.com/ddPn08/),
-[kizamimi](https://github.com/kizamimi/),
-[ramune](https://github.com/YN35/),
-[teftef](https://github.com/teftef6220/),
-[Tonimono](https://github.com/mili-inch/),
-[Verb](https://github.com/discus0434),
+<p align="center">
+  <img src="./assets/demo_07.gif" width=90%>
+  <img src="./assets/demo_09.gif" width=90%>
+</p>
+
+# StreamDiffusion: A Pipeline-Level Solution for Real-Time Interactive Generation
+
+**Authors:** [Akio Kodaira](https://www.linkedin.com/feed/), [Chenfeng Xu](https://www.chenfengx.com/), Toshiki Hazama, Takanori Yoshimoto, [Kohei Ohno](https://www.linkedin.com/in/kohei--ohno/), [Shogo Mitsuhori](https://me.ddpn.world/), Soichi Sugano, Hanying Cho, [Zhijian Liu](https://zhijianliu.com/), [Kurt Keutzer](https://scholar.google.com/citations?hl=en&user=ID9QePIAAAAJ)
 
 
-[![arXiv](https://img.shields.io/badge/arXiv-2307.04725-b31b1b.svg)](https://arxiv.org/xxxx)
-[![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-yellow)](xxxx)
+StreamDiffusionは、リアルタイム画像生成を目指して開発された、画期的な拡散モデルベースの画像生成パイプラインです。この技術は、従来の拡散モデルベースの画像生成手法を向上し性能向上を実現しました。
 
+[![arXiv](https://img.shields.io/badge/arXiv-2307.04725-b31b1b.svg)](https://arxiv.org/abs/2312.12491)
+[![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-yellow)](https://huggingface.co/papers/2312.12491)
+
+
+
+```bash
+@article{kodaira2023streamdiffusion,
+      title={StreamDiffusion: A Pipeline-level Solution for Real-time Interactive Generation},
+      author={Akio Kodaira and Chenfeng Xu and Toshiki Hazama and Takanori Yoshimoto and Kohei Ohno and Shogo Mitsuhori and Soichi Sugano and Hanying Cho and Zhijian Liu and Kurt Keutzer},
+      year={2023},
+      eprint={2312.12491},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
+```
 
 ## インストール
 
@@ -26,8 +37,8 @@ anaconda または pip で仮想環境を作成してください。
 anaconda を用いる場合
 
 ```
-conda create -n stream-diffusion python=3.10
-conda activate stream-diffusion
+conda create -n streamdiffusion python=3.10
+conda activate streamdiffusion
 ```
 pip を用いる場合
 ```
@@ -59,7 +70,7 @@ pip3 install torch==2.1.0 torchvision==0.16.0 xformers --index-url https://downl
 #### ユーザー向け
 StreamDiffusion　をインストール
 ```
-pip install git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=stream-diffusion
+pip install git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=streamdiffusion
 ```
 tensorrt をインストール
 ```
@@ -69,13 +80,18 @@ python -m streamdiffusion.tools.install-tensorrt
 #### 開発者向け
 ```
 git clone https://github.com/cumulo-autumn/StreamDiffusion.git
-python setup.py develop easy_install stream-diffusion[tensorrt]
+python setup.py develop easy_install streamdiffusion[tensorrt]
 python -m streamdiffusion.tools.install-tensorrt
 ```
 
 ## 動作例
 
  [`examples`](./examples) からサンプルを実行できます。
+
+| ![画像3](./assets/demo_02.gif) | ![画像4](./assets/demo_03.gif) |
+|:--------------------:|:--------------------:|
+| ![画像5](./assets/demo_04.gif) | ![画像6](./assets/demo_05.gif) |
+
 
 ## 使用方法
 
@@ -171,4 +187,26 @@ def run(
 if __name__ == "__main__":
     fire.Fire(run)
 
-``````
+```
+
+# 謝辞
+
+</br>
+
+[Aki](https://github.com/cumulo-autumn/),
+[Ararat](https://github.com/AttaQ/),
+[Chenfeng Xu](https://github.com/chenfengxu714/),
+[ddPn08](https://github.com/ddPn08/),
+[kizamimi](https://github.com/kizamimi/),
+[ramune](https://github.com/YN35/),
+[teftef](https://github.com/teftef6220/),
+[Tonimono](https://github.com/mili-inch/),
+[Verb](https://github.com/discus0434),
+
+</br>
+
+この GitHubリポジトリ にある動画と画像のデモは、[kohakuV2](https://civitai.com/models/136268/kohaku-v2)と[SD-Turbo](https://arxiv.org/abs/2311.17042)を使用して生成されました。
+
+KohakuV2 モデルを提供していただいたKohaku BlueLeaf 様 ([@KBlueleaf](https://twitter.com/KBlueleaf))、[SD-Turbo](https://arxiv.org/abs/2311.17042)を提供していただいた[StabilityAI](https://ja.stability.ai/)様に心より感謝いたします。
+
+KohakuV2 モデルは[Civitai](https://civitai.com/models/136268/kohaku-v2)と[HuggingFace](https://huggingface.co/stabilityai/sd-turbo)からダウンロードでき、[SD-Turbo](https://arxiv.org/abs/2311.17042)　Hugging Faceで使用可能です。
