@@ -12,7 +12,7 @@
 **Authors:** [Akio Kodaira](https://www.linkedin.com/feed/), [Chenfeng Xu](https://www.chenfengx.com/), Toshiki Hazama, Takanori Yoshimoto, [Kohei Ohno](https://www.linkedin.com/in/kohei--ohno/), [Shogo Mitsuhori](https://me.ddpn.world/), Soichi Sugano, Hanying Cho, [Zhijian Liu](https://zhijianliu.com/), [Kurt Keutzer](https://scholar.google.com/citations?hl=en&user=ID9QePIAAAAJ)
 
 
-StreamDiffusionは、リアルタイム画像生成を実現するために最適化された、革新的な画像生成パイプラインです。StreamDiffusionは、従来の画像生成パイプラインと比べて飛躍的な速度向上を実現しました。
+StreamDiffusionは、リアルタイム画像生成を実現するために最適化されたパイプラインです。従来の画像生成パイプラインと比べて飛躍的な速度向上を実現しました。
 
 [![arXiv](https://img.shields.io/badge/arXiv-2307.04725-b31b1b.svg)](https://arxiv.org/abs/2312.12491)
 [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-yellow)](https://huggingface.co/papers/2312.12491)
@@ -22,24 +22,24 @@ StreamDiffusionの開発にあたり、丁寧なサポート、有意義なフ�
 ## 主な特徴
 
 1. **Stream Batch** - [詳細](#stream-batching-link)
-   - バッチ処理によるデータ処理の効率化を行っています。
+   - バッチ処理によるデータ処理の効率化
 
 2. **Residual Classifier-Free Guidance** - [詳細](#residual-classifier-free-guidance-link)
-   - 計算の冗長性を最小限に抑える改良されたガイダンスメカニズム。
+   - 計算の冗長性を最小限に抑えるCFG
 
 3. **Stochastic Similarity Filter** - [詳細](#stochastic-similarity-filtering-link)
-   - 高度なフィルタリング技術によりGPUの利用効率を向上させます。
+   - 類似度によるフィルタリングでGPUの使用効率を最大化
 
 4. **IO Queues** - [詳細](#io-queues-link)
-   - 入出力操作を効率的に管理し、よりスムーズな実行を実現します。
+   - 入出力操作を効率的に管理し、よりスムーズな実行を実現
 
 5. **Pre-Computation for KV-Caches** - [詳細](#pre-computation-for-kv-caches-link)
    - 高速処理のためのキャッシュ戦略を最適化します。
 
 6. **Model Acceleration Tools**
-   - モデルの最適化とパフォーマンス向上のための様々なツールを利用できます。
+   - モデルの最適化とパフォーマンス向上のための様々なツールの利用
 
-StreamDiffusionの機能をより詳しく知るために、提供されているリンクをたどって各機能を自由に探索してください。お役に立ちましたら、ぜひ引用をご検討ください：
+_Feel free to explore each feature by following the provided links to learn more about StreamDiffusion's capabilities. If you find it helpful, please consider citing our work:_
 
 ```bash
 @article{kodaira2023streamdiffusion,
@@ -56,16 +56,16 @@ StreamDiffusionの機能をより詳しく知るために、提供されてい�
 
 ### 環境構築
 
-anaconda または pip で仮想環境を作成してください。
+anaconda、pip、または後述するDockerで仮想環境を作成します。
 
-anaconda を用いる場合
+anacondaを用いる場合
 
 ```bash
 conda create -n streamdiffusion python=3.10
 conda activate streamdiffusion
 ```
 
-pip を用いる場合
+pipを用いる場合
 
 ```cmd
 python -m venv .venv
@@ -75,9 +75,9 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
-### Step1: PyTorch のインストール
+### Step1: PyTorchのインストール
 
-使用する GPU の CUDA バージョンに合わせて PyTorch をインストールしてください。
+使用するGPUのCUDAバージョンに合わせてPyTorchをインストールしてください。
 
 CUDA 11.8
 
@@ -94,17 +94,17 @@ pip3 install torch==2.1.0 torchvision==0.16.0 xformers --index-url https://downl
 詳しくは[こちら](https://pytorch.org/)
 
 
-### Step2: StreamDiffusion のインストール
+### Step2: StreamDiffusionのインストール
 
-#### 非開発者向け
+#### ユーザー向け
 
-StreamDiffusion をインストール
+StreamDiffusionをインストール
 
 ```bash
 pip install git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=streamdiffusion
 ```
 
-tensorrt をインストール
+TensorRTをインストール
 
 ```bash
 python -m streamdiffusion.tools.install-tensorrt
@@ -118,7 +118,7 @@ python setup.py develop easy_install streamdiffusion[tensorrt]
 python -m streamdiffusion.tools.install-tensorrt
 ```
 
-## Docker　の場合 (TensorRT 対応)
+## Dockerの場合(TensorRT対応)
 
 ```bash
 git clone https://github.com/cumulo-autumn/StreamDiffusion.git
@@ -129,7 +129,7 @@ docker run --gpus all -it -v $(pwd):/home/ubuntu/streamdiffusion stream-diffusio
 
 ## 動作例
 
- [`examples`](./examples) からサンプルを実行できます。
+[`examples`](./examples) からサンプルを実行できます。
 
 | ![画像3](./assets/demo_02.gif) | ![画像4](./assets/demo_03.gif) |
 |:--------------------:|:--------------------:|
@@ -137,23 +137,21 @@ docker run --gpus all -it -v $(pwd):/home/ubuntu/streamdiffusion stream-diffusio
 
 具体的な詳細設定及びユーザカスタマイズは以下をお読みください。
 
-## リアルタイム Txt2Img デモ
+## Real-Time Txt2Img Demo
 
-リアルタイムの txt2img デモは [`demo/realtime-txt2img`](./demo/realtime-txt2img) ディレクトリにあります。
+リアルタイムのtxt2imgデモは [`demo/realtime-txt2img`](./demo/realtime-txt2img)にあります。
 
 <p align="center">
   <img src="./assets/demo_01.gif" width=80%>
 </p>
 
-## minimum example
+## サンプルコード(最小限)
 
 ```python
 
 ```
 
-## ユーザカスタマイズ
-
-下記は、ローカル環境にて StreamDiffusion を実行する際のサンプルコードです。
+## サンプルコード(詳細)
 
 ```python
 from typing import Literal, Optional
