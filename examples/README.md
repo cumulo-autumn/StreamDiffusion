@@ -40,6 +40,11 @@ With TensorRT acceleration:
 python benchmark/multi.py --acceleration tensorrt
 ```
 
+
+ [`examples`](./examples) からサンプルを実行できます。
+
+
+
 ## `optimal-performance/`
 
 Using SD-Turbo and TensorRT, perform text-to-image with optimal performance.

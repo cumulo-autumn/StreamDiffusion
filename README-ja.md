@@ -39,6 +39,13 @@ StreamDiffusionの開発にあたり、丁寧なサポート、有意義なフ�
 6. **Model Acceleration Tools**
    - モデルの最適化とパフォーマンス向上のための様々なツールの利用
 
+**GPU: RTX 4090**, **CPU: Core i9-13900K**, **OS: Ubuntu 22.04.3 LTS**　環境で StreamDiffusion pipeline を用いて 画像を生成した場合、以下のような結果が得られました。
+
+|model                | Denoising Step      |  fps on Txt2Img      |  fps on Img2Img      | 
+|:-------------------:|:-------------------:|:--------------------:|:--------------------:|
+|SR-turbo             | 1              | 106.16                    | 93.897               | 
+|LCM-LoRA <br>+<br> kohakuV2| 4        | 38.023                    | 37.133               |
+
 _Feel free to explore each feature by following the provided links to learn more about StreamDiffusion's capabilities. If you find it helpful, please consider citing our work:_
 
 ```bash
