@@ -40,12 +40,12 @@ We sincerely thank [Taku Fujimoto](https://twitter.com/AttaQjp) and [Radamés Aj
    - Utilizes various tools for model optimization and performance boost.
 
 
-   
-When images are produced using our proposed StreamDiffusion pipeline in an environment with **GPU: RTX 4090**, **CPU: Core i9-13900K**, and **OS: Ubuntu 22.04.3 LTS**, 
 
-|model                | Denoising Step      |  fps on Txt2Img      |  fps on Img2Img      | 
+When images are produced using our proposed StreamDiffusion pipeline in an environment with **GPU: RTX 4090**, **CPU: Core i9-13900K**, and **OS: Ubuntu 22.04.3 LTS**,
+
+|model                | Denoising Step      |  fps on Txt2Img      |  fps on Img2Img      |
 |:-------------------:|:-------------------:|:--------------------:|:--------------------:|
-|SR-turbo             | 1              | 106.16                    | 93.897               | 
+|SR-turbo             | 1              | 106.16                    | 93.897               |
 |LCM-LoRA <br>+<br> kohakuV2| 4        | 38.023                    | 37.133               |
 
 Feel free to explore each feature by following the provided links to learn more about StreamDiffusion's capabilities. If you find it helpful, please consider citing our work:
@@ -206,7 +206,7 @@ while True:
 
 ## Optionals
 
-## Stochastic Similarity Filter
+### Stochastic Similarity Filter
 
 ![demo](assets/demo_06.gif)
 
@@ -223,15 +223,15 @@ stream.enable_similar_image_filter(similar_image_filter_threshold,similar_image_
 
 There are the following parameters that can be set as arguments in the function:
 
-### similar_image_filter_threshold
+#### `similar_image_filter_threshold`
 
 - The threshold for similarity between the previous frame and the current frame before the processing is paused.
 
-### similar_image_filter_max_skip_frame
+#### `similar_image_filter_max_skip_frame`
 
 - The maximum interval during the pause before resuming the conversion.
 
-## Residual CFG (RCFG)
+### Residual CFG (RCFG)
 
 ![rcfg](assets/cfg_conparision.png)
 
@@ -263,7 +263,7 @@ stream.prepare(
 
 The delta has a moderating effect on the effectiveness of RCFG.
 
-# Development Team
+## Development Team
 
 [Aki](https://github.com/cumulo-autumn/),
 [Ararat](https://github.com/AttaQ/),
@@ -278,7 +278,7 @@ The delta has a moderating effect on the effectiveness of RCFG.
 (*alphabetical order)
 </br>
 
-# Acknowledgements
+## Acknowledgements
 
 The video and image demos in this GitHub repository were generated using [LCM-LoRA](https://huggingface.co/latent-consistency/lcm-lora-sdv1-5) + [kohakuV2](https://civitai.com/models/136268/kohaku-v2) and [SD-Turbo](https://arxiv.org/abs/2311.17042).
 
@@ -288,7 +288,7 @@ Special thanks to [LCM-LoRA authors](https://latent-consistency-models.github.io
 
  SD-Turbois also available on [Hugging Face Space](https://huggingface.co/stabilityai/sd-turbo) .
 
-# Contributors
+## Contributors
 
 <!-- <a href="https://github.com/cumulo-autumn/StreamDiffusion/tree/dev/refactor-examples/graphs/contributors" target="_blank">
   <img src="https://contrib.rocks/image?repo=cumulo-autumn/StreamDiffusion" />
