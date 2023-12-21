@@ -9,6 +9,7 @@ import PIL.Image
 from streamdiffusion.image_utils import pil2tensor
 import mss
 import fire
+import tkinter as tk
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 
@@ -17,6 +18,8 @@ from utils.wrapper import StreamDiffusionWrapper
 
 inputs = []
 stop_capture = False
+top = 0
+left = 0
 
 def screen(
     height: int = 512,
@@ -34,6 +37,26 @@ def screen(
             if stop_capture:
                 return
 
+def dummy_screen(
+        width: int,
+        height: int,
+):
+    root = tk.Tk()
+    root.title("Press Enter to start")
+    root.geometry(f"{width}x{height}")
+    root.resizable(False, False)
+    root.attributes("-alpha", 0.8)
+    root.configure(bg="black")
+    def destroy(event):
+        root.destroy()
+    root.bind("<Return>", destroy)
+    def update_geometry(event):
+        global top, left
+        top = root.winfo_y()
+        left = root.winfo_x()
+    root.bind("<Configure>", update_geometry)
+    root.mainloop()
+    return {"top": top, "left": left, "width": width, "height": height}
 
 def image_generation_process(
     queue: Queue,
@@ -55,6 +78,7 @@ def image_generation_process(
     enable_similar_image_filter: bool,
     similar_image_filter_threshold: float,
     similar_image_filter_max_skip_frame: float,
+    monitor: Dict[str, int],
 ) -> None:
     """
     Process for generating images based on a prompt using a specified model.
@@ -133,7 +157,7 @@ def image_generation_process(
         delta=delta,
     )
 
-    input_screen = threading.Thread(target=screen, args=(height, width))
+    input_screen = threading.Thread(target=screen, args=(height, width, monitor))
     input_screen.start()
     time.sleep(5)
 
@@ -187,6 +211,8 @@ def main(
     """
     Main function to start the image generation and viewer processes.
     """
+    monitor = dummy_screen(width, height)
+
     queue = Queue()
     fps_queue = Queue()
     process1 = Process(
@@ -211,7 +237,8 @@ def main(
             enable_similar_image_filter,
             similar_image_filter_threshold,
             similar_image_filter_max_skip_frame,
-              ),
+            monitor
+            ),
     )
     process1.start()
 
