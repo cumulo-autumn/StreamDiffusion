@@ -83,7 +83,7 @@ Install StreamDiffusion
 ```
 pip install git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=stream-diffusion
 ```
-Install tensorrt extension
+Install TensorRT extension
 ```
 python -m streamdiffusion.tools.install-tensorrt
 ```
