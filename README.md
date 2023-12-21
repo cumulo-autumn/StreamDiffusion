@@ -220,7 +220,7 @@ if __name__ == "__main__":
     run()
 ```
 
-# Developement Team
+# 💪 Developement Team
 
 [Aki](https://github.com/cumulo-autumn/),
 [Ararat](https://github.com/AttaQ/),
@@ -238,6 +238,10 @@ if __name__ == "__main__":
 # Acknowledgements
 
 
-The video and image demos in this github repository were generated using [kohakuV2](https://civitai.com/models/136268/kohaku-v2). Thanks to Kohaku BlueLeaf ([@KBlueleaf](https://twitter.com/KBlueleaf)) for providing the model.
+The video and image demos in this github repository were generated using [kohakuV2](https://civitai.com/models/136268/kohaku-v2). Thanks to Kohaku BlueLeaf ([@KBlueleaf](https://twitter.com/KBlueleaf)) for providing the model. Can download model in [Civitai](https://civitai.com/models/136268/kohaku-v2) and [HuggingFace](https://huggingface.co/KBlueLeaf/kohaku-v2.1/tree/main).
 
-Can download model in [Civitai](https://civitai.com/models/136268/kohaku-v2) and [HuggingFace](https://huggingface.co/KBlueLeaf/kohaku-v2.1/tree/main).
+# Contributors
+
+<!-- <a href="https://github.com/cumulo-autumn/StreamDiffusion/tree/dev/refactor-examples/graphs/contributors" target="_blank">
+  <img src="https://contrib.rocks/image?repo=cumulo-autumn/StreamDiffusion" />
+</a> -->

@@ -26,4 +26,4 @@ python main.py
 
 KohakuV2 モデルを提供していただいたKohaku BlueLeaf 様 ([@KBlueleaf](https://twitter.com/KBlueleaf))、[SD-Turbo](https://arxiv.org/abs/2311.17042)を提供していただいた[StabilityAI](https://ja.stability.ai/)様に心より感謝いたします。
 
-KohakuV2 モデルは[Civitai](https://civitai.com/models/136268/kohaku-v2)と[HuggingFace](https://huggingface.co/stabilityai/sd-turbo)からダウンロードでき、[SD-Turbo](https://arxiv.org/abs/2311.17042)　Hugging Faceで使用可能です。
+KohakuV2 モデルは [Civitai](https://civitai.com/models/136268/kohaku-v2) と [HuggingFace](https://huggingface.co/stabilityai/sd-turbo) からダウンロードでき、[SD-Turbo](https://arxiv.org/abs/2311.17042) は Hugging Faceで使用可能です。

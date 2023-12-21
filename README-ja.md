@@ -15,6 +15,7 @@ StreamDiffusionは、リアルタイム画像生成を実現するために最�
 [![arXiv](https://img.shields.io/badge/arXiv-2307.04725-b31b1b.svg)](https://arxiv.org/abs/2312.12491)
 [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-yellow)](https://huggingface.co/papers/2312.12491)
 
+StreamDiffusionの開発にあたり、丁寧なサポート、有意義なフィードバックと議論をしていただいた [Taku Fujimoto](https://twitter.com/AttaQjp) 様と [Radamés Ajna](https://twitter.com/radamar) 様、そして Huggingface チームに心より感謝いたします。
 
 ## 主な特徴
 
@@ -221,8 +222,7 @@ if __name__ == "__main__":
 
 ```
 
-# 謝辞
-</br>
+# 開発チーム
 
 [Aki](https://github.com/cumulo-autumn/),
 [Ararat](https://github.com/AttaQ/),
@@ -234,10 +234,17 @@ if __name__ == "__main__":
 [Tonimono](https://github.com/mili-inch/),
 [Verb](https://github.com/discus0434),
 
+(*alphabetical order)
 </br>
 
-この GitHubリポジトリ にある動画と画像のデモは、[kohakuV2](https://civitai.com/models/136268/kohaku-v2) と [SD-Turbo](https://arxiv.org/abs/2311.17042)を使用して生成されました。
+# 謝辞
 
-KohakuV2 モデルを提供していただいた Kohaku BlueLeaf 様 ([@KBlueleaf](https://twitter.com/KBlueleaf))、[SD-Turbo](https://arxiv.org/abs/2311.17042) を提供していただいた  [StabilityAI](https://ja.stability.ai/) 様に心より感謝いたします。
+この Github リポジトリにある動画と画像のデモは、[kohakuV2](https://civitai.com/models/136268/kohaku-v2)を使用して生成しました。モデルを提供していただいた Kohaku BlueLeaf ([@KBlueleaf](https://twitter.com/KBlueleaf)) 様に心より感謝いたします。
+KohakuV2 モデルは [Civitai](https://civitai.com/models/136268/kohaku-v2) と [HuggingFace](https://huggingface.co/stabilityai/sd-turbo) からダウンロードでき、[SD-Turbo](https://arxiv.org/abs/2311.17042) は Hugging Face で使用可能です。
 
-KohakuV2 モデルは [Civitai](https://civitai.com/models/136268/kohaku-v2) と [HuggingFace](https://huggingface.co/stabilityai/sd-turbo)からダウンロードでき、[SD-Turbo](https://arxiv.org/abs/2311.17042) は Hugging Face で使用可能です。
+
+# Contributors
+
+<!-- <a href="https://github.com/cumulo-autumn/StreamDiffusion/tree/dev/refactor-examples/graphs/contributors" target="_blank">
+  <img src="https://contrib.rocks/image?repo=cumulo-autumn/StreamDiffusion" />
+</a> -->
