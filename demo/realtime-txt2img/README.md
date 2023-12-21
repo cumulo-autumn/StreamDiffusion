@@ -1,7 +1,7 @@
 # Txt2Img Example
 
 <p align="center">
-  <img src="../../assets/demo.gif" width=80%>
+  <img src="../../assets/demo_01.gif" width=80%>
 </p>
 
 This example provides a simple implementation of the use of StreamDiffusion to generate images from text.
