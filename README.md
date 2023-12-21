@@ -81,7 +81,7 @@ details: https://pytorch.org/
 #### For User
 Install StreamDiffusion
 ```
-pip install git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=stream-diffusion
+pip install git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=streamdiffusion
 ```
 Install tensorrt extension
 ```
