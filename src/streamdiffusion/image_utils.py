@@ -23,7 +23,7 @@ def pt_to_numpy(images: torch.Tensor) -> np.ndarray:
 
 def numpy_to_pil(images: np.ndarray) -> PIL.Image.Image:
     """
-    Convert a numpy image or a batch of images to a PIL image.
+    Convert a NumPy image or a batch of images to a PIL image.
     """
     if images.ndim == 3:
         images = images[None, ...]
@@ -44,7 +44,6 @@ def postprocess_image(
     output_type: str = "pil",
     do_denormalize: Optional[List[bool]] = None,
 ) -> Union[torch.Tensor, np.ndarray, PIL.Image.Image]:
-    # TODO: if文消してもいいかも。
     if not isinstance(image, torch.Tensor):
         raise ValueError(
             f"Input for postprocessing is in incorrect format: {type(image)}. We only support pytorch tensor"
@@ -53,7 +52,6 @@ def postprocess_image(
     if output_type == "latent":
         return image
 
-    # TODO: classにして、initで前処理しておいてもいいかも。
     do_normalize_flg = True
     if do_denormalize is None:
         do_denormalize = [do_normalize_flg] * image.shape[0]
