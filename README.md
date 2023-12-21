@@ -140,6 +140,55 @@ There is an interactive txt2img demo in [`demo/realtime-txt2img`](./demo/realtim
 ## minimum example
 
 ```python
+import torch
+from diffusers import AutoencoderTiny, StableDiffusionPipeline
+from diffusers.utils import load_image
+
+from streamdiffusion import StreamDiffusion
+from streamdiffusion.image_utils import postprocess_image
+
+pipe = StableDiffusionPipeline.from_pretrained("KBlueLeaf/kohaku-v2.1").to(
+    device=torch.device("cuda"),
+    dtype=torch.float16,
+)
+
+# Wrap the pipeline in StreamDiffusion
+stream = StreamDiffusion(
+    pipe,
+    t_index_list=[32, 45],
+    do_add_noise=True,
+    torch_dtype=torch.float16,
+)
+
+# Merge LCM if loaded model is not LCM
+stream.load_lcm_lora()
+stream.fuse_lora()
+
+# Use Tiny VAE to speedup
+stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
+
+# Use memory efficient attention to speedup
+# If TensorRT is available, we recommend using TensorRT instead of this.
+pipe.enable_xformers_memory_efficient_attention()
+
+# prepare prompt
+prompt = "1girl with dog hair, thick frame glasses"
+stream.prepare(prompt)
+
+# prepare image
+init_image = load_image("assets\img2img_example.png").resize((512, 512))
+
+# Warmup: >= len(t_index_list) x frame_buffer_size
+for _ in range(2):
+    stream(init_image)
+
+# Run the stream
+while True:
+    x_output = stream(init_image)
+    postprocess_image(x_output, output_type="pil")[0].show()
+    input_response = input("Press Enter to continue or type 'stop' to exit: ")
+    if input_response == "stop":
+        break
 
 ```
 

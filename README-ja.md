@@ -146,9 +146,56 @@ docker run --gpus all -it -v $(pwd):/home/ubuntu/streamdiffusion stream-diffusio
 </p>
 
 ## minimum example
-
 ```python
+import torch
+from diffusers import AutoencoderTiny, StableDiffusionPipeline
+from diffusers.utils import load_image
 
+from streamdiffusion import StreamDiffusion
+from streamdiffusion.image_utils import postprocess_image
+
+pipe = StableDiffusionPipeline.from_pretrained("KBlueLeaf/kohaku-v2.1").to(
+    device=torch.device("cuda"),
+    dtype=torch.float16,
+)
+
+# StreamDiffusionでパイプラインをラップ
+stream = StreamDiffusion(
+    pipe,
+    t_index_list=[32, 45],
+    do_add_noise=True,
+    torch_dtype=torch.float16,
+)
+
+# 読みこんだモデルがLCMではない場合、LCMをマージする
+stream.load_lcm_lora()
+stream.fuse_lora()
+
+# Tiny VAEを使用しさらに高速化
+stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
+
+# xformersを使用してさらに高速化
+# TensorRTが利用可能であればそちらを推奨
+pipe.enable_xformers_memory_efficient_attention()
+
+# プロンプトの設定
+prompt = "1girl with dog hair, thick frame glasses"
+stream.prepare(prompt)
+
+# 画像の読み込み
+init_image = load_image("assets\img2img_example.png").resize((512, 512))
+
+# ワームアップ: >= len(t_index_list) x frame_buffer_size
+for _ in range(2):
+    stream(init_image)
+
+# 実行
+while True:
+    x_output = stream(init_image)
+    postprocess_image(x_output, output_type="pil")[0].show()
+    input_response = input("Press Enter to continue or type 'stop' to exit: ")
+    if input_response == "stop":
+        break
 ```
 
 ## ユーザカスタマイズ
