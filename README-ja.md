@@ -21,19 +21,19 @@ StreamDiffusionの開発にあたり、丁寧なサポート、有意義なフ�
 
 ## 主な特徴
 
-1. **Stream Batch** - [詳細](#stream-batching-link)
+1. **Stream Batch**
    - バッチ処理によるデータ処理の効率化
 
-2. **Residual Classifier-Free Guidance** - [詳細](#residual-classifier-free-guidance-link)
+2. **Residual Classifier-Free Guidance** - [詳細](#residual-cfg-rcfg)
    - 計算の冗長性を最小限に抑えるCFG
 
-3. **Stochastic Similarity Filter** - [詳細](#stochastic-similarity-filtering-link)
+3. **Stochastic Similarity Filter** - [詳細](#stochastic-similarity-filter)
    - 類似度によるフィルタリングでGPUの使用効率を最大化
 
-4. **IO Queues** - [詳細](#io-queues-link)
+4. **IO Queues**
    - 入出力操作を効率的に管理し、よりスムーズな実行を実現
 
-5. **Pre-Computation for KV-Caches** - [詳細](#pre-computation-for-kv-caches-link)
+5. **Pre-Computation for KV-Caches**
    - 高速処理のためのキャッシュ戦略を最適化します。
 
 6. **Model Acceleration Tools**

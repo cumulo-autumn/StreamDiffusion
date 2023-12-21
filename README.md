@@ -21,19 +21,19 @@ We sincerely thank [Taku Fujimoto](https://twitter.com/AttaQjp) and [Radamés Aj
 
 ## Key Features
 
-1. **Stream Batch** - [Learn More](#stream-batching-link)
+1. **Stream Batch**
    - Streamlined data processing through efficient batch operations.
 
-2. **Residual Classifier-Free Guidance** - [Learn More](#residual-classifier-free-guidance-link)
+2. **Residual Classifier-Free Guidance** - [Learn More](#residual-cfg-rcfg)
    - Improved guidance mechanism that minimizes computational redundancy.
 
-3. **Stochastic Similarity Filter** - [Learn More](#stochastic-similarity-filtering-link)
+3. **Stochastic Similarity Filter** - [Learn More](#stochastic-similarity-filter)
    - Improves GPU utilization efficiency through advanced filtering techniques.
 
-4. **IO Queues** - [Learn More](#io-queues-link)
+4. **IO Queues**
    - Efficiently manages input and output operations for smoother execution.
 
-5. **Pre-Computation for KV-Caches** - [Learn More](#pre-computation-for-kv-caches-link)
+5. **Pre-Computation for KV-Caches**
    - Optimizes caching strategies for accelerated processing.
 
 6. **Model Acceleration Tools**
