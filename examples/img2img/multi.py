@@ -106,7 +106,6 @@ def main(
         image = images.pop(0)
         outputs.append(image)
         output_image = stream(image=image)
-        output_image.save(os.path.join(output, f"{i}.png"))
 
     for image in images:
         outputs.append(image)
@@ -116,8 +115,8 @@ def main(
             continue
 
         name = outputs.pop(0)
-        basename = os.path.basename(name)
-        output_image.save(os.path.join(output, basename))
+        basename = os.path.splitext(os.path.basename(name))[0]
+        output_image.save(os.path.join(output, f"{basename}.png"))
 
 
 if __name__ == "__main__":
