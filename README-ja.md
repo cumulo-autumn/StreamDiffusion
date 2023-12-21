@@ -147,8 +147,6 @@ docker run --gpus all -it -v $(pwd):/home/ubuntu/streamdiffusion stream-diffusio
 
 ## 使用例
 
-### 最小限の構成
-
 ```python
 import torch
 from diffusers import AutoencoderTiny, StableDiffusionPipeline
@@ -199,112 +197,6 @@ while True:
     input_response = input("Press Enter to continue or type 'stop' to exit: ")
     if input_response == "stop":
         break
-```
-
-### ベンチマーク
-
-```python
-from typing import Literal, Optional
-from PIL import Image
-import torch
-from diffusers import AutoencoderTiny, StableDiffusionPipeline
-from tqdm import tqdm
-
-from streamdiffusion import StreamDiffusion
-from streamdiffusion.image_utils import pil2tensor, postprocess_image
-
-
-torch.set_grad_enabled(False)
-torch.backends.cuda.matmul.allow_tf32 = True
-torch.backends.cudnn.allow_tf32 = True
-
-
-def run(
-    prompt: str = "1girl with dog hair, thick frame glasses",
-    warmup: int = 10,
-    iterations: int = 50,
-    lcm_lora: bool = True,
-    tiny_vae: bool = True,
-    acceleration: Optional[Literal["none", "xformers", "tensorrt"]] = "xformers",
-):
-    # Load Stable Diffusion pipeline
-    pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_pretrained(
-        "KBlueLeaf/kohaku-v2.1"
-    ).to(
-        device=torch.device("cuda"),
-        dtype=torch.float16,
-    )
-
-    # Wrap the pipeline in StreamDiffusion
-    stream = StreamDiffusion(
-        pipe,
-        [32, 45],
-        torch_dtype=torch.float16,
-    )
-
-    # Load LCM LoRA
-    if lcm_lora:
-        stream.load_lcm_lora()
-        stream.fuse_lora()
-
-    # Load Tiny VAE
-    if tiny_vae:
-        stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(
-            device=pipe.device, dtype=pipe.dtype
-        )
-
-    # Enable acceleration
-    if acceleration == "xformers":
-        pipe.enable_xformers_memory_efficient_attention()
-    elif acceleration == "tensorrt":
-        from streamdiffusion.acceleration.tensorrt import accelerate_with_tensorrt
-
-        stream = accelerate_with_tensorrt(
-            stream,
-            "engines",
-            max_batch_size=2,
-            engine_build_options={"build_static_batch": True},
-        )
-
-    # Prepare the stream
-    stream.prepare(
-        prompt,
-        num_inference_steps=50,
-    )
-
-    # Prepare the input tensor
-    image = Image.open("assets/img2img_example.png").convert("RGB").resize((512, 512))
-    input_tensor = pil2tensor(image)
-
-    # Warmup
-    for _ in range(warmup):
-        stream(
-            input_tensor.detach().clone().to(device=stream.device, dtype=stream.dtype)
-        )
-
-
-    # Run the stream
-    results = []
-    for _ in tqdm(range(iterations)):
-        start = torch.cuda.Event(enable_timing=True)
-        end = torch.cuda.Event(enable_timing=True)
-
-        start.record()
-        x_output = stream(
-            input_tensor.detach().clone().to(device=stream.device, dtype=stream.dtype)
-        )
-        image = postprocess_image(x_output, output_type="pil")[0]
-        end.record()
-
-        torch.cuda.synchronize()
-        results.append(start.elapsed_time(end))
-
-    print(f"Average time: {sum(results) / len(results)}ms")
-    print(f"Average FPS: {1000 / (sum(results) / len(results))}")
-
-
-if __name__ == "__main__":
-    run()
 ```
 
 # 開発チーム
