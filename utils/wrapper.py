@@ -48,6 +48,72 @@ class StreamDiffusionWrapper:
         seed: int = 2,
         use_safety_checker: bool = False,
     ):
+        """
+        Initializes the StreamDiffusionWrapper.
+
+        Parameters
+        ----------
+        model_id_or_path : str
+            The model id or path to load.
+        t_index_list : List[int]
+            The t_index_list to use for inference.
+        lora_dict : Optional[Dict[str, float]], optional
+            The lora_dict to load, by default None.
+            Keys are the LoRA names and values are the LoRA scales.
+            Example: {"LoRA_1" : 0.5 , "LoRA_2" : 0.7 ,...}
+        mode : Literal["img2img", "txt2img"], optional
+            txt2img or img2img, by default "img2img".
+        output_type : Literal["pil", "pt", "np", "latent"], optional
+            The output type of image, by default "pil".
+        lcm_lora_id : Optional[str], optional
+            The lcm_lora_id to load, by default None.
+            If None, the default LCM-LoRA
+            ("latent-consistency/lcm-lora-sdv1-5") will be used.
+        vae_id : Optional[str], optional
+            The vae_id to load, by default None.
+            If None, the default TinyVAE
+            ("madebyollin/taesd") will be used.
+        device : Literal["cpu", "cuda"], optional
+            The device to use for inference, by default "cuda".
+        dtype : torch.dtype, optional
+            The dtype for inference, by default torch.float16.
+        frame_buffer_size : int, optional
+            The frame buffer size for denoising batch, by default 1.
+        width : int, optional
+            The width of the image, by default 512.
+        height : int, optional
+            The height of the image, by default 512.
+        warmup : int, optional
+            The number of warmup steps to perform, by default 10.
+        acceleration : Literal["none", "xformers", "tensorrt"], optional
+            The acceleration method, by default "tensorrt".
+        do_add_noise : bool, optional
+            Whether to add noise for following denoising steps or not,
+            by default True.
+        device_ids : Optional[List[int]], optional
+            The device ids to use for DataParallel, by default None.
+        use_lcm_lora : bool, optional
+            Whether to use LCM-LoRA or not, by default True.
+        use_tiny_vae : bool, optional
+            Whether to use TinyVAE or not, by default True.
+        enable_similar_image_filter : bool, optional
+            Whether to enable similar image filter or not,
+            by default False.
+        similar_image_filter_threshold : float, optional
+            The threshold for similar image filter, by default 0.98.
+        similar_image_filter_max_skip_frame : int, optional
+            The max skip frame for similar image filter, by default 10.
+        use_denoising_batch : bool, optional
+            Whether to use denoising batch or not, by default True.
+        cfg_type : Literal["none", "full", "self", "initialize"],
+        optional
+            The cfg_type for img2img mode, by default "self".
+            You cannot use anything other than "none" for txt2img mode.
+        seed : int, optional
+            The seed, by default 2.
+        use_safety_checker : bool, optional
+            Whether to use safety checker or not, by default False.
+        """
         self.sd_turbo = "turbo" in model_id_or_path
 
         if mode == "txt2img":
@@ -307,18 +373,19 @@ class StreamDiffusionWrapper:
         Parameters
         ----------
         model_id_or_path : str
-            The model id to load.
+            The model id or path to load.
         t_index_list : List[int]
             The t_index_list to use for inference.
         lora_dict : Optional[Dict[str, float]], optional
-            The lora_dict to use, by default None.
+            The lora_dict to load, by default None.
+            Keys are the LoRA names and values are the LoRA scales.
             Example: {"LoRA_1" : 0.5 , "LoRA_2" : 0.7 ,...}
         lcm_lora_id : Optional[str], optional
             The lcm_lora_id to load, by default None.
         vae_id : Optional[str], optional
             The vae_id to load, by default None.
         acceleration : Literal["none", "xfomers", "sfast", "tensorrt"], optional
-            The acceleration method to use, by default "tensorrt".
+            The acceleration method, by default "tensorrt".
         warmup : int, optional
             The number of warmup steps to perform, by default 10.
         do_add_noise : bool, optional
@@ -328,6 +395,12 @@ class StreamDiffusionWrapper:
             Whether to use LCM-LoRA or not, by default True.
         use_tiny_vae : bool, optional
             Whether to use TinyVAE or not, by default True.
+        cfg_type : Literal["none", "full", "self", "initialize"],
+        optional
+            The cfg_type for img2img mode, by default "self".
+            You cannot use anything other than "none" for txt2img mode.
+        seed : int, optional
+            The seed, by default 2.
 
         Returns
         -------
