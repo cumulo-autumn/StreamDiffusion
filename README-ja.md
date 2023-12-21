@@ -22,7 +22,7 @@ StreamDiffusionの開発にあたり、丁寧なサポート、有意義なフ�
 ## 主な特徴
 
 1. **Stream Batch** - [詳細](#stream-batching-link)
-   - バッチ処理によるデータ処理の効率化を行っています。 
+   - バッチ処理によるデータ処理の効率化を行っています。
 
 2. **Residual Classifier-Free Guidance** - [詳細](#residual-classifier-free-guidance-link)
    - 計算の冗長性を最小限に抑える改良されたガイダンスメカニズム。
@@ -60,12 +60,14 @@ anaconda または pip で仮想環境を作成してください。
 
 anaconda を用いる場合
 
-```
+```bash
 conda create -n streamdiffusion python=3.10
 conda activate streamdiffusion
 ```
+
 pip を用いる場合
-```
+
+```cmd
 python -m venv .venv
 # Windows
 .\.venv\Scripts\activate
@@ -78,11 +80,14 @@ source .venv/bin/activate
 使用する GPU の CUDA バージョンに合わせて PyTorch をインストールしてください。
 
 CUDA 11.8
-```
+
+```bash
 pip3 install torch==2.1.0 torchvision==0.16.0 xformers --index-url https://download.pytorch.org/whl/cu118
 ```
+
 CUDA 12.1
-```
+
+```bash
 pip3 install torch==2.1.0 torchvision==0.16.0 xformers --index-url https://download.pytorch.org/whl/cu121
 ```
 
@@ -92,20 +97,34 @@ pip3 install torch==2.1.0 torchvision==0.16.0 xformers --index-url https://downl
 ### Step2: StreamDiffusion のインストール
 
 #### 非開発者向け
+
 StreamDiffusion をインストール
-```
+
+```bash
 pip install git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=streamdiffusion
 ```
+
 tensorrt をインストール
-```
+
+```bash
 python -m streamdiffusion.tools.install-tensorrt
 ```
 
 #### 開発者向け
-```
+
+```bash
 git clone https://github.com/cumulo-autumn/StreamDiffusion.git
 python setup.py develop easy_install streamdiffusion[tensorrt]
 python -m streamdiffusion.tools.install-tensorrt
+```
+
+## Docker　の場合 (TensorRT 対応)
+
+```bash
+git clone https://github.com/cumulo-autumn/StreamDiffusion.git
+cd StreamDiffusion
+docker build -t stream-diffusion:latest -f Dockerfile .
+docker run --gpus all -it -v $(pwd):/home/ubuntu/streamdiffusion stream-diffusion:latest
 ```
 
 ## 動作例
@@ -118,13 +137,19 @@ python -m streamdiffusion.tools.install-tensorrt
 
 具体的な詳細設定及びユーザカスタマイズは以下をお読みください。
 
+## リアルタイム Txt2Img デモ
+
+リアルタイムの txt2img デモは [`demo/realtime-txt2img`](./demo/realtime-txt2img) ディレクトリにあります。
+
+<p align="center">
+  <img src="./assets/demo_01.gif" width=80%>
+</p>
+
 ## minimum example
 
 ```python
 
 ```
-
-
 
 ## ユーザカスタマイズ
 
@@ -221,7 +246,6 @@ def run(
 
 if __name__ == "__main__":
     fire.Fire(run)
-
 ```
 
 # 開発チーム

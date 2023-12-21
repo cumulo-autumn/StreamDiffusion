@@ -57,12 +57,15 @@ Feel free to explore each feature by following the provided links to learn more 
 ## Installation
 
 ### Step0: Make environment
-```
+
+```bash
 conda create -n streamdiffusion python=3.10
 conda activate streamdiffusion
 ```
+
 OR
-```
+
+```cmd
 python -m venv .venv
 # Windows
 .\.venv\Scripts\activate
@@ -74,11 +77,14 @@ source .venv/bin/activate
 Select the appropriate version for your system.
 
 CUDA 11.8
-```
+
+```bash
 pip3 install torch==2.1.0 torchvision==0.16.0 xformers --index-url https://download.pytorch.org/whl/cu118
 ```
+
 CUDA 12.1
-```
+
+```bash
 pip3 install torch==2.1.0 torchvision==0.16.0 xformers --index-url https://download.pytorch.org/whl/cu121
 ```
 details: https://pytorch.org/
@@ -87,19 +93,32 @@ details: https://pytorch.org/
 
 #### For User
 Install StreamDiffusion
-```
+
+```bash
 pip install git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=streamdiffusion
 ```
+
 Install TensorRT extension
-```
+
+```bash
 python -m streamdiffusion.tools.install-tensorrt
 ```
 
 #### For Developer
-```
+
+```bash
 git clone https://github.com/cumulo-autumn/StreamDiffusion.git
 python setup.py develop easy_install streamdiffusion[tensorrt]
 python -m streamdiffusion.tools.install-tensorrt
+```
+
+## Docker Installation (TensorRT Ready)
+
+```bash
+git clone https://github.com/cumulo-autumn/StreamDiffusion.git
+cd StreamDiffusion
+docker build -t stream-diffusion:latest -f Dockerfile .
+docker run --gpus all -it -v $(pwd):/home/ubuntu/streamdiffusion stream-diffusion:latest
 ```
 
 ## Quick Start
@@ -109,6 +128,14 @@ You can try StreamDiffusion in [`examples`](./examples) directory.
 | ![画像3](./assets/demo_02.gif) | ![画像4](./assets/demo_03.gif) |
 |:--------------------:|:--------------------:|
 | ![画像5](./assets/demo_04.gif) | ![画像6](./assets/demo_05.gif) |
+
+## Real-time Txt2Img Demo
+
+There is an interactive txt2img demo in [`demo/realtime-txt2img`](./demo/realtime-txt2img) directory!
+
+<p align="center">
+  <img src="./assets/demo_01.gif" width=80%>
+</p>
 
 ## minimum example
 
@@ -222,7 +249,7 @@ if __name__ == "__main__":
     run()
 ```
 
-# 💪 Developement Team
+# Development Team
 
 [Aki](https://github.com/cumulo-autumn/),
 [Ararat](https://github.com/AttaQ/),
