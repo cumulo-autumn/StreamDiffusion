@@ -45,7 +45,7 @@ When images are produced using our proposed StreamDiffusion pipeline in an envir
 
 |model                | Denoising Step      |  fps on Txt2Img      |  fps on Img2Img      |
 |:-------------------:|:-------------------:|:--------------------:|:--------------------:|
-|SR-turbo             | 1              | 106.16                    | 93.897               |
+|SD-turbo             | 1              | 106.16                    | 93.897               |
 |LCM-LoRA <br>+<br> kohakuV2| 4        | 38.023                    | 37.133               |
 
 Feel free to explore each feature by following the provided links to learn more about StreamDiffusion's capabilities. If you find it helpful, please consider citing our work:
