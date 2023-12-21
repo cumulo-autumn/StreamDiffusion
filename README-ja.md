@@ -44,7 +44,7 @@ StreamDiffusionの開発にあたり、丁寧なサポート、有意義なフ�
 |model                | Denoising Step      |  fps on Txt2Img      |  fps on Img2Img      |
 |:-------------------:|:-------------------:|:--------------------:|:--------------------:|
 |SD-turbo             | 1              | 106.16                    | 93.897               |
-|LCM-LoRA <br>+<br> kohakuV2| 4        | 38.023                    | 37.133               |
+|LCM-LoRA <br>+<br> KohakuV2| 4        | 38.023                    | 37.133               |
 
 _Feel free to explore each feature by following the provided links to learn more about StreamDiffusion's capabilities. If you find it helpful, please consider citing our work:_
 
@@ -339,7 +339,7 @@ deltaはRCFGの効きをマイルドにする効果を持つ
 
 ## 謝辞
 
-この GitHubリポジトリ にある動画と画像のデモは、[LCM-LoRA](https://huggingface.co/latent-consistency/lcm-lora-sdv1-5) + [kohakuV2](https://civitai.com/models/136268/kohaku-v2)と[SD-Turbo](https://arxiv.org/abs/2311.17042)を使用して生成されました。
+この GitHubリポジトリ にある動画と画像のデモは、[LCM-LoRA](https://huggingface.co/latent-consistency/lcm-lora-sdv1-5) + [KohakuV2](https://civitai.com/models/136268/kohaku-v2)と[SD-Turbo](https://arxiv.org/abs/2311.17042)を使用して生成されました。
 
 LCM-LoRAを提供していただいた[LCM-LoRA authors](https://latent-consistency-models.github.io/)、KohakuV2 モデルを提供していただいたKohaku BlueLeaf 様 ([@KBlueleaf](https://twitter.com/KBlueleaf))、[SD-Turbo](https://arxiv.org/abs/2311.17042)を提供していただいた[Stability AI](https://ja.stability.ai/)様に心より感謝いたします。
 

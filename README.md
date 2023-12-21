@@ -46,7 +46,7 @@ When images are produced using our proposed StreamDiffusion pipeline in an envir
 |model                | Denoising Step      |  fps on Txt2Img      |  fps on Img2Img      |
 |:-------------------:|:-------------------:|:--------------------:|:--------------------:|
 |SD-turbo             | 1              | 106.16                    | 93.897               |
-|LCM-LoRA <br>+<br> kohakuV2| 4        | 38.023                    | 37.133               |
+|LCM-LoRA <br>+<br> KohakuV2| 4        | 38.023                    | 37.133               |
 
 Feel free to explore each feature by following the provided links to learn more about StreamDiffusion's capabilities. If you find it helpful, please consider citing our work:
 
@@ -330,7 +330,7 @@ The delta has a moderating effect on the effectiveness of RCFG.
 
 ## Acknowledgements
 
-The video and image demos in this GitHub repository were generated using [LCM-LoRA](https://huggingface.co/latent-consistency/lcm-lora-sdv1-5) + [kohakuV2](https://civitai.com/models/136268/kohaku-v2) and [SD-Turbo](https://arxiv.org/abs/2311.17042).
+The video and image demos in this GitHub repository were generated using [LCM-LoRA](https://huggingface.co/latent-consistency/lcm-lora-sdv1-5) + [KohakuV2](https://civitai.com/models/136268/kohaku-v2) and [SD-Turbo](https://arxiv.org/abs/2311.17042).
 
 Special thanks to [LCM-LoRA authors](https://latent-consistency-models.github.io/) for providing the LCM-LoRA and Kohaku BlueLeaf ([@KBlueleaf](https://twitter.com/KBlueleaf)) for providing the KohakuV2 model and , and to [Stability AI](https://ja.stability.ai/) for [SD-Turbo](https://arxiv.org/abs/2311.17042).
 
