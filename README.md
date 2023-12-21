@@ -1,9 +1,11 @@
-# StreamDiffusion: A Pipeline-Level Solution for Real-Time Interactive Generation
+# StreamDiffusion
 
 <p align="center">
   <img src="./assets/demo_07.gif" width=90%>
   <img src="./assets/demo_09.gif" width=90%>
 </p>
+
+# StreamDiffusion: A Pipeline-Level Solution for Real-Time Interactive Generation
 
 **Authors:** [Akio Kodaira*](https://www.linkedin.com/feed/), [Chenfeng Xu*](https://www.chenfengx.com/), Toshiki Hazama, Takanori Yoshimoto, [Kohei Ohno](https://www.linkedin.com/in/kohei--ohno/), Shogo Mitsuhori, Soichi Sugano, Hanying Cho, [Zhijian Liu](https://scholar.google.com/citations?hl=en&user=3coYSTUAAAAJ), [Kurt Keutzer](https://scholar.google.com/citations?hl=en&user=ID9QePIAAAAJ) (*Corresponding Author)
 
