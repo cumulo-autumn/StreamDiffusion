@@ -307,6 +307,71 @@ if __name__ == "__main__":
     run()
 ```
 
+## オプション
+
+## Stochastic Similarity Filter
+
+![demo](assets\demo_06.gif)
+
+Stochastic Similarity Filterは動画入力時、前フレームからあまり変化しないときの変換処理を減らすことで、上のGIFの赤枠の様にGPUの負荷を軽減する。使用方法は以下のとおりである。
+
+```
+stream = StreamDiffusion(
+        pipe,
+        [32, 45],
+        torch_dtype=torch.float16,
+    )
+stream.enable_similar_image_filter(similar_image_filter_threshold,similar_image_filter_max_skip_frame)
+```
+
+関数で設定できる引数として以下がある。
+### similar_image_filter_threshold
+
+- 処理を休止する前フレームと現フレームの類似度の閾値
+
+### similar_image_filter_max_skip_frame
+
+- 休止中に変換を再開する最大の間隔
+
+## Residual CFG (RCFG)
+
+![rcfg](assets\cfg_conparision.png)
+
+RCFGはCFG使用しない場合と比較し、競争力のある計算量で近似的にCFGを実現させる方法である。StreamDiffusionの引数cfg_typeから指定可能である。
+
+RCFGは二種類あり、negative promptの指定項目なしのRCFG Self-Negativeとnegative promptが指定可能なOnetime-Negativeが利用可能である。計算量はCFGなしの計算量をN、通常のCFGありの計算量を２Nとしたとき、RCFG Self-NegativeはN回で、Onetime-NegativeはN+1回で計算できる。
+
+The usage is as follows:
+
+```
+# CFG なし
+cfg_type = "none"
+
+# 通常のCFG
+cfg_type = "full"
+
+# RCFG Self-Negative
+cfg_type = "self"
+
+# RCFG Onetime-Negative
+cfg_type = "initialize"
+
+stream = StreamDiffusion(
+        pipe,
+        [32, 45],
+        torch_dtype=torch.float16,
+        cfg_type = cfg_type
+    )
+
+stream.prepare(
+        prompt = "1girl, purple hair",
+        guidance_scale = guidance_scale,
+        delta = delta,
+    )
+```
+
+deltaはRCFGの効きをマイルドにする効果を持つ
+
 # 開発チーム
 
 [Aki](https://github.com/cumulo-autumn/),
