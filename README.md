@@ -192,6 +192,9 @@ for _ in range(2):
 while True:
     x_output = stream(init_image)
     postprocess_image(x_output, output_type="pil")[0].show()
+    input_response = input("Press Enter to continue or type 'stop' to exit: ")
+    if input_response == "stop":
+        break
 ```
 
 ### For Benchmark
