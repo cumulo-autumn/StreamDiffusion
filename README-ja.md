@@ -10,12 +10,33 @@
 **Authors:** [Akio Kodaira](https://www.linkedin.com/feed/), [Chenfeng Xu](https://www.chenfengx.com/), Toshiki Hazama, Takanori Yoshimoto, [Kohei Ohno](https://www.linkedin.com/in/kohei--ohno/), [Shogo Mitsuhori](https://me.ddpn.world/), Soichi Sugano, Hanying Cho, [Zhijian Liu](https://zhijianliu.com/), [Kurt Keutzer](https://scholar.google.com/citations?hl=en&user=ID9QePIAAAAJ)
 
 
-StreamDiffusionは、リアルタイム画像生成を目指して開発された、画期的な拡散モデルベースの画像生成パイプラインです。この技術は、従来の拡散モデルベースの画像生成手法を向上し性能向上を実現しました。
+StreamDiffusionは、リアルタイム画像生成を実現するために最適化された、革新的な画像生成パイプラインです。StreamDiffusionは、従来の画像生成パイプラインと比べて飛躍的な速度向上を実現しました。
 
 [![arXiv](https://img.shields.io/badge/arXiv-2307.04725-b31b1b.svg)](https://arxiv.org/abs/2312.12491)
 [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-yellow)](https://huggingface.co/papers/2312.12491)
 
 
+## 主な特徴
+
+1. **Stream Batch** - [詳細](#stream-batching-link)
+   - バッチ処理によるデータ処理の効率化を行っています。 
+
+2. **Residual Classifier-Free Guidance** - [詳細](#residual-classifier-free-guidance-link)
+   - 計算の冗長性を最小限に抑える改良されたガイダンスメカニズム。
+
+3. **Stochastic Similarity Filter** - [詳細](#stochastic-similarity-filtering-link)
+   - 高度なフィルタリング技術によりGPUの利用効率を向上させます。
+
+4. **IO Queues** - [詳細](#io-queues-link)
+   - 入出力操作を効率的に管理し、よりスムーズな実行を実現します。
+
+5. **Pre-computation for KV-Caches** - [詳細](#pre-computation-for-kv-caches-link)
+   - 高速処理のためのキャッシュ戦略を最適化します。
+
+6. **Model Acceleration Tools**
+   - モデルの最適化とパフォーマンス向上のための様々なツールを利用できます。
+
+StreamDiffusionの機能をより詳しく知るために、提供されているリンクをたどって各機能を自由に探索してください。お役に立ちましたら、ぜひ引用をご検討ください：
 
 ```bash
 @article{kodaira2023streamdiffusion,
@@ -49,9 +70,9 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
-### Step1: PyTorch インストール
+### Step1: PyTorch のインストール
 
-使用する GPU の CUDA のバージョンに合わせてインストールしてください。
+使用する GPU の CUDA バージョンに合わせて PyTorch をインストールしてください。
 
 CUDA 11.8
 ```
@@ -67,8 +88,8 @@ pip3 install torch==2.1.0 torchvision==0.16.0 xformers --index-url https://downl
 
 ### Step2: StreamDiffusion のインストール
 
-#### ユーザー向け
-StreamDiffusion　をインストール
+#### 非開発者向け
+StreamDiffusion をインストール
 ```
 pip install git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=streamdiffusion
 ```
@@ -92,8 +113,19 @@ python -m streamdiffusion.tools.install-tensorrt
 |:--------------------:|:--------------------:|
 | ![画像5](./assets/demo_04.gif) | ![画像6](./assets/demo_05.gif) |
 
+具体的な詳細設定及びユーザカスタマイズは以下をお読みください。
 
-## 使用方法
+## minimum example
+
+```python
+
+```
+
+
+
+## ユーザカスタマイズ
+
+下記は、ローカル環境にて StreamDiffusion を実行する際のサンプルコードです。
 
 ```python
 import io
@@ -190,7 +222,6 @@ if __name__ == "__main__":
 ```
 
 # 謝辞
-
 </br>
 
 [Aki](https://github.com/cumulo-autumn/),
@@ -205,8 +236,8 @@ if __name__ == "__main__":
 
 </br>
 
-この GitHubリポジトリ にある動画と画像のデモは、[kohakuV2](https://civitai.com/models/136268/kohaku-v2)と[SD-Turbo](https://arxiv.org/abs/2311.17042)を使用して生成されました。
+この GitHubリポジトリ にある動画と画像のデモは、[kohakuV2](https://civitai.com/models/136268/kohaku-v2) と [SD-Turbo](https://arxiv.org/abs/2311.17042)を使用して生成されました。
 
-KohakuV2 モデルを提供していただいたKohaku BlueLeaf 様 ([@KBlueleaf](https://twitter.com/KBlueleaf))、[SD-Turbo](https://arxiv.org/abs/2311.17042)を提供していただいた[StabilityAI](https://ja.stability.ai/)様に心より感謝いたします。
+KohakuV2 モデルを提供していただいた Kohaku BlueLeaf 様 ([@KBlueleaf](https://twitter.com/KBlueleaf))、[SD-Turbo](https://arxiv.org/abs/2311.17042) を提供していただいた  [StabilityAI](https://ja.stability.ai/) 様に心より感謝いたします。
 
-KohakuV2 モデルは[Civitai](https://civitai.com/models/136268/kohaku-v2)と[HuggingFace](https://huggingface.co/stabilityai/sd-turbo)からダウンロードでき、[SD-Turbo](https://arxiv.org/abs/2311.17042)　Hugging Faceで使用可能です。
+KohakuV2 モデルは [Civitai](https://civitai.com/models/136268/kohaku-v2) と [HuggingFace](https://huggingface.co/stabilityai/sd-turbo)からダウンロードでき、[SD-Turbo](https://arxiv.org/abs/2311.17042) は Hugging Face で使用可能です。

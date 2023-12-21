@@ -11,8 +11,11 @@
 
 StreamDiffusion is an innovative diffusion pipeline designed for real-time interactive generation. It introduces significant performance enhancements to current diffusion-based image generation techniques.
 
+
 [![arXiv](https://img.shields.io/badge/arXiv-2307.04725-b31b1b.svg)](https://arxiv.org/abs/2312.12491)
 [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-yellow)](https://huggingface.co/papers/2312.12491)
+
+We sincerely thank [Taku Fujimoto](https://twitter.com/AttaQjp) and [Radamés Ajna](https://twitter.com/radamar) and Huggingface team for their invaluable feedback, courteous support, and insightful discussions.
 
 ## Key Features
 
@@ -36,6 +39,7 @@ StreamDiffusion is an innovative diffusion pipeline designed for real-time inter
 
 Feel free to explore each feature by following the provided links to learn more about StreamDiffusion's capabilities. If you find it helpful, please consider citing our work:
 
+
 ```bash
 @article{kodaira2023streamdiffusion,
       title={StreamDiffusion: A Pipeline-level Solution for Real-time Interactive Generation},
@@ -46,6 +50,7 @@ Feel free to explore each feature by following the provided links to learn more 
       primaryClass={cs.CV}
 }
 ```
+
 
 ## Installation
 
@@ -102,6 +107,12 @@ You can try StreamDiffusion in [`examples`](./examples) directory.
 | ![画像3](./assets/demo_02.gif) | ![画像4](./assets/demo_03.gif) |
 |:--------------------:|:--------------------:|
 | ![画像5](./assets/demo_04.gif) | ![画像6](./assets/demo_05.gif) |
+
+## minimum example
+
+```python
+
+```
 
 ## Usage
 
@@ -209,8 +220,7 @@ if __name__ == "__main__":
     run()
 ```
 
-# Acknowledgements
-</br>
+# Developement Team
 
 [Aki](https://github.com/cumulo-autumn/),
 [Ararat](https://github.com/AttaQ/),
@@ -223,12 +233,11 @@ if __name__ == "__main__":
 [Verb](https://github.com/discus0434),
 
 (*alphabetical order)
-
 </br>
+
+# Acknowledgements
 
 
 The video and image demos in this github repository were generated using [kohakuV2](https://civitai.com/models/136268/kohaku-v2). Thanks to Kohaku BlueLeaf ([@KBlueleaf](https://twitter.com/KBlueleaf)) for providing the model.
 
 Can download model in [Civitai](https://civitai.com/models/136268/kohaku-v2) and [HuggingFace](https://huggingface.co/KBlueLeaf/kohaku-v2.1/tree/main).
-
-We sincerely thank [Taku Fujimoto](https://www.linkedin.com/in/taku-fujimoto-a81405b1/) and　[Radamés Ajna](https://github.com/radames) and Huggingface team for their invaluable feedback, courteous support, and insightful discussions.
