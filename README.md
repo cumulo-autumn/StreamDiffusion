@@ -33,7 +33,7 @@ We sincerely thank [Taku Fujimoto](https://twitter.com/AttaQjp) and [Radamés Aj
 4. **IO Queues** - [Learn More](#io-queues-link)
    - Efficiently manages input and output operations for smoother execution.
 
-5. **Pre-computation for KV-Caches** - [Learn More](#pre-computation-for-kv-caches-link)
+5. **Pre-Computation for KV-Caches** - [Learn More](#pre-computation-for-kv-caches-link)
    - Optimizes caching strategies for accelerated processing.
 
 6. **Model Acceleration Tools**
@@ -56,7 +56,7 @@ Feel free to explore each feature by following the provided links to learn more 
 
 ## Installation
 
-### Step0: Make environment
+### Step0: Make Environment
 
 ```bash
 conda create -n streamdiffusion python=3.10
@@ -73,7 +73,7 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
-### Step1: Install Torch
+### Step1: Install PyTorch
 Select the appropriate version for your system.
 
 CUDA 11.8
@@ -92,6 +92,7 @@ details: https://pytorch.org/
 ### Step2: Install StreamDiffusion
 
 #### For User
+
 Install StreamDiffusion
 
 ```bash
@@ -129,7 +130,7 @@ You can try StreamDiffusion in [`examples`](./examples) directory.
 |:--------------------:|:--------------------:|
 | ![画像5](./assets/demo_04.gif) | ![画像6](./assets/demo_05.gif) |
 
-## Real-time Txt2Img Demo
+## Real-Time Txt2Img Demo
 
 There is an interactive txt2img demo in [`demo/realtime-txt2img`](./demo/realtime-txt2img) directory!
 
@@ -137,7 +138,7 @@ There is an interactive txt2img demo in [`demo/realtime-txt2img`](./demo/realtim
   <img src="./assets/demo_01.gif" width=100%>
 </p>
 
-## minimum example
+## Minimum Example
 
 ```python
 
@@ -269,9 +270,9 @@ if __name__ == "__main__":
 
 The video and image demos in this GitHub repository were generated using [kohakuV2](https://civitai.com/models/136268/kohaku-v2) and [SD-Turbo](https://arxiv.org/abs/2311.17042).
 
-Special thanks to Kohaku BlueLeaf ([@KBlueleaf](https://twitter.com/KBlueleaf)) for providing the KohakuV2 model, and to [StabilityAI](https://ja.stability.ai/) for [SD-Turbo](https://arxiv.org/abs/2311.17042).
+Special thanks to Kohaku BlueLeaf ([@KBlueleaf](https://twitter.com/KBlueleaf)) for providing the KohakuV2 model, and to [Stability AI](https://ja.stability.ai/) for [SD-Turbo](https://arxiv.org/abs/2311.17042).
 
- KohakuV2 Models can be downloaded from  [Civitai](https://civitai.com/models/136268/kohaku-v2)  and [HuggingFace](https://huggingface.co/stabilityai/sd-turbo).
+ KohakuV2 Models can be downloaded from  [Civitai](https://civitai.com/models/136268/kohaku-v2)  and [Hugging Face](https://huggingface.co/stabilityai/sd-turbo).
 
  [SD-Turbo](https://arxiv.org/abs/2311.17042) is also available on Hugging Face.
 
