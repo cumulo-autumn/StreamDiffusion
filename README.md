@@ -14,14 +14,14 @@ StreamDiffusion is an innovative diffusion pipeline designed for real-time inter
 
 ## Key Features
 
-1. **Stream Batching** - [Learn More](#stream-batching-link)
+1. **Stream Batch** - [Learn More](#stream-batching-link)
    - Streamlined data processing through efficient batch operations.
 
 2. **Residual Classifier-Free Guidance** - [Learn More](#residual-classifier-free-guidance-link)
    - Improved guidance mechanism that minimizes computational redundancy.
 
-3. **Stochastic Similarity Filtering** - [Learn More](#stochastic-similarity-filtering-link)
-   - Enhances image quality through advanced filtering techniques.
+3. **Stochastic Similarity Filter** - [Learn More](#stochastic-similarity-filtering-link)
+   - Improves GPU utilization efficiency through advanced filtering techniques.
 
 4. **IO Queues** - [Learn More](#io-queues-link)
    - Efficiently manages input and output operations for smoother execution.
