@@ -71,6 +71,10 @@ python -m streamdiffusion.tools.install-tensorrt
 
 You can try StreamDiffusion in [`examples`](./examples) directory.
 
+| ![画像1](./assets/demo_02.gif) | ![画像2](./assets/demo_03.gif) |
+|:--------------------:|:--------------------:|
+| ![画像3](./assets/demo_04.gif) | ![画像4](./assets/demo_05.gif) |
+
 ## Usage
 
 ```python
