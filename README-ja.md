@@ -12,34 +12,34 @@
 **Authors:** [Akio Kodaira](https://www.linkedin.com/feed/), [Chenfeng Xu](https://www.chenfengx.com/), Toshiki Hazama, Takanori Yoshimoto, [Kohei Ohno](https://www.linkedin.com/in/kohei--ohno/), [Shogo Mitsuhori](https://me.ddpn.world/), Soichi Sugano, Hanying Cho, [Zhijian Liu](https://zhijianliu.com/), [Kurt Keutzer](https://scholar.google.com/citations?hl=en&user=ID9QePIAAAAJ)
 
 
-StreamDiffusionは、リアルタイム画像生成を実現するために最適化された、革新的な画像生成パイプラインです。StreamDiffusionは、従来の画像生成パイプラインと比べて飛躍的な速度向上を実現しました。
+StreamDiffusionは、リアルタイム画像生成を実現するために最適化されたパイプラインです。従来の画像生成パイプラインと比べて飛躍的な速度向上を実現しました。
 
 [![arXiv](https://img.shields.io/badge/arXiv-2307.04725-b31b1b.svg)](https://arxiv.org/abs/2312.12491)
 [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-yellow)](https://huggingface.co/papers/2312.12491)
 
-StreamDiffusionの開発にあたり、丁寧なサポート、有意義なフィードバックと議論をしていただいた [Taku Fujimoto](https://twitter.com/AttaQjp) 様と [Radamés Ajna](https://twitter.com/radamar) 様、そして Huggingface チームに心より感謝いたします。
+StreamDiffusionの開発にあたり、丁寧なサポート、有意義なフィードバックと議論をしていただいた [Taku Fujimoto](https://twitter.com/AttaQjp) 様と [Radamés Ajna](https://twitter.com/radamar) 様、そして Hugging Face チームに心より感謝いたします。
 
 ## 主な特徴
 
 1. **Stream Batch** - [詳細](#stream-batching-link)
-   - バッチ処理によるデータ処理の効率化を行っています。
+   - バッチ処理によるデータ処理の効率化
 
 2. **Residual Classifier-Free Guidance** - [詳細](#residual-classifier-free-guidance-link)
-   - 計算の冗長性を最小限に抑える改良されたガイダンスメカニズム。
+   - 計算の冗長性を最小限に抑えるCFG
 
 3. **Stochastic Similarity Filter** - [詳細](#stochastic-similarity-filtering-link)
-   - 高度なフィルタリング技術によりGPUの利用効率を向上させます。
+   - 類似度によるフィルタリングでGPUの使用効率を最大化
 
 4. **IO Queues** - [詳細](#io-queues-link)
-   - 入出力操作を効率的に管理し、よりスムーズな実行を実現します。
+   - 入出力操作を効率的に管理し、よりスムーズな実行を実現
 
-5. **Pre-computation for KV-Caches** - [詳細](#pre-computation-for-kv-caches-link)
+5. **Pre-Computation for KV-Caches** - [詳細](#pre-computation-for-kv-caches-link)
    - 高速処理のためのキャッシュ戦略を最適化します。
 
 6. **Model Acceleration Tools**
-   - モデルの最適化とパフォーマンス向上のための様々なツールを利用できます。
+   - モデルの最適化とパフォーマンス向上のための様々なツールの利用
 
-StreamDiffusionの機能をより詳しく知るために、提供されているリンクをたどって各機能を自由に探索してください。お役に立ちましたら、ぜひ引用をご検討ください：
+_Feel free to explore each feature by following the provided links to learn more about StreamDiffusion's capabilities. If you find it helpful, please consider citing our work:_
 
 ```bash
 @article{kodaira2023streamdiffusion,
@@ -56,16 +56,16 @@ StreamDiffusionの機能をより詳しく知るために、提供されてい�
 
 ### 環境構築
 
-anaconda または pip で仮想環境を作成してください。
+anaconda、pip、または後述するDockerで仮想環境を作成します。
 
-anaconda を用いる場合
+anacondaを用いる場合
 
 ```bash
 conda create -n streamdiffusion python=3.10
 conda activate streamdiffusion
 ```
 
-pip を用いる場合
+pipを用いる場合
 
 ```cmd
 python -m venv .venv
@@ -75,9 +75,9 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
-### Step1: PyTorch のインストール
+### Step1: PyTorchのインストール
 
-使用する GPU の CUDA バージョンに合わせて PyTorch をインストールしてください。
+使用するGPUのCUDAバージョンに合わせてPyTorchをインストールしてください。
 
 CUDA 11.8
 
@@ -94,17 +94,17 @@ pip3 install torch==2.1.0 torchvision==0.16.0 xformers --index-url https://downl
 詳しくは[こちら](https://pytorch.org/)
 
 
-### Step2: StreamDiffusion のインストール
+### Step2: StreamDiffusionのインストール
 
-#### 非開発者向け
+#### ユーザー向け
 
-StreamDiffusion をインストール
+StreamDiffusionをインストール
 
 ```bash
 pip install git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=streamdiffusion
 ```
 
-tensorrt をインストール
+TensorRTをインストール
 
 ```bash
 python -m streamdiffusion.tools.install-tensorrt
@@ -118,7 +118,7 @@ python setup.py develop easy_install streamdiffusion[tensorrt]
 python -m streamdiffusion.tools.install-tensorrt
 ```
 
-## Docker　の場合 (TensorRT 対応)
+### Dockerの場合(TensorRT対応)
 
 ```bash
 git clone https://github.com/cumulo-autumn/StreamDiffusion.git
@@ -129,7 +129,7 @@ docker run --gpus all -it -v $(pwd):/home/ubuntu/streamdiffusion stream-diffusio
 
 ## 動作例
 
- [`examples`](./examples) からサンプルを実行できます。
+[`examples`](./examples) からサンプルを実行できます。
 
 | ![画像3](./assets/demo_02.gif) | ![画像4](./assets/demo_03.gif) |
 |:--------------------:|:--------------------:|
@@ -137,31 +137,75 @@ docker run --gpus all -it -v $(pwd):/home/ubuntu/streamdiffusion stream-diffusio
 
 具体的な詳細設定及びユーザカスタマイズは以下をお読みください。
 
-## リアルタイム Txt2Img デモ
+## Real-Time Txt2Img Demo
 
-リアルタイムの txt2img デモは [`demo/realtime-txt2img`](./demo/realtime-txt2img) ディレクトリにあります。
+リアルタイムのtxt2imgデモは [`demo/realtime-txt2img`](./demo/realtime-txt2img)にあります。
 
 <p align="center">
   <img src="./assets/demo_01.gif" width=80%>
 </p>
 
-## minimum example
+## 使用例
+
+### 最小限の構成
 
 ```python
+import torch
+from diffusers import AutoencoderTiny, StableDiffusionPipeline
+from diffusers.utils import load_image
 
+from streamdiffusion import StreamDiffusion
+from streamdiffusion.image_utils import postprocess_image
+
+pipe = StableDiffusionPipeline.from_pretrained("KBlueLeaf/kohaku-v2.1").to(
+    device=torch.device("cuda"),
+    dtype=torch.float16,
+)
+
+# Wrap the pipeline in StreamDiffusion
+stream = StreamDiffusion(
+    pipe,
+    t_index_list=[32, 45],
+    do_add_noise=True,
+    torch_dtype=torch.float16,
+)
+
+# If the loaded model is not LCM, merge LCM
+stream.load_lcm_lora()
+stream.fuse_lora()
+
+# Use Tiny VAE for further acceleration
+stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
+
+# Enable acceleration
+pipe.enable_xformers_memory_efficient_attention()
+
+prompt = "1girl with dog hair, thick frame glasses"
+
+# Prepare the stream
+stream.prepare(prompt)
+
+# Prepare image
+init_image = load_image("assets/img2img_example.png").resize((512, 512))
+
+# Warmup >= len(t_index_list) x frame_buffer_size
+for _ in range(2):
+    stream(init_image)
+
+# Run the stream infinitely
+while True:
+    x_output = stream(init_image)
+    postprocess_image(x_output, output_type="pil")[0].show()
+    input_response = input("Press Enter to continue or type 'stop' to exit: ")
+    if input_response == "stop":
+        break
 ```
 
-## ユーザカスタマイズ
-
-下記は、ローカル環境にて StreamDiffusion を実行する際のサンプルコードです。
+### ベンチマーク
 
 ```python
-import io
-from typing import *
-
-import fire
-import PIL.Image
-import requests
+from typing import Literal, Optional
+from PIL import Image
 import torch
 from diffusers import AutoencoderTiny, StableDiffusionPipeline
 from tqdm import tqdm
@@ -170,71 +214,86 @@ from streamdiffusion import StreamDiffusion
 from streamdiffusion.image_utils import pil2tensor, postprocess_image
 
 
-def download_image(url: str):
-    response = requests.get(url)
-    image = PIL.Image.open(io.BytesIO(response.content))
-    return image
+torch.set_grad_enabled(False)
+torch.backends.cuda.matmul.allow_tf32 = True
+torch.backends.cudnn.allow_tf32 = True
 
 
 def run(
-    wamup: int = 10,
+    prompt: str = "1girl with dog hair, thick frame glasses",
+    warmup: int = 10,
     iterations: int = 50,
-    prompt: str = "1girl with brown dog ears, thick frame glasses",
     lcm_lora: bool = True,
     tiny_vae: bool = True,
-    acceleration: Optional[Literal["xformers", "sfast", "tensorrt"]] = None,
+    acceleration: Optional[Literal["none", "xformers", "tensorrt"]] = "xformers",
 ):
-    pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_single_file("./model.safetensors").to(
+    # Load Stable Diffusion pipeline
+    pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_pretrained(
+        "KBlueLeaf/kohaku-v2.1"
+    ).to(
         device=torch.device("cuda"),
         dtype=torch.float16,
     )
+
+    # Wrap the pipeline in StreamDiffusion
     stream = StreamDiffusion(
         pipe,
         [32, 45],
         torch_dtype=torch.float16,
     )
 
+    # Load LCM LoRA
     if lcm_lora:
         stream.load_lcm_lora()
         stream.fuse_lora()
 
+    # Load Tiny VAE
     if tiny_vae:
-        stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
+        stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(
+            device=pipe.device, dtype=pipe.dtype
+        )
 
+    # Enable acceleration
     if acceleration == "xformers":
         pipe.enable_xformers_memory_efficient_attention()
     elif acceleration == "tensorrt":
         from streamdiffusion.acceleration.tensorrt import accelerate_with_tensorrt
 
         stream = accelerate_with_tensorrt(
-            stream, "engines", max_batch_size=2, engine_build_options={"build_static_batch": True}
+            stream,
+            "engines",
+            max_batch_size=2,
+            engine_build_options={"build_static_batch": True},
         )
-    elif acceleration == "sfast":
-        from streamdiffusion.acceleration.sfast import accelerate_with_stable_fast
 
-        stream = accelerate_with_stable_fast(stream)
-
+    # Prepare the stream
     stream.prepare(
         prompt,
         num_inference_steps=50,
     )
 
-    image = download_image("https://github.com/ddpn08.png").resize((512, 512))
+    # Prepare the input tensor
+    image = Image.open("assets/img2img_example.png").convert("RGB").resize((512, 512))
     input_tensor = pil2tensor(image)
 
-    # warmup
-    for _ in range(wamup):
-        stream(input_tensor.detach().clone().to(device=stream.device, dtype=stream.dtype))
+    # Warmup
+    for _ in range(warmup):
+        stream(
+            input_tensor.detach().clone().to(device=stream.device, dtype=stream.dtype)
+        )
 
+
+    # Run the stream
     results = []
-
     for _ in tqdm(range(iterations)):
         start = torch.cuda.Event(enable_timing=True)
         end = torch.cuda.Event(enable_timing=True)
 
         start.record()
-        x_output = stream(input_tensor.detach().clone().to(device=stream.device, dtype=stream.dtype))
-        postprocess_image(x_output, output_type="pil")[0]
+        x_output = stream(
+            input_tensor.detach().clone().to(device=stream.device, dtype=stream.dtype)
+        )
+        image = postprocess_image(x_output, output_type="pil")[0]
         end.record()
 
         torch.cuda.synchronize()
@@ -245,7 +304,7 @@ def run(
 
 
 if __name__ == "__main__":
-    fire.Fire(run)
+    run()
 ```
 
 # 開発チーム
@@ -265,11 +324,11 @@ if __name__ == "__main__":
 
 # 謝辞
 
-この GitHubリポジトリ にある動画と画像のデモは、[kohakuV2](https://civitai.com/models/136268/kohaku-v2)と[SD-Turbo](https://arxiv.org/abs/2311.17042)を使用して生成されました。
+この GitHubリポジトリ にある動画と画像のデモは、[LCM-LoRA](https://huggingface.co/latent-consistency/lcm-lora-sdv1-5) + [kohakuV2](https://civitai.com/models/136268/kohaku-v2)と[SD-Turbo](https://arxiv.org/abs/2311.17042)を使用して生成されました。
 
-KohakuV2 モデルを提供していただいたKohaku BlueLeaf 様 ([@KBlueleaf](https://twitter.com/KBlueleaf))、[SD-Turbo](https://arxiv.org/abs/2311.17042)を提供していただいた[StabilityAI](https://ja.stability.ai/)様に心より感謝いたします。
+LCM-LoRAを提供していただいた[LCM-LoRA authors](https://latent-consistency-models.github.io/)、KohakuV2 モデルを提供していただいたKohaku BlueLeaf 様 ([@KBlueleaf](https://twitter.com/KBlueleaf))、[SD-Turbo](https://arxiv.org/abs/2311.17042)を提供していただいた[Stability AI](https://ja.stability.ai/)様に心より感謝いたします。
 
-KohakuV2 モデルは [Civitai](https://civitai.com/models/136268/kohaku-v2) と [HuggingFace](https://huggingface.co/stabilityai/sd-turbo) からダウンロードでき、[SD-Turbo](https://arxiv.org/abs/2311.17042) は Hugging Faceで使用可能です。。
+KohakuV2 モデルは [Civitai](https://civitai.com/models/136268/kohaku-v2) と [Hugging Face](https://huggingface.co/stabilityai/sd-turbo) からダウンロードでき、[SD-Turbo](https://arxiv.org/abs/2311.17042) は Hugging Faceで使用可能です。。
 
 
 # Contributors

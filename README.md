@@ -56,6 +56,8 @@ Feel free to explore each feature by following the provided links to learn more 
 
 ## Installation
 
+You can install StreamDiffusion via pip, conda, or Docker(explanation below).
+
 ### Step0: Make Environment
 
 ```bash
@@ -74,6 +76,7 @@ source .venv/bin/activate
 ```
 
 ### Step1: Install PyTorch
+
 Select the appropriate version for your system.
 
 CUDA 11.8
@@ -113,7 +116,7 @@ python setup.py develop easy_install streamdiffusion[tensorrt]
 python -m streamdiffusion.tools.install-tensorrt
 ```
 
-## Docker Installation (TensorRT Ready)
+### Docker Installation (TensorRT Ready)
 
 ```bash
 git clone https://github.com/cumulo-autumn/StreamDiffusion.git
@@ -138,13 +141,63 @@ There is an interactive txt2img demo in [`demo/realtime-txt2img`](./demo/realtim
   <img src="./assets/demo_01.gif" width=100%>
 </p>
 
-## Minimum Example
+## Usage Examples
+
+### Minimum
 
 ```python
+import torch
+from diffusers import AutoencoderTiny, StableDiffusionPipeline
+from diffusers.utils import load_image
 
+from streamdiffusion import StreamDiffusion
+from streamdiffusion.image_utils import postprocess_image
+
+pipe = StableDiffusionPipeline.from_pretrained("KBlueLeaf/kohaku-v2.1").to(
+    device=torch.device("cuda"),
+    dtype=torch.float16,
+)
+
+# Wrap the pipeline in StreamDiffusion
+stream = StreamDiffusion(
+    pipe,
+    t_index_list=[32, 45],
+    do_add_noise=True,
+    torch_dtype=torch.float16,
+)
+
+# If the loaded model is not LCM, merge LCM
+stream.load_lcm_lora()
+stream.fuse_lora()
+
+# Use Tiny VAE for further acceleration
+stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(device=pipe.device, dtype=pipe.dtype)
+
+# Enable acceleration
+pipe.enable_xformers_memory_efficient_attention()
+
+prompt = "1girl with dog hair, thick frame glasses"
+
+# Prepare the stream
+stream.prepare(prompt)
+
+# Prepare image
+init_image = load_image("assets/img2img_example.png").resize((512, 512))
+
+# Warmup >= len(t_index_list) x frame_buffer_size
+for _ in range(2):
+    stream(init_image)
+
+# Run the stream infinitely
+while True:
+    x_output = stream(init_image)
+    postprocess_image(x_output, output_type="pil")[0].show()
+    input_response = input("Press Enter to continue or type 'stop' to exit: ")
+    if input_response == "stop":
+        break
 ```
 
-## Usage
+### For Benchmark
 
 ```python
 from typing import Literal, Optional
@@ -267,14 +320,13 @@ if __name__ == "__main__":
 
 # Acknowledgements
 
+The video and image demos in this GitHub repository were generated using [LCM-LoRA](https://huggingface.co/latent-consistency/lcm-lora-sdv1-5) + [kohakuV2](https://civitai.com/models/136268/kohaku-v2) and [SD-Turbo](https://arxiv.org/abs/2311.17042).
 
-The video and image demos in this GitHub repository were generated using [kohakuV2](https://civitai.com/models/136268/kohaku-v2) and [SD-Turbo](https://arxiv.org/abs/2311.17042).
-
-Special thanks to Kohaku BlueLeaf ([@KBlueleaf](https://twitter.com/KBlueleaf)) for providing the KohakuV2 model, and to [Stability AI](https://ja.stability.ai/) for [SD-Turbo](https://arxiv.org/abs/2311.17042).
+Special thanks to [LCM-LoRA authors](https://latent-consistency-models.github.io/) for providing the LCM-LoRA and Kohaku BlueLeaf ([@KBlueleaf](https://twitter.com/KBlueleaf)) for providing the KohakuV2 model and , and to [Stability AI](https://ja.stability.ai/) for [SD-Turbo](https://arxiv.org/abs/2311.17042).
 
  KohakuV2 Models can be downloaded from  [Civitai](https://civitai.com/models/136268/kohaku-v2)  and [Hugging Face](https://huggingface.co/stabilityai/sd-turbo).
 
- [SD-Turbo](https://arxiv.org/abs/2311.17042) is also available on Hugging Face.
+ SD-Turbois also available on [Hugging Face Space](https://huggingface.co/stabilityai/sd-turbo) .
 
 # Contributors
 
