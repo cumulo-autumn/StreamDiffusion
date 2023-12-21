@@ -324,15 +324,15 @@ deltaはRCFGの効きをマイルドにする効果を持つ
 
 ## 開発チーム
 
-[Aki](https://github.com/cumulo-autumn/),
-[Ararat](https://github.com/AttaQ/),
-[Chenfeng Xu](https://github.com/chenfengxu714/),
-[ddPn08](https://github.com/ddPn08/),
-[kizamimi](https://github.com/kizamimi/),
-[ramune](https://github.com/YN35/),
-[teftef](https://github.com/teftef6220/),
-[Tonimono](https://github.com/mili-inch/),
-[Verb](https://github.com/discus0434),
+[Aki](https://twitter.com/cumulo_autumn),
+[Ararat](https://twitter.com/AttaQjp),
+[Chenfeng Xu](https://twitter.com/Chenfeng_X),
+[ddPn08](https://twitter.com/ddPn08),
+[kizamimi](https://twitter.com/ArtengMimi),
+[ramune](https://twitter.com/__ramu0e__),
+[teftef](https://twitter.com/hanyingcl),
+[Tonimono](https://twitter.com/toni_nimono),
+[Verb](https://twitter.com/IMG_5955),
 
 (*alphabetical order)
 </br>
