@@ -118,7 +118,7 @@ python setup.py develop easy_install streamdiffusion[tensorrt]
 python -m streamdiffusion.tools.install-tensorrt
 ```
 
-## Dockerの場合(TensorRT対応)
+### Dockerの場合(TensorRT対応)
 
 ```bash
 git clone https://github.com/cumulo-autumn/StreamDiffusion.git

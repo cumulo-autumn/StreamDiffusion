@@ -56,6 +56,8 @@ Feel free to explore each feature by following the provided links to learn more 
 
 ## Installation
 
+You can install StreamDiffusion via pip, conda, or Docker(explanation below).
+
 ### Step0: Make Environment
 
 ```bash
@@ -74,6 +76,7 @@ source .venv/bin/activate
 ```
 
 ### Step1: Install PyTorch
+
 Select the appropriate version for your system.
 
 CUDA 11.8
@@ -113,7 +116,7 @@ python setup.py develop easy_install streamdiffusion[tensorrt]
 python -m streamdiffusion.tools.install-tensorrt
 ```
 
-## Docker Installation (TensorRT Ready)
+### Docker Installation (TensorRT Ready)
 
 ```bash
 git clone https://github.com/cumulo-autumn/StreamDiffusion.git
