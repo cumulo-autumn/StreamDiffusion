@@ -16,9 +16,7 @@ CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def main(
     input: str,
-    output: str = os.path.join(
-        CURRENT_DIR, "..", "..", "images", "outputs", "output.mp4"
-    ),
+    output: str = os.path.join(CURRENT_DIR, "..", "..", "images", "outputs", "output.mp4"),
     model_id: str = "KBlueLeaf/kohaku-v2.1",
     lora_dict: Optional[Dict[str, float]] = None,
     prompt: str = "1girl with brown dog ears, thick frame glasses",
@@ -34,8 +32,10 @@ def main(
 
     Parameters
     ----------
+    input : str, optional
+        The input video name to load images from.
     output : str, optional
-        The output image file to save images to.
+        The output video name to save images to.
     model_id_or_path : str
         The name of the model to use for image generation.
     lora_dict : Optional[Dict[str, float]], optional
@@ -44,18 +44,19 @@ def main(
         Example: {"LoRA_1" : 0.5 , "LoRA_2" : 0.7 ,...}
     prompt : str
         The prompt to generate images from.
-    width : int, optional
-        The width of the image, by default 512.
-    height : int, optional
-        The height of the image, by default 512.
+    scale : float, optional
+        The scale of the image, by default 1.0.
     acceleration : Literal["none", "xformers", "tensorrt"]
         The type of acceleration to use for image generation.
     use_denoising_batch : bool, optional
         Whether to use denoising batch or not, by default False.
+    enable_similar_image_filter : bool, optional
+        Whether to enable similar image filter or not,
+        by default True.
     seed : int, optional
         The seed, by default 2.
     """
-    
+
     video_info = read_video(input)
     video = video_info[0] / 255
     fps = video_info[2]["video_fps"]
