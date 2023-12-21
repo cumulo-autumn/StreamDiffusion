@@ -51,7 +51,7 @@ setup(
     long_description=open("README.md", "r", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
     keywords="deep learning diffusion pytorch stable diffusion audioldm streamdiffusion real-time",
-    license="CC BY 4.0",
+    license="Apache 2.0 License",
     author="Aki, kizamimi, ddPn08, Verb, ramune, teftef6220, Tonimono, Chenfeng Xu, Ararat with the help of all our contributors (https://github.com/cumulo-autumn/StreamDiffusion/graphs/contributors)",
     author_email="cumulokyoukai@gmail.com",
     url="https://github.com/cumulo-autumn/StreamDiffusion",
