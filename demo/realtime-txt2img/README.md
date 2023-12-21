@@ -18,26 +18,11 @@ cd ../server
 python main.py
 ```
 
-## Docker
-
-Build
-`GITHUB_TOKEN` is temp until project is public
-```bash
-docker build --secret id=GITHUB_TOKEN,src=./github_token.txt -t realtime-txt2img .
-```
-
-Run
-```bash
-docker run -ti -p 9090:9090 -e HF_HOME=/data -v ~/.cache/huggingface:/data  --gpus all realtime-txt2img
-```
-
-`-e HF_HOME=/data -v ~/.cache/huggingface:/data` is used to mount your local huggingface cache to the container, so that you don't need to download the model again.
-
 # Acknowledgements
 
 </br>
 
-The video and image demos in this GitHub repository were generated using [kohakuV2](https://civitai.com/models/136268/kohaku-v2) and [SD-Turbo](https://arxiv.org/abs/2311.17042). 
+The video and image demos in this GitHub repository were generated using [kohakuV2](https://civitai.com/models/136268/kohaku-v2) and [SD-Turbo](https://arxiv.org/abs/2311.17042).
 
 Special thanks to Kohaku BlueLeaf ([@KBlueleaf](https://twitter.com/KBlueleaf)) for providing the KohakuV2 model, and to [StabilityAI](https://ja.stability.ai/) for [SD-Turbo](https://arxiv.org/abs/2311.17042).
 

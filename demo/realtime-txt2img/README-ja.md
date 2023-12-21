@@ -19,20 +19,3 @@ npm start &
 cd ../server
 python main.py
 ```
-
-## Docker
-
-Build
-
-`GITHUB_TOKEN` を各自変更してください。
-```bash
-docker build --secret id=GITHUB_TOKEN,src=./github_token.txt -t realtime-txt2img .
-```
-
-実行
-```bash
-docker run -ti -p 9090:9090 -e HF_HOME=/data -v ~/.cache/huggingface:/data  --gpus all realtime-txt2img
-```
-
-
-`-e HF_HOME=/data -v ~/.cache/huggingface:/data` はローカルの huggingface キャッシュをコンテナにマウントするために使用されます。
