@@ -1,6 +1,9 @@
 # StreamDiffusion
 
-| ![画像1](./assets/demo_07.gif) | ![画像2](./assets/demo_09.gif) |
+<p align="center">
+  <img src="./assets/demo_07.gif" width=80%>
+  <img src="./assets/demo_09.gif" width=80%>
+</p>
 
 
 **[StreamDiffusion: A Pipeline-level Solution for Real-time Interactive Generation](https://arxiv.org/abs/2312.12491)**
