@@ -64,7 +64,7 @@ def main(
     height = int(video.shape[2] * scale)
 
     stream = StreamDiffusionWrapper(
-        model_id=model_id,
+        model_id_or_path=model_id,
         lora_dict=lora_dict,
         t_index_list=[35, 45],
         frame_buffer_size=1,
