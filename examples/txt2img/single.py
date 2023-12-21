@@ -22,7 +22,7 @@ def main(
     width: int = 512,
     height: int = 512,
     acceleration: Literal["none", "xformers", "tensorrt"] = "xformers",
-    use_denoising_batch: bool = True,
+    use_denoising_batch: bool = False,
     seed: int = 2,
 ):
     stream = StreamDiffusionWrapper(
