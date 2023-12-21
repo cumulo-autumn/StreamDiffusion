@@ -1,5 +1,7 @@
 # StreamDiffusion Examples
 
+[English](./README.md) | [日本語](./README-ja.md)
+
 StreamDiffusion の使用例です。
 
 [README.md](../README.md) に書いてある手順で StreamDiffusion 環境構築及びインストールを行ってください。

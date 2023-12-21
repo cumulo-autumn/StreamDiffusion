@@ -1,5 +1,7 @@
 # StreamDiffusion Examples
 
+[English](./README.md) | [日本語](./README-ja.md)
+
 Examples of StreamDiffusion.
 
 If you want to maximize performance, you need to install with following steps explained in [README.md](../README.md) in the root directory, and use `--acceleration tensorrt` option at the end of each command. At default, StreamDiffusion uses `xformers` for acceleration, which is not the fastest option.

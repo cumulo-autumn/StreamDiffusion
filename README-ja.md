@@ -1,5 +1,7 @@
 # StreamDiffusion
 
+[English](./README.md) | [日本語](./README-ja.md)
+
 <p align="center">
   <img src="./assets/demo_07.gif" width=90%>
   <img src="./assets/demo_09.gif" width=90%>
@@ -239,8 +241,11 @@ if __name__ == "__main__":
 
 # 謝辞
 
-この Github リポジトリにある動画と画像のデモは、[kohakuV2](https://civitai.com/models/136268/kohaku-v2)を使用して生成しました。モデルを提供していただいた Kohaku BlueLeaf ([@KBlueleaf](https://twitter.com/KBlueleaf)) 様に心より感謝いたします。
-KohakuV2 モデルは [Civitai](https://civitai.com/models/136268/kohaku-v2) と [HuggingFace](https://huggingface.co/stabilityai/sd-turbo) からダウンロードでき、[SD-Turbo](https://arxiv.org/abs/2311.17042) は Hugging Face で使用可能です。
+この GitHubリポジトリ にある動画と画像のデモは、[kohakuV2](https://civitai.com/models/136268/kohaku-v2)と[SD-Turbo](https://arxiv.org/abs/2311.17042)を使用して生成されました。
+
+KohakuV2 モデルを提供していただいたKohaku BlueLeaf 様 ([@KBlueleaf](https://twitter.com/KBlueleaf))、[SD-Turbo](https://arxiv.org/abs/2311.17042)を提供していただいた[StabilityAI](https://ja.stability.ai/)様に心より感謝いたします。
+
+KohakuV2 モデルは [Civitai](https://civitai.com/models/136268/kohaku-v2) と [HuggingFace](https://huggingface.co/stabilityai/sd-turbo) からダウンロードでき、[SD-Turbo](https://arxiv.org/abs/2311.17042) は Hugging Faceで使用可能です。。
 
 
 # Contributors
