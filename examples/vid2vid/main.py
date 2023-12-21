@@ -59,7 +59,7 @@ def main(
         video_result[i] = output_image.permute(1, 2, 0)
 
     video_result = video_result * 255
-    write_video(f"{output}.mp4", video_result, fps=fps)
+    write_video(output, video_result, fps=fps)
 
 
 if __name__ == "__main__":
