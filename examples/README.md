@@ -10,6 +10,8 @@ If you want to maximize performance, you need to install with following steps ex
 
 Take a screen capture and process it. **This script only works on Windows.**
 
+When you run the script, a translucent window appears. Position it at where you want to capture the screen and press the enter key to finalize the capture area.
+
 You need to install extra dependencies for this script as follows:
 
 ```bash
@@ -40,10 +42,7 @@ With TensorRT acceleration:
 python benchmark/multi.py --acceleration tensorrt
 ```
 
-
- [`examples`](./examples) からサンプルを実行できます。
-
-
+[`examples`](./examples) からサンプルを実行できます。
 
 ## `optimal-performance/`
 
@@ -116,4 +115,3 @@ pip install -r vid2vid/requirements.txt
 ```bash
 python vid2vid/main.py --input path/to/input.mp4 --output path/to/output.mp4
 ```
-
