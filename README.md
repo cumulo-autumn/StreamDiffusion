@@ -195,6 +195,176 @@ while True:
         break
 ```
 
+### For Benchmark
+
+```python
+from typing import Literal, Optional
+from PIL import Image
+import torch
+from diffusers import AutoencoderTiny, StableDiffusionPipeline
+from tqdm import tqdm
+
+from streamdiffusion import StreamDiffusion
+from streamdiffusion.image_utils import pil2tensor, postprocess_image
+
+
+torch.set_grad_enabled(False)
+torch.backends.cuda.matmul.allow_tf32 = True
+torch.backends.cudnn.allow_tf32 = True
+
+
+def run(
+    prompt: str = "1girl with dog hair, thick frame glasses",
+    warmup: int = 10,
+    iterations: int = 50,
+    lcm_lora: bool = True,
+    tiny_vae: bool = True,
+    acceleration: Optional[Literal["none", "xformers", "tensorrt"]] = "xformers",
+):
+    # Load Stable Diffusion pipeline
+    pipe: StableDiffusionPipeline = StableDiffusionPipeline.from_pretrained(
+        "KBlueLeaf/kohaku-v2.1"
+    ).to(
+        device=torch.device("cuda"),
+        dtype=torch.float16,
+    )
+
+    # Wrap the pipeline in StreamDiffusion
+    stream = StreamDiffusion(
+        pipe,
+        [32, 45],
+        torch_dtype=torch.float16,
+    )
+
+    # Load LCM LoRA
+    if lcm_lora:
+        stream.load_lcm_lora()
+        stream.fuse_lora()
+
+    # Load Tiny VAE
+    if tiny_vae:
+        stream.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd").to(
+            device=pipe.device, dtype=pipe.dtype
+        )
+
+    # Enable acceleration
+    if acceleration == "xformers":
+        pipe.enable_xformers_memory_efficient_attention()
+    elif acceleration == "tensorrt":
+        from streamdiffusion.acceleration.tensorrt import accelerate_with_tensorrt
+
+        stream = accelerate_with_tensorrt(
+            stream,
+            "engines",
+            max_batch_size=2,
+            engine_build_options={"build_static_batch": True},
+        )
+
+    # Prepare the stream
+    stream.prepare(
+        prompt,
+        num_inference_steps=50,
+    )
+
+    # Prepare the input tensor
+    image = Image.open("assets/img2img_example.png").convert("RGB").resize((512, 512))
+    input_tensor = pil2tensor(image)
+
+    # Warmup
+    for _ in range(warmup):
+        stream(
+            input_tensor.detach().clone().to(device=stream.device, dtype=stream.dtype)
+        )
+
+
+    # Run the stream
+    results = []
+    for _ in tqdm(range(iterations)):
+        start = torch.cuda.Event(enable_timing=True)
+        end = torch.cuda.Event(enable_timing=True)
+
+        start.record()
+        x_output = stream(
+            input_tensor.detach().clone().to(device=stream.device, dtype=stream.dtype)
+        )
+        image = postprocess_image(x_output, output_type="pil")[0]
+        end.record()
+
+        torch.cuda.synchronize()
+        results.append(start.elapsed_time(end))
+
+    print(f"Average time: {sum(results) / len(results)}ms")
+    print(f"Average FPS: {1000 / (sum(results) / len(results))}")
+
+
+if __name__ == "__main__":
+    run()
+```
+
+## Optionals
+
+## Stochastic Similarity Filter
+
+![demo](assets\demo_06.gif)
+
+Stochastic Similarity Filter reduces processing during video input by minimizing conversion operations when there is little change from the previous frame, thereby alleviating GPU processing load, as shown by the red frame in the above GIF. The usage is as follows:
+
+```
+stream = StreamDiffusion(
+        pipe,
+        [32, 45],
+        torch_dtype=torch.float16,
+    )
+stream.enable_similar_image_filter(similar_image_filter_threshold,similar_image_filter_max_skip_frame)
+```
+
+There are the following parameters that can be set as arguments in the function:
+
+### similar_image_filter_threshold
+
+- The threshold for similarity between the previous frame and the current frame before the processing is paused.
+
+### similar_image_filter_max_skip_frame
+
+- The maximum interval during the pause before resuming the conversion.
+
+## Residual CFG (RCFG)
+
+![rcfg](assets\cfg_conparision.png)
+
+RCFG is a method for approximately realizing CFG with competitive computational complexity compared to cases where CFG is not used. It can be specified through the cfg_type argument in the StreamDiffusion. There are two types of RCFG: one with no specified items for negative prompts RCFG Self-Negative and one where negative prompts can be specified RCFG Onetime-Negative. In terms of computational complexity, denoting the complexity without CFG as N and the complexity with a regular CFG as 2N, RCFG Self-Negative can be computed in N steps, while RCFG Onetime-Negative can be computed in N+1 steps.
+
+The usage is as follows:
+
+```
+# w/0 CFG
+cfg_type = "none"
+
+# CFG
+cfg_type = "full"
+
+# RCFG Self-Negative
+cfg_type = "self"
+
+# RCFG Onetime-Negative
+cfg_type = "initialize"
+
+stream = StreamDiffusion(
+        pipe,
+        [32, 45],
+        torch_dtype=torch.float16,
+        cfg_type = cfg_type
+    )
+
+stream.prepare(
+        prompt = "1girl, purple hair",
+        guidance_scale = guidance_scale,
+        delta = delta,
+    )
+```
+
+The delta has a moderating effect on the effectiveness of RCFG.
+
 # Development Team
 
 [Aki](https://github.com/cumulo-autumn/),
