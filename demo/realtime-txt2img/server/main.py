@@ -1,3 +1,5 @@
+import sys
+import os
 import asyncio
 import base64
 import logging
@@ -12,8 +14,10 @@ from fastapi.staticfiles import StaticFiles
 
 from PIL import Image
 from pydantic import BaseModel
-from wrapper import StreamDiffusionWrapper
 
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+
+from utils.wrapper import StreamDiffusionWrapper
 
 logger = logging.getLogger("uvicorn")
 PROJECT_DIR = Path(__file__).parent.parent
@@ -56,7 +60,7 @@ class Api:
         self.config = config
         self.stream_diffusion = StreamDiffusionWrapper(
             mode=config.mode,
-            model_id=config.model_id,
+            model_id_or_path=config.model_id_or_path,
             lcm_lora_id=config.lcm_lora_id,
             vae_id=config.vae_id,
             device=config.device,
@@ -65,6 +69,7 @@ class Api:
             t_index_list=config.t_index_list,
             warmup=config.warmup,
             use_safety_checker=config.use_safety_checker,
+            cfg_type="none",
         )
         self.app = FastAPI()
         self.app.add_api_route(
@@ -103,7 +108,9 @@ class Api:
         """
         async with self._predict_lock:
             return PredictResponseModel(
-                base64_image=self._pil_to_base64(self.stream_diffusion(prompt=inp.prompt))
+                base64_image=self._pil_to_base64(
+                    self.stream_diffusion(prompt=inp.prompt)
+                )
             )
 
     def _pil_to_base64(self, image: Image.Image, format: str = "JPEG") -> bytes:

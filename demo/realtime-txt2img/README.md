@@ -1,7 +1,9 @@
 # Txt2Img Example
 
+[English](./README.md) | [日本語](./README-ja.md)
+
 <p align="center">
-  <img src="./assets/example.gif" width=80%>
+  <img src="../../assets/demo_01.gif" width=80%>
 </p>
 
 This example provides a simple implementation of the use of StreamDiffusion to generate images from text.
@@ -10,30 +12,22 @@ You can realtimely generate 4x4 images from text, on changing the input prompt.
 ## Usage
 
 ```bash
-chmod +x ./start.sh && ./start.sh
-```
-
-or
-
-```bash
 pip install -r requirements.txt
 cd view
-npm start &
+npm i
+npm run build
 cd ../server
-python3 main.py
+python main.py
 ```
 
-## Docker
+# Acknowledgements
 
-Build
-`GITHUB_TOKEN` is temp until project is public
-```bash
-docker build --secret id=GITHUB_TOKEN,src=./github_token.txt -t realtime-txt2img .
-```
+</br>
 
-Run
-```bash
-docker run -ti -p 9090:9090 -e HF_HOME=/data -v ~/.cache/huggingface:/data  --gpus all realtime-txt2img
-```
+The video and image demos in this GitHub repository were generated using [kohakuV2](https://civitai.com/models/136268/kohaku-v2) and [SD-Turbo](https://arxiv.org/abs/2311.17042).
 
-`-e HF_HOME=/data -v ~/.cache/huggingface:/data` is used to mount your local huggingface cache to the container, so that you don't need to download the model again.
+Special thanks to Kohaku BlueLeaf ([@KBlueleaf](https://twitter.com/KBlueleaf)) for providing the KohakuV2 model, and to [StabilityAI](https://ja.stability.ai/) for [SD-Turbo](https://arxiv.org/abs/2311.17042).
+
+ KohakuV2 Models can be downloaded from  [Civitai](https://civitai.com/models/136268/kohaku-v2)  and [HuggingFace](https://huggingface.co/stabilityai/sd-turbo).
+
+ [SD-Turbo](https://arxiv.org/abs/2311.17042) is also available on Hugging Face.
