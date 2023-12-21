@@ -49,7 +49,7 @@ def main(
     acceleration : Literal["none", "xformers", "tensorrt"]
         The type of acceleration to use for image generation.
     use_denoising_batch : bool, optional
-        Whether to use denoising batch or not, by default False.
+        Whether to use denoising batch or not, by default True.
     enable_similar_image_filter : bool, optional
         Whether to enable similar image filter or not,
         by default True.
