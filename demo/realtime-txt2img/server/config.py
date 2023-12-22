@@ -26,7 +26,7 @@ class Config:
     ####################################################################
     mode: Literal["txt2img", "img2img"] = "txt2img"
     # SD1.x variant model
-    model_id: str = "KBlueLeaf/kohaku-v2.1"
+    model_id_or_path: str = "KBlueLeaf/kohaku-v2.1"
     # LCM-LORA model
     lcm_lora_id: str = "latent-consistency/lcm-lora-sdv1-5"
     # TinyVAE model
@@ -36,7 +36,7 @@ class Config:
     # Data type
     dtype: torch.dtype = torch.float16
     # acceleration
-    acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "xformers"
+    acceleration: Literal["none", "xformers", "tensorrt"] = "xformers"
 
     ####################################################################
     # Inference configuration

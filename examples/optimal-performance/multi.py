@@ -12,9 +12,9 @@ from PIL import Image, ImageTk
 from streamdiffusion.image_utils import postprocess_image
 
 
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 
-from wrapper import StreamDiffusionWrapper
+from utils.wrapper import StreamDiffusionWrapper
 
 
 image_update_counter = 0
@@ -46,9 +46,9 @@ def image_generation_process(
     queue: Queue,
     fps_queue: Queue,
     prompt: str,
-    model_name: str,
+    model_id_or_path: str,
     batch_size: int = 10,
-    acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "tensorrt",
+    acceleration: Literal["none", "xformers", "tensorrt"] = "tensorrt",
 ) -> None:
     """
     Process for generating images based on a prompt using a specified model.
@@ -61,22 +61,23 @@ def image_generation_process(
         The queue to put the calculated fps.
     prompt : str
         The prompt to generate images from.
-    model_name : str
+    model_id_or_path : str
         The name of the model to use for image generation.
     batch_size : int
         The batch size to use for image generation.
-    acceleration : Literal["none", "xformers", "sfast", "tensorrt"]
+    acceleration : Literal["none", "xformers", "tensorrt"]
         The type of acceleration to use for image generation.
     """
     stream = StreamDiffusionWrapper(
-        model_id=model_name,
+        model_id_or_path=model_id_or_path,
         t_index_list=[0],
         frame_buffer_size=batch_size,
         warmup=10,
         acceleration=acceleration,
-        is_drawing=True,
         use_lcm_lora=False,
         mode="txt2img",
+        cfg_type="none",
+        use_denoising_batch=True,
     )
 
     stream.prepare(
@@ -98,7 +99,9 @@ def image_generation_process(
             return
 
 
-def _receive_images(queue: Queue, fps_queue: Queue, labels: List[tk.Label], fps_label: tk.Label) -> None:
+def _receive_images(
+    queue: Queue, fps_queue: Queue, labels: List[tk.Label], fps_label: tk.Label
+) -> None:
     """
     Continuously receive images from a queue and update the labels.
 
@@ -118,7 +121,9 @@ def _receive_images(queue: Queue, fps_queue: Queue, labels: List[tk.Label], fps_
             if not queue.empty():
                 [
                     labels[0].after(0, update_image, image_data, labels)
-                    for image_data in postprocess_image(queue.get(block=False), output_type="pil")
+                    for image_data in postprocess_image(
+                        queue.get(block=False), output_type="pil"
+                    )
                 ]
             if not fps_queue.empty():
                 fps_label.config(text=f"FPS: {fps_queue.get(block=False):.2f}")
@@ -149,7 +154,9 @@ def receive_images(queue: Queue, fps_queue: Queue) -> None:
     fps_label = tk.Label(root, text="FPS: 0")
     fps_label.grid(rows=2, columnspan=2)
 
-    thread = threading.Thread(target=_receive_images, args=(queue, fps_queue, labels, fps_label), daemon=True)
+    thread = threading.Thread(
+        target=_receive_images, args=(queue, fps_queue, labels, fps_label), daemon=True
+    )
     thread.start()
 
     try:
@@ -160,9 +167,9 @@ def receive_images(queue: Queue, fps_queue: Queue) -> None:
 
 def main(
     prompt: str = "cat with sunglasses and a hat, photoreal, 8K",
-    model_name: str = "stabilityai/sd-turbo",
+    model_id_or_path: str = "stabilityai/sd-turbo",
     batch_size: int = 12,
-    acceleration: Literal["none", "xformers", "sfast", "tensorrt"] = "tensorrt",
+    acceleration: Literal["none", "xformers", "tensorrt"] = "tensorrt",
 ) -> None:
     """
     Main function to start the image generation and viewer processes.
@@ -171,7 +178,7 @@ def main(
     fps_queue = Queue()
     process1 = Process(
         target=image_generation_process,
-        args=(queue, fps_queue, prompt, model_name, batch_size, acceleration),
+        args=(queue, fps_queue, prompt, model_id_or_path, batch_size, acceleration),
     )
     process1.start()
 
