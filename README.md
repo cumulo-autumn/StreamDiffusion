@@ -359,6 +359,6 @@ Special thanks to [LCM-LoRA authors](https://latent-consistency-models.github.io
 
 ## Contributors
 
-<!-- <a href="https://github.com/cumulo-autumn/StreamDiffusion/tree/dev/refactor-examples/graphs/contributors" target="_blank">
+<a href="https://github.com/cumulo-autumn/StreamDiffusion/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=cumulo-autumn/StreamDiffusion" />
-</a> -->
+</a>
