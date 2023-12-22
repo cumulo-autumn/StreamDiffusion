@@ -626,6 +626,9 @@ class StreamDiffusionWrapper:
             traceback.print_exc()
             print("Acceleration has failed. Falling back to normal mode.")
 
+        if seed < 0: # Random seed
+            seed = np.random.randint(0, 1000000)
+
         stream.prepare(
             "",
             "",
