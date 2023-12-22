@@ -8,7 +8,6 @@ import numpy as np
 import torch
 from diffusers import AutoencoderTiny, StableDiffusionPipeline
 from PIL import Image
-from polygraphy import cuda
 
 from streamdiffusion import StreamDiffusion
 from streamdiffusion.image_utils import postprocess_image
@@ -463,6 +462,7 @@ class StreamDiffusionWrapper:
             if acceleration == "xformers":
                 stream.pipe.enable_xformers_memory_efficient_attention()
             if acceleration == "tensorrt":
+                from polygraphy import cuda
                 from streamdiffusion.acceleration.tensorrt import (
                     TorchVAEEncoder,
                     compile_unet,
