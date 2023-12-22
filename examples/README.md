@@ -6,6 +6,8 @@ Examples of StreamDiffusion.
 
 If you want to maximize performance, you need to install with following steps explained in [README.md](../README.md) in the root directory, and use `--acceleration tensorrt` option at the end of each command. At default, StreamDiffusion uses `xformers` for acceleration, which is not the fastest option.
 
+※※ For other commands, please refer to **Command Line Options** at the bottom.
+
 ## `screen/`
 
 Take a screen capture and process it. **This script only works on Windows.**
@@ -115,3 +117,35 @@ pip install -r vid2vid/requirements.txt
 ```bash
 python vid2vid/main.py --input path/to/input.mp4 --output path/to/output.mp4
 ```
+
+# Command Line Options
+
+### model_id_or_path
+```--model_id_or_path``` allows you to change models.<br>
+By specifying the model ID in Hugging Face (like "KBlueLeaf/kohaku-v2.1" ), the model can be loaded from Hugging Face  at runtime.<br>
+It is also possible to use models in a local directorys by specifying the local model path.
+
+
+Usage (Hugging Face) : ```--model_id_or_path "KBlueLeaf/kohaku-v2.1"```<br>
+Usage (Local) : ```--model_id_or_path "C:/stable-diffusion-webui/models/Stable-diffusion/ModelName.safetensor"```
+
+### lora_dict
+```--lora_dict``` can specify multiple LoRAs to be used. <br>
+The ```--lora_dict``` is in the format ```"{'LoRA_1 file path' : LoRA_1 scale , 'LoRA_2 file path' : LoRA_2 scale}"```.
+
+
+Usage : 
+```--lora_dict "{'C:/stable-diffusion-webui/models/Stable-diffusion/LoRA_1.safetensor' : 0.5 ,"E:/ComfyUI/models/LoRA_2.safetensor' : 0.7 }"``` 
+
+### Prompt 
+```--prompt``` allows you to change Prompt.
+
+Usage : ```--prompt "A cat with a hat"```
+
+### Negative Prompt
+
+```negative_prompt``` allows you to change Negative Prompt. <br> 
+※※ ```negative_prompt``` Not available in txt2img ,optimal-performance, and vid2vid.
+
+
+Usage : ```--negative_prompt "Bad quality"```

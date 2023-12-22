@@ -9,6 +9,8 @@ StreamDiffusion の使用例です。
 TensorRT を用いることで最大パフォーマンスとなります。使用する際は TensorRT を使用した上でコマンドに`--acceleration tensorrt`を付けてください。
 `xformers`がデフォルトで使用されていますが、これは最速ではありません。
 
+※※ その他、各種コマンドは最下部の**コマンドオプション**を参考にしてください。
+
 ## `screen/`
 
 スクリーンキャプチャをリアルタイムで img2img します。**Windows でのみ動作します。**
@@ -113,3 +115,34 @@ pip install -r vid2vid/requirements.txt
 ```bash
 python vid2vid/main.py --input path/to/input.mp4 --output path/to/output.mp4
 ```
+
+# コマンドオプション
+### モデル変更
+```--model_id_or_path```　引数で使用するモデルを指定できる。
+Hugging Face のモデル id を指定することで実行時に Hugging Face からモデルをロードすることができる。<br>
+また、ローカルのモデルのパスを指定することでローカルフォルダ内のモデルを使用することも可能である。
+
+
+例 (Hugging Face) : ```--model_id_or_path "KBlueLeaf/kohaku-v2.1"```<br>
+例 (ローカル) : ```--model_id_or_path "C:/stable-diffusion-webui/models/Stable-diffusion/ModelName.safetensor"```
+
+### LoRA 追加
+```--lora_dict``` 引数で使用するLoRAを複数指定できる。<br>
+```--lora_dict``` は ```"{'LoRA_1 のファイルパス' : LoRA_1 のスケール ,'LoRA_2 のファイルパス' : LoRA_2 のスケール}"``` という形式で指定する。
+
+
+例 : 
+```--lora_dict "{'C:/stable-diffusion-webui/models/Stable-diffusion/LoRA_1.safetensor' : 0.5 ,'E:/ComfyUI/models/LoRA_2.safetensor' : 0.7}"``` 
+
+### Prompt 
+```--prompt``` 引数で Prompt を文字列で指定する。
+
+例 : ```--prompt "A cat with a hat"```
+
+### Negative Prompt
+
+```negative_prompt``` 引数で Negative Prompt を文字列で指定する。<br>
+※※ ただし、txt2img ,optimal-performance, vid2vid では使用できない。
+
+
+例 : ```--negative_prompt "Bad quality"```

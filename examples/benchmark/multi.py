@@ -84,7 +84,7 @@ def run(
     use_denoising_batch : bool, optional
         Whether to use denoising batch or not, by default True.
     seed : int, optional
-        The seed, by default 2.
+        The seed, by default 2. if -1, use random seed.
     """        
     stream = StreamDiffusionWrapper(
         model_id_or_path=model_id_or_path,

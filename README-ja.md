@@ -173,6 +173,9 @@ docker run --gpus all -it -v $(pwd):/home/ubuntu/streamdiffusion stream-diffusio
 
 ## 使用例
 シンプルなStreamDiffusionの使用例を取り上げる. より詳細かつ様々な使用例は[`examples`](./examples)を参照してください。
+
+
+
 ### Image-to-Image
 ```python
 import torch
@@ -284,10 +287,9 @@ from streamdiffusion.acceleration.tensorrt import accelerate_with_tensorrt
 
 stream = accelerate_with_tensorrt(
     stream, "engines", max_batch_size=2,
-    engine_build_options={"build_static_batch": True}
 )
 ```
-ただし、TensorRTのインストールとエンジンのビルドに次官を要する。
+ただし、TensorRTのインストールとエンジンのビルドに時間を要する。
 
 ## オプション
 

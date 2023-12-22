@@ -63,7 +63,7 @@ def main(
         The cfg_type for img2img mode, by default "self".
         You cannot use anything other than "none" for txt2img mode.
     seed : int, optional
-        The seed, by default 2.
+        The seed, by default 2. if -1, use random seed.
     delta : float, optional
         The delta multiplier of virtual residual noise,
         by default 1.0.

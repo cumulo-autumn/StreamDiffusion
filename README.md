@@ -272,7 +272,7 @@ while True:
     if input_response == "stop":
         break
 ```
-You can it make more faster by using SD-Turbo.
+You can make it faster by using SD-Turbo.
 
 ### More fast generation
 Replace the following code in the above example.
@@ -285,7 +285,6 @@ from streamdiffusion.acceleration.tensorrt import accelerate_with_tensorrt
 
 stream = accelerate_with_tensorrt(
     stream, "engines", max_batch_size=2,
-    engine_build_options={"build_static_batch": True}
 )
 ```
 It requires TensorRT extension and time to build the engine, but it will be faster than the above example.
@@ -375,7 +374,7 @@ Special thanks to [LCM-LoRA authors](https://latent-consistency-models.github.io
 
  KohakuV2 Models can be downloaded from  [Civitai](https://civitai.com/models/136268/kohaku-v2)  and [Hugging Face](https://huggingface.co/KBlueLeaf/kohaku-v2.1).
 
- SD-Turbois also available on [Hugging Face Space](https://huggingface.co/stabilityai/sd-turbo) .
+ SD-Turbo is also available on [Hugging Face Space](https://huggingface.co/stabilityai/sd-turbo).
 
 ## Contributors
 

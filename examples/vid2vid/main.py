@@ -54,7 +54,7 @@ def main(
         Whether to enable similar image filter or not,
         by default True.
     seed : int, optional
-        The seed, by default 2.
+        The seed, by default 2. if -1, use random seed.
     """
 
     video_info = read_video(input)
