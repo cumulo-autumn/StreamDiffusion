@@ -139,7 +139,6 @@ pip install pywin32
 #### 開発者向け
 
 ```bash
-git clone https://github.com/cumulo-autumn/StreamDiffusion.git
 python setup.py develop easy_install streamdiffusion[tensorrt]
 python -m streamdiffusion.tools.install-tensorrt
 ```
