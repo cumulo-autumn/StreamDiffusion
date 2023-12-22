@@ -219,7 +219,7 @@ pipe = StableDiffusionPipeline.from_pretrained("KBlueLeaf/kohaku-v2.1").to(
 
 # Diffusers pipelineをStreamDiffusionにラップ
 # text2imageにおいてはより長いステップ(len(t_index_list))を要求する
-# text2imageにおいてはcfg_type="none"である必要がある
+# text2imageにおいてはcfg_type="none"が推奨される
 stream = StreamDiffusion(
     pipe,
     t_index_list=[0, 16, 32, 45],
@@ -252,6 +252,23 @@ while True:
     if input_response == "stop":
         break
 ```
+SD-Turboを使用するとさらに高速化も可能である
+
+### More fast generation
+上のコードの以下の部分を書き換えることで、より高速な生成が可能である。
+```python
+pipe.enable_xformers_memory_efficient_attention()
+```
+以下に書き換える
+```python
+from streamdiffusion.acceleration.tensorrt import accelerate_with_tensorrt
+
+stream = accelerate_with_tensorrt(
+    stream, "engines", max_batch_size=2,
+    engine_build_options={"build_static_batch": True}
+)
+```
+ただし、TensorRTのインストールとエンジンのビルドに次官を要する。
 
 ## オプション
 

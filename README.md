@@ -161,6 +161,7 @@ from diffusers.utils import load_image
 from streamdiffusion import StreamDiffusion
 from streamdiffusion.image_utils import postprocess_image
 
+# You can load any models using diffuser's StableDiffusionPipeline
 pipe = StableDiffusionPipeline.from_pretrained("KBlueLeaf/kohaku-v2.1").to(
     device=torch.device("cuda"),
     dtype=torch.float16,
@@ -210,6 +211,7 @@ from diffusers import AutoencoderTiny, StableDiffusionPipeline
 from streamdiffusion import StreamDiffusion
 from streamdiffusion.image_utils import postprocess_image
 
+# You can load any models using diffuser's StableDiffusionPipeline
 pipe = StableDiffusionPipeline.from_pretrained("KBlueLeaf/kohaku-v2.1").to(
     device=torch.device("cuda"),
     dtype=torch.float16,
@@ -217,7 +219,7 @@ pipe = StableDiffusionPipeline.from_pretrained("KBlueLeaf/kohaku-v2.1").to(
 
 # Wrap the pipeline in StreamDiffusion
 # Requires more long steps (len(t_index_list)) in text2image
-# You should use cfg_type="none" when text2image
+# You recommend to use cfg_type="none" when text2image
 stream = StreamDiffusion(
     pipe,
     t_index_list=[0, 16, 32, 45],
@@ -250,6 +252,23 @@ while True:
     if input_response == "stop":
         break
 ```
+You can it make more faster by using SD-Turbo.
+
+### More fast generation
+Replace the following code in the above example.
+```python
+pipe.enable_xformers_memory_efficient_attention()
+```
+To
+```python
+from streamdiffusion.acceleration.tensorrt import accelerate_with_tensorrt
+
+stream = accelerate_with_tensorrt(
+    stream, "engines", max_batch_size=2,
+    engine_build_options={"build_static_batch": True}
+)
+```
+It requires TensorRT extension and time to build the engine, but it will be faster than the above example.
 
 ## Optionals
 
