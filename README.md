@@ -272,7 +272,7 @@ while True:
     if input_response == "stop":
         break
 ```
-You can it make faster by using SD-Turbo.
+You can make it faster by using SD-Turbo.
 
 ### More fast generation
 Replace the following code in the above example.
