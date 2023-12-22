@@ -274,7 +274,7 @@ while True:
 ```
 You can make it faster by using SD-Turbo.
 
-### More fast generation
+### Faster generation
 Replace the following code in the above example.
 ```python
 pipe.enable_xformers_memory_efficient_attention()
