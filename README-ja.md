@@ -365,6 +365,6 @@ KohakuV2 モデルは [Civitai](https://civitai.com/models/136268/kohaku-v2) と
 
 ## Contributors
 
-<!-- <a href="https://github.com/cumulo-autumn/StreamDiffusion/tree/dev/refactor-examples/graphs/contributors" target="_blank">
+<a href="https://github.com/cumulo-autumn/StreamDiffusion/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=cumulo-autumn/StreamDiffusion" />
-</a> -->
+</a>
