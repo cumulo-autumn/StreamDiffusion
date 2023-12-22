@@ -65,9 +65,17 @@ Feel free to explore each feature by following the provided links to learn more 
 
 ## Installation
 
-You can install StreamDiffusion via pip, conda, or Docker(explanation below).
 
-### Step0: Make Environment
+
+### Step0: clone this repository
+
+```bash
+git clone https://github.com/cumulo-autumn/StreamDiffusion.git
+```
+
+### Step1: Make Environment
+
+You can install StreamDiffusion via pip, conda, or Docker(explanation below).
 
 ```bash
 conda create -n streamdiffusion python=3.10
@@ -84,7 +92,7 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
-### Step1: Install PyTorch
+### Step2: Install PyTorch
 
 Select the appropriate version for your system.
 
@@ -101,21 +109,33 @@ pip3 install torch==2.1.0 torchvision==0.16.0 xformers --index-url https://downl
 ```
 details: https://pytorch.org/
 
-### Step2: Install StreamDiffusion
+### Step3: Install StreamDiffusion
 
 #### For User
 
 Install StreamDiffusion
 
 ```bash
-pip install git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=streamdiffusion
+#for Latest Version (recommended)
+pip install git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=streamdiffusion[tensorrt]
+
+
+#or
+
+
+#for Stable Version
+pip install streamdiffusion[tensorrt]
 ```
 
-Install TensorRT extension
+Install TensorRT extension and pywin32
+(※※pywin32 is required only for Windows.)
 
 ```bash
 python -m streamdiffusion.tools.install-tensorrt
+# If you use Windows, you need to install pywin32 
+pip install pywin32
 ```
+
 
 #### For Developer
 
@@ -351,7 +371,7 @@ The delta has a moderating effect on the effectiveness of RCFG.
 
 The video and image demos in this GitHub repository were generated using [LCM-LoRA](https://huggingface.co/latent-consistency/lcm-lora-sdv1-5) + [KohakuV2](https://civitai.com/models/136268/kohaku-v2) and [SD-Turbo](https://arxiv.org/abs/2311.17042).
 
-Special thanks to [LCM-LoRA authors](https://latent-consistency-models.github.io/) for providing the LCM-LoRA and Kohaku BlueLeaf ([@KBlueleaf](https://twitter.com/KBlueleaf)) for providing the KohakuV2 model and , and to [Stability AI](https://ja.stability.ai/) for [SD-Turbo](https://arxiv.org/abs/2311.17042).
+Special thanks to [LCM-LoRA authors](https://latent-consistency-models.github.io/) for providing the LCM-LoRA and Kohaku BlueLeaf ([@KBlueleaf](https://twitter.com/KBlueleaf)) for providing the KohakuV2 model and ,to [Stability AI](https://ja.stability.ai/) for [SD-Turbo](https://arxiv.org/abs/2311.17042).
 
  KohakuV2 Models can be downloaded from  [Civitai](https://civitai.com/models/136268/kohaku-v2)  and [Hugging Face](https://huggingface.co/KBlueLeaf/kohaku-v2.1).
 

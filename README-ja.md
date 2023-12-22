@@ -63,6 +63,14 @@ _Feel free to explore each feature by following the provided links to learn more
 
 ### 環境構築
 
+### Step0: リポジトリのクローン
+
+```bash
+git clone https://github.com/cumulo-autumn/StreamDiffusion.git
+```
+
+### Step1: 仮想環境構築
+
 anaconda、pip、または後述するDockerで仮想環境を作成します。
 
 anacondaを用いる場合
@@ -82,7 +90,7 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
-### Step1: PyTorchのインストール
+### Step2: PyTorchのインストール
 
 使用するGPUのCUDAバージョンに合わせてPyTorchをインストールしてください。
 
@@ -101,20 +109,31 @@ pip3 install torch==2.1.0 torchvision==0.16.0 xformers --index-url https://downl
 詳しくは[こちら](https://pytorch.org/)
 
 
-### Step2: StreamDiffusionのインストール
-
-#### ユーザー向け
+### Step3: StreamDiffusionのインストール
 
 StreamDiffusionをインストール
 
+#### ユーザー向け
+
 ```bash
-pip install git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=streamdiffusion
+#最新バージョン (推奨)
+pip install git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=streamdiffusion[tensorrt]
+
+
+#もしくは
+
+
+#リリースバージョン
+pip install streamdiffusion[tensorrt]
 ```
 
-TensorRTをインストール
+TensorRT と pywin32 をインストール
+(※※pywin32はWindowsの場合のみ必要です。)
 
 ```bash
 python -m streamdiffusion.tools.install-tensorrt
+# windows の場合以下も実行
+pip install pywin32
 ```
 
 #### 開発者向け
@@ -360,7 +379,7 @@ deltaはRCFGの効きをマイルドにする効果を持つ
 
 LCM-LoRAを提供していただいた[LCM-LoRA authors](https://latent-consistency-models.github.io/)、KohakuV2 モデルを提供していただいたKohaku BlueLeaf 様 ([@KBlueleaf](https://twitter.com/KBlueleaf))、[SD-Turbo](https://arxiv.org/abs/2311.17042)を提供していただいた[Stability AI](https://ja.stability.ai/)様に心より感謝いたします。
 
-KohakuV2 モデルは [Civitai](https://civitai.com/models/136268/kohaku-v2) と [Hugging Face](https://huggingface.co/KBlueLeaf/kohaku-v2.1) からダウンロードでき、[SD-Turbo](https://huggingface.co/stabilityai/sd-turbo) は Hugging Faceで使用可能です。。
+KohakuV2 モデルは [Civitai](https://civitai.com/models/136268/kohaku-v2) と [Hugging Face](https://huggingface.co/KBlueLeaf/kohaku-v2.1) からダウンロードでき、[SD-Turbo](https://huggingface.co/stabilityai/sd-turbo) は Hugging Faceで使用可能です。
 
 
 ## Contributors
