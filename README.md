@@ -272,7 +272,7 @@ while True:
     if input_response == "stop":
         break
 ```
-You can it make more faster by using SD-Turbo.
+You can it make faster by using SD-Turbo.
 
 ### More fast generation
 Replace the following code in the above example.
@@ -285,7 +285,6 @@ from streamdiffusion.acceleration.tensorrt import accelerate_with_tensorrt
 
 stream = accelerate_with_tensorrt(
     stream, "engines", max_batch_size=2,
-    engine_build_options={"build_static_batch": True}
 )
 ```
 It requires TensorRT extension and time to build the engine, but it will be faster than the above example.

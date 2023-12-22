@@ -91,12 +91,16 @@ def image_generation_process(
         The queue to put the calculated fps.
     model_id_or_path : str
         The name of the model to use for image generation.
+    lora_dict : Optional[Dict[str, float]], optional
+        The lora_dict to load, by default None.
+        Keys are the LoRA names and values are the LoRA scales.
+        Example: {"LoRA_1" : 0.5 , "LoRA_2" : 0.7 ,...}
     prompt : str
         The prompt to generate images from.
     negative_prompt : str, optional
         The negative prompt to use.
-    acceleration : Literal["none", "xformers", "tensorrt"]
-        The type of acceleration to use for image generation.
+    frame_buffer_size : int, optional
+        The frame buffer size for denoising batch, by default 1.
     width : int, optional
         The width of the image, by default 512.
     height : int, optional
@@ -106,7 +110,7 @@ def image_generation_process(
     use_denoising_batch : bool, optional
         Whether to use denoising batch or not, by default True.
     seed : int, optional
-        The seed, by default 2.
+        The seed, by default 2. if -1, use random seed.
     cfg_type : Literal["none", "full", "self", "initialize"],
     optional
         The cfg_type for img2img mode, by default "self".
