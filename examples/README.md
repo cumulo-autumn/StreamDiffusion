@@ -144,8 +144,8 @@ Usage : ```--prompt "A cat with a hat"```
 
 ### Negative Prompt
 
-```negative_prompt``` allows you to change Negative Prompt. <br> 
-※※ ```negative_prompt``` Not available in txt2img ,optimal-performance, and vid2vid.
+```--negative_prompt``` allows you to change Negative Prompt. <br> 
+※※ ```--negative_prompt``` Not available in txt2img ,optimal-performance, and vid2vid.
 
 
 Usage : ```--negative_prompt "Bad quality"```
