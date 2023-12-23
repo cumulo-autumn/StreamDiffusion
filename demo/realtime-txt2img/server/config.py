@@ -17,7 +17,7 @@ class Config:
     # Server
     ####################################################################
     # In most cases, you should leave this as it is.
-    host: str = "0.0.0.0"
+    host: str = "127.0.0.1"
     port: int = 9090
     workers: int = 1
 
