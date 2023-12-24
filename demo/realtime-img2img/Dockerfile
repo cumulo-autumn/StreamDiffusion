@@ -3,11 +3,11 @@ FROM node:20-alpine AS frontend
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-COPY frontend .
+COPY . .
+WORKDIR /app/frontend
 RUN npm ci
 RUN npm run build
 
-# build backend on CUDA 
 FROM nvidia/cuda:12.2.2-cudnn8-devel-ubuntu22.04 AS backend
 WORKDIR /app
 
@@ -59,7 +59,7 @@ COPY --chown=user:user . .
 RUN pip install --no-cache-dir --upgrade -r requirements.txt 
 RUN python -m streamdiffusion.tools.install-tensorrt
 
-COPY --from=frontend /app/public ./frontend/public
+COPY --from=frontend /app/frontend/public ./frontend/public
 
 WORKDIR $HOME/app/
 

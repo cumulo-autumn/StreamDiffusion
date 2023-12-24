@@ -16,6 +16,7 @@ class Args(NamedTuple):
     ssl_keyfile: str
     debug: bool
     acceleration: str
+    engine_dir: str
 
     def pretty_print(self):
         print("\n")
@@ -28,6 +29,8 @@ MAX_QUEUE_SIZE = int(os.environ.get("MAX_QUEUE_SIZE", 0))
 TIMEOUT = float(os.environ.get("TIMEOUT", 0))
 SAFETY_CHECKER = os.environ.get("SAFETY_CHECKER", None) == "True"
 USE_TAESD = os.environ.get("USE_TAESD", "True") == "True"
+ENGINE_DIR = os.environ.get("ENGINE_DIR", None)
+
 default_host = os.getenv("HOST", "0.0.0.0")
 default_port = int(os.getenv("PORT", "7860"))
 default_mode = os.getenv("MODE", "default")
@@ -92,6 +95,13 @@ parser.add_argument(
     default="tensorrt",
     choices=["none", "xformers", "sfast", "tensorrt"],
     help="Acceleration",
+)
+parser.add_argument(
+    "--engine-dir",
+    dest="engine_dir",
+    type=str,
+    default=ENGINE_DIR,
+    help="Engine Dir",
 )
 parser.set_defaults(taesd=USE_TAESD)
 

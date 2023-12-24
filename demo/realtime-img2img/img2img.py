@@ -22,22 +22,16 @@ page_content = """<h1 class="text-3xl font-bold">Streaming Diffusion</h1>
 <p class="text-sm">
     This demo showcases
     <a
-    href="https://huggingface.co/blog/lcm_lora"
+    href="https://github.com/cumulo-autumn/StreamDiffusion"
     target="_blank"
-    class="text-blue-500 underline hover:no-underline">LCM</a>
+    class="text-blue-500 underline hover:no-underline">StreamDiffusion
+</a>
 Image to Image pipeline using
     <a
-    href="https://huggingface.co/docs/diffusers/main/en/using-diffusers/lcm#performing-inference-with-lcm"
+    href="https://huggingface.co/stabilityai/sd-turbo"
     target="_blank"
-    class="text-blue-500 underline hover:no-underline">Diffusers</a
+    class="text-blue-500 underline hover:no-underline">SD-Turbo</a
     > with a MJPEG stream server.
-</p>
-<p class="text-sm text-gray-500">
-    Change the prompt to generate different images, accepts <a
-    href="https://github.com/damian0815/compel/blob/main/doc/syntax.md"
-    target="_blank"
-    class="text-blue-500 underline hover:no-underline">Compel</a
-    > syntax.
 </p>
 """
 
@@ -61,38 +55,12 @@ class Pipeline:
         #     field="textarea",
         #     id="negative_prompt",
         # )
-        seed: int = Field(
-            2159232, min=0, title="Seed", field="seed", hide=True, id="seed"
-        )
-        steps: int = Field(
-            4, min=1, max=15, title="Steps", field="range", hide=True, id="steps"
-        )
         width: int = Field(
             512, min=2, max=15, title="Width", disabled=True, hide=True, id="width"
         )
         height: int = Field(
             512, min=2, max=15, title="Height", disabled=True, hide=True, id="height"
         )
-        # guidance_scale: float = Field(
-        #     1.2,
-        #     min=0,
-        #     max=20,
-        #     step=0.001,
-        #     title="Guidance Scale",
-        #     field="range",
-        #     hide=True,
-        #     id="guidance_scale",
-        # )
-        # strength: float = Field(
-        #     0.5,
-        #     min=0.25,
-        #     max=1.0,
-        #     step=0.001,
-        #     title="Strength",
-        #     field="range",
-        #     hide=True,
-        #     id="strength",
-        # )
 
     def __init__(self, args: Args, device: torch.device, torch_dtype: torch.dtype):
         params = self.InputParams()
@@ -114,6 +82,9 @@ class Pipeline:
             use_denoising_batch=True,
             cfg_type="none",
             use_safety_checker=args.safety_checker,
+            # enable_similar_image_filter=True,
+            # similar_image_filter_threshold=0.99,
+            engine_dir=args.engine_dir,
         )
 
         self.last_prompt = default_prompt
@@ -125,10 +96,6 @@ class Pipeline:
         )
 
     def predict(self, params: "Pipeline.InputParams") -> Image.Image:
-        generator = torch.manual_seed(params.seed)
-        # steps = params.steps
-        # strength = params.strength
-
         image_tensor = self.stream.preprocess_image(params.image)
         for _ in range(self.stream.batch_size - 1):
             self.stream(image=image_tensor, prompt=params.prompt)

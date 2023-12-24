@@ -46,6 +46,7 @@ class StreamDiffusionWrapper:
         cfg_type: Literal["none", "full", "self", "initialize"] = "self",
         seed: int = 2,
         use_safety_checker: bool = False,
+        engine_dir: Optional[Union[str, Path]] = "engines",
     ):
         """
         Initializes the StreamDiffusionWrapper.
@@ -161,6 +162,7 @@ class StreamDiffusionWrapper:
             use_tiny_vae=use_tiny_vae,
             cfg_type=cfg_type,
             seed=seed,
+            engine_dir=engine_dir,
         )
 
         if device_ids is not None:
@@ -361,6 +363,7 @@ class StreamDiffusionWrapper:
         use_tiny_vae: bool = True,
         cfg_type: Literal["none", "full", "self", "initialize"] = "none",
         seed: int = 2,
+        engine_dir: Optional[Union[str, Path]] = "engines",
     ) -> StreamDiffusion:
         """
         Loads the model.
@@ -495,7 +498,7 @@ class StreamDiffusionWrapper:
                     else:
                         return f"{model_id_or_path}--lcm_lora-{use_lcm_lora}--tiny_vae-{use_tiny_vae}--max_batch-{max_batch_size}--min_batch-{min_batch_size}--mode-{self.mode}"
 
-                engine_dir = os.path.join("engines")
+                engine_dir = Path(engine_dir)
                 unet_path = os.path.join(
                     engine_dir,
                     create_prefix(
