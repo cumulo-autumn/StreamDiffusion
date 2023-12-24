@@ -59,7 +59,7 @@ class StreamDiffusionWrapper:
         lora_dict : Optional[Dict[str, float]], optional
             The lora_dict to load, by default None.
             Keys are the LoRA names and values are the LoRA scales.
-            Example: {"LoRA_1" : 0.5 , "LoRA_2" : 0.7 ,...}
+            Example: {'LoRA_1' : 0.5 , 'LoRA_2' : 0.7 ,...}
         mode : Literal["img2img", "txt2img"], optional
             txt2img or img2img, by default "img2img".
         output_type : Literal["pil", "pt", "np", "latent"], optional
@@ -378,7 +378,7 @@ class StreamDiffusionWrapper:
         lora_dict : Optional[Dict[str, float]], optional
             The lora_dict to load, by default None.
             Keys are the LoRA names and values are the LoRA scales.
-            Example: {"LoRA_1" : 0.5 , "LoRA_2" : 0.7 ,...}
+            Example: {'LoRA_1' : 0.5 , 'LoRA_2' : 0.7 ,...}
         lcm_lora_id : Optional[str], optional
             The lcm_lora_id to load, by default None.
         vae_id : Optional[str], optional
