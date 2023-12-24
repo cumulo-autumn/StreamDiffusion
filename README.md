@@ -124,7 +124,7 @@ pip install "git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=s
 
 
 #for Stable Version
-pip install streamdiffusion[tensorrt]
+pip install "streamdiffusion[tensorrt]"
 ```
 
 Install TensorRT extension and pywin32
