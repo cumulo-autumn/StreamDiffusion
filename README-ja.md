@@ -117,14 +117,14 @@ StreamDiffusionをインストール
 
 ```bash
 #最新バージョン (推奨)
-pip install git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=streamdiffusion[tensorrt]
+pip install "git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=streamdiffusion[tensorrt]"
 
 
 #もしくは
 
 
 #リリースバージョン
-pip install streamdiffusion[tensorrt]
+pip install "streamdiffusion[tensorrt]"
 ```
 
 TensorRT と pywin32 をインストール
