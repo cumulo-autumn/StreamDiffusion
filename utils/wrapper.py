@@ -349,7 +349,7 @@ class StreamDiffusionWrapper:
         lora_dict: Optional[Dict[str, float]] = None,
         lcm_lora_id: Optional[str] = None,
         vae_id: Optional[str] = None,
-        acceleration: Literal["none", "sfast", "tensorrt"] = "tensorrt",
+        acceleration: Literal["none", "xformers", "tensorrt"] = "tensorrt",
         warmup: int = 10,
         do_add_noise: bool = True,
         use_lcm_lora: bool = True,

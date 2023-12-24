@@ -141,7 +141,7 @@ Hugging Face のモデル id を指定することで実行時に Hugging Face �
 
 ### Negative Prompt
 
-```negative_prompt``` 引数で Negative Prompt を文字列で指定する。<br>
+```--negative_prompt``` 引数で Negative Prompt を文字列で指定する。<br>
 ※※ ただし、txt2img ,optimal-performance, vid2vid では使用できない。
 
 
