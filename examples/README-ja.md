@@ -49,7 +49,7 @@ python benchmark/multi.py --acceleration tensorrt
 
 TensorRT で最適化された SD-Turbo を用いて txt2img を実行します。
 
-`optimal-performance/multi.py`では RTX4090 に最適化されたバッチ処理を行いますが、`optimal-performance/single.py`は単一バッヂでの処理を行います。
+`optimal-performance/multi.py`では RTX4090 に最適化されたバッチ処理を行いますが、`optimal-performance/single.py`は単一バッチでの処理を行います。
 
 ### 使用方法
 
