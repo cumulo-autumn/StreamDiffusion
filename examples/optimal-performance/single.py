@@ -1,7 +1,7 @@
 import os
 import sys
 import time
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, get_context
 from typing import Literal
 
 import fire
@@ -72,17 +72,20 @@ def main(
     """
     Main function to start the image generation and viewer processes.
     """
-    queue = Queue()
-    fps_queue = Queue()
-    process1 = Process(
+    ctx = get_context('spawn')
+    queue = ctx.Queue()
+    fps_queue = ctx.Queue()
+    process1 = ctx.Process(
         target=image_generation_process,
         args=(queue, fps_queue, prompt, model_id_or_path, acceleration),
     )
     process1.start()
 
-    process2 = Process(target=receive_images, args=(queue, fps_queue))
+    process2 = ctx.Process(target=receive_images, args=(queue, fps_queue))
     process2.start()
 
+    process1.join()
+    process2.join()
 
 if __name__ == "__main__":
     fire.Fire(main)
