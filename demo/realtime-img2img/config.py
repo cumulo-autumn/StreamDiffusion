@@ -16,8 +16,6 @@ class Args(NamedTuple):
     ssl_keyfile: str
     debug: bool
     acceleration: str
-    use_denoising_batch: bool
-    cfg_type: str
 
     def pretty_print(self):
         print("\n")
@@ -94,20 +92,6 @@ parser.add_argument(
     default="tensorrt",
     choices=["none", "xformers", "sfast", "tensorrt"],
     help="Acceleration",
-)
-parser.add_argument(
-    "--use-denoising-batch",
-    action="store_true",
-    default=True,
-    help="Use denoising batch",
-)
-parser.add_argument(
-    "--cfg-type",
-    dest="cfg_type",
-    type=str,
-    default="initialize",
-    choices=["none", "full", "self", "initialize"],
-    help="Config type",
 )
 parser.set_defaults(taesd=USE_TAESD)
 

@@ -1,48 +1,67 @@
-FROM nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04
+# build frontend with node
+FROM node:20-alpine AS frontend
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
 
-ARG DEBIAN_FRONTEND=noninteractive
+COPY frontend .
+RUN npm ci
+RUN npm run build
 
-ENV PYTHONUNBUFFERED=1
+# build backend on CUDA 
+FROM nvidia/cuda:12.2.2-cudnn8-devel-ubuntu22.04 AS backend
+WORKDIR /app
+
+ENV DEBIAN_FRONTEND=noninteractive
 ENV NODE_MAJOR=20
 
-RUN apt-get update && apt-get install --no-install-recommends -y \
-    build-essential \
-    python3.9 \
-    python3-pip \
-    python3-dev \
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends \
     git \
-    ffmpeg \
-    google-perftools \
-    ca-certificates curl gnupg \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    git-lfs \
+    wget \
+    curl \
+    # python build dependencies \
+    build-essential \
+    libssl-dev \
+    zlib1g-dev \
+    libbz2-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    libncursesw5-dev \
+    xz-utils \
+    tk-dev \
+    libxml2-dev \
+    libxmlsec1-dev \
+    libffi-dev \
+    liblzma-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-WORKDIR /code
+USER root
 
-RUN mkdir -p /etc/apt/keyrings 
-RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-RUN echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list > /dev/null
-RUN apt-get update && apt-get install nodejs -y
-
-COPY ./requirements.txt /code/requirements.txt
-
-# Set up a new user named "user" with user ID 1000
 RUN useradd -m -u 1000 user
-# Switch to the "user" user
 USER user
-# Set home to the user's home directory
 ENV HOME=/home/user \
-    PATH=/home/user/.local/bin:$PATH \
-    PYTHONPATH=$HOME/app \
-    PYTHONUNBUFFERED=1 \
-    SYSTEM=spaces
-
-RUN pip3 install --no-cache-dir --upgrade --pre -r /code/requirements.txt
-
-# Set the working directory to the user's home directory
+    PATH=/home/user/.local/bin:$PATH
 WORKDIR $HOME/app
 
-# Copy the current directory contents into the container at $HOME/app setting the owner to the user
-COPY --chown=user . $HOME/app
+RUN curl https://pyenv.run | bash
+ENV PATH=$HOME/.pyenv/shims:$HOME/.pyenv/bin:$PATH
+ARG PYTHON_VERSION=3.10.12
+RUN pyenv install $PYTHON_VERSION && \
+    pyenv global $PYTHON_VERSION && \
+    pyenv rehash && \
+    pip install --no-cache-dir -U pip setuptools wheel
 
-ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc.so.4
-CMD ["./build-run.sh"]
+COPY --chown=user:user . .
+
+RUN pip install --no-cache-dir --upgrade -r requirements.txt 
+RUN python -m streamdiffusion.tools.install-tensorrt
+
+COPY --from=frontend /app/public ./frontend/public
+
+WORKDIR $HOME/app/
+
+USER user
+CMD ["python",  "main.py", "--debug", "--acceleration", "tensorrt"]

@@ -5,8 +5,8 @@ const config = {
   preprocess: vitePreprocess({ postcss: true }),
   kit: {
     adapter: adapter({
-      pages: '../public',
-      assets: '../public',
+      pages: 'public',
+      assets: 'public',
       fallback: undefined,
       precompress: false,
       strict: true

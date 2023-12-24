@@ -58,6 +58,3 @@ class UserData:
 
     def get_websocket(self, user_id: UUID) -> WebSocket:
         return self.data_content[user_id]["websocket"]
-
-
-user_data = UserData()
