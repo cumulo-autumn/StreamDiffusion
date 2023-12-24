@@ -144,6 +144,13 @@ python setup.py develop easy_install streamdiffusion[tensorrt]
 python -m streamdiffusion.tools.install-tensorrt
 ```
 
+Reinstall pywin32
+(※※If you created your environment with conda on Windows.)
+
+```bash
+pip install --force-reinstall pywin32
+```
+
 ### Docker Installation (TensorRT Ready)
 
 ```bash

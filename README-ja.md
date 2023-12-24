@@ -143,6 +143,13 @@ python setup.py develop easy_install streamdiffusion[tensorrt]
 python -m streamdiffusion.tools.install-tensorrt
 ```
 
+pywin32 を再インストール
+(※※Windowsでanacondaを使用して仮想環境を作成した場合のみ必要です。)
+
+```bash
+pip install --force-reinstall pywin32
+```
+
 ### Dockerの場合(TensorRT対応)
 
 ```bash
