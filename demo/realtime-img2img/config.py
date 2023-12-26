@@ -30,6 +30,7 @@ TIMEOUT = float(os.environ.get("TIMEOUT", 0))
 SAFETY_CHECKER = os.environ.get("SAFETY_CHECKER", None) == "True"
 USE_TAESD = os.environ.get("USE_TAESD", "True") == "True"
 ENGINE_DIR = os.environ.get("ENGINE_DIR", None)
+ACCELERATION = os.environ.get("ACCELERATION", "tensorrt")
 
 default_host = os.getenv("HOST", "0.0.0.0")
 default_port = int(os.getenv("PORT", "7860"))
@@ -92,7 +93,7 @@ parser.add_argument(
 parser.add_argument(
     "--acceleration",
     type=str,
-    default="tensorrt",
+    default=ACCELERATION,
     choices=["none", "xformers", "sfast", "tensorrt"],
     help="Acceleration",
 )
