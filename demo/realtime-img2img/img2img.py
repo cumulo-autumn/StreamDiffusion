@@ -14,10 +14,10 @@ import math
 base_model = "stabilityai/sd-turbo"
 taesd_model = "madebyollin/taesd"
 
-default_prompt = "Portrait a disney character cinematic, masterpiece"
+default_prompt = "Portrait of The Joker halloween costume, face painting, with , glare pose, detailed, intricate, full of colour, cinematic lighting, trending on artstation, 8k, hyperrealistic, focused, extreme details, unreal engine 5 cinematic, masterpiece"
 default_negative_prompt = "black and white, blurry, low resolution, pixelated,  pixel art, low quality, low fidelity"
 
-page_content = """<h1 class="text-3xl font-bold">Streaming Diffusion</h1>
+page_content = """<h1 class="text-3xl font-bold">StreamDiffusion</h1>
 <h3 class="text-xl font-bold">Image-to-Image SD-Turbo</h3>
 <p class="text-sm">
     This demo showcases
@@ -38,7 +38,7 @@ Image to Image pipeline using
 
 class Pipeline:
     class Info(BaseModel):
-        name: str = "img2img"
+        name: str = "StreamDiffusion img2img"
         input_mode: str = "image"
         page_content: str = page_content
 
