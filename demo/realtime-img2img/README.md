@@ -15,6 +15,7 @@ This example, based on this [MPJEG server](https://github.com/radames/Real-Time-
 
 ## Usage
 You need Node.js 18+ and Python 3.10 to run this example.
+Please make sure you've installed all dependencies according to the [installation instructions](../../README.md#installation).
 
 ```bash
 cd frontend
@@ -33,3 +34,12 @@ chmod +x start.sh
 ```
 
 then open `http://0.0.0.0:7860` in your browser.
+
+### Running with Docker
+
+```bash
+docker build -t img2img .
+docker run -ti -e ENGINE_DIR=~/.cache/huggingface/ -e HF_HOME=/data -v ~/.cache/huggingface:/data  -p 7860:7860 --gpus all img2img
+```
+
+Where `ENGINE_DIR` and `HF_HOME` set a local cache directory, making it faster to restart the docker container.

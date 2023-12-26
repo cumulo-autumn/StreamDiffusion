@@ -8,5 +8,4 @@ else
     echo -e "\033[1;31m\nfrontend build failed\n\033[0m" >&2  exit 1
 fi
 cd ../
-pip install -r requirements.txt
 python3 main.py --port 7860 --host 0.0.0.0 
