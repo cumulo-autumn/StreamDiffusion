@@ -39,7 +39,7 @@ then open `http://0.0.0.0:7860` in your browser.
 
 ```bash
 docker build -t img2img .
-docker run -ti -e ENGINE_DIR=~/.cache/huggingface/ -e HF_HOME=/data -v ~/.cache/huggingface:/data  -p 7860:7860 --gpus all img2img
+docker run -ti -e ENGINE_DIR=/data -e HF_HOME=/data -v ~/.cache/huggingface:/data  -p 7860:7860 --gpus all img2img
 ```
 
 Where `ENGINE_DIR` and `HF_HOME` set a local cache directory, making it faster to restart the docker container.
