@@ -20,7 +20,16 @@ You need Node.js 18+ and Python 3.10 to run this example.
 cd frontend
 npm i
 npm run build
-pip install -r requirements.txt
 cd ..
+pip install -r requirements.txt
 python main.py  --acceleration tensorrt   
 ```
+
+or 
+
+```
+chmod +x start.sh
+./start.sh
+```
+
+then open `http://0.0.0.0:7860` in your browser.
