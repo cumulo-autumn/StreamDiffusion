@@ -146,6 +146,7 @@ def accelerate_with_tensorrt(
         del unet
 
     if not os.path.exists(vae_decoder_engine_path):
+        vae.forward = vae.decode
         compile_vae_decoder(
             vae,
             vae_decoder_model,
