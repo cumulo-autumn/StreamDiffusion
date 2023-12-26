@@ -2,7 +2,8 @@
   export let message: string = '';
 
   let timeout = 0;
-  $: if (message) {
+  $: if (message !== '') {
+    console.log('message', message);
     clearTimeout(timeout);
     timeout = setTimeout(() => {
       message = '';

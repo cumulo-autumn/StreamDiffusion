@@ -79,8 +79,9 @@
         toggleQueueChecker(true);
       }
     } catch (e) {
-      warningMessage = e.message;
+      warningMessage = e instanceof Error ? e.message : '';
       disabled = false;
+      toggleQueueChecker(true);
     }
   }
 </script>
@@ -92,7 +93,7 @@
 </svelte:head>
 
 <main class="container mx-auto flex max-w-5xl flex-col gap-3 px-4 py-4">
-  <Warning message={warningMessage}></Warning>
+  <Warning bind:message={warningMessage}></Warning>
   <article class="text-center">
     {#if pageContent}
       {@html pageContent}
