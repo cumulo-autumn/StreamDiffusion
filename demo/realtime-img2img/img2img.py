@@ -18,7 +18,7 @@ default_prompt = "Portrait a disney character cinematic, masterpiece"
 default_negative_prompt = "black and white, blurry, low resolution, pixelated,  pixel art, low quality, low fidelity"
 
 page_content = """<h1 class="text-3xl font-bold">Streaming Diffusion</h1>
-<h3 class="text-xl font-bold">Image-to-Image LCM</h3>
+<h3 class="text-xl font-bold">Image-to-Image SD-Turbo</h3>
 <p class="text-sm">
     This demo showcases
     <a

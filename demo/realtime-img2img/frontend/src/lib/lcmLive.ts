@@ -62,7 +62,7 @@ export const lcmLiveActions = {
                             console.log(data.message);
                             lcmLiveStatus.set(LCMLiveStatus.DISCONNECTED);
                             streamId.set(null);
-                            reject(data.message);
+                            reject(new Error(data.message));
                     }
                 };
 
