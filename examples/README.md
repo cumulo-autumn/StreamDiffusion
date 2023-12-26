@@ -10,7 +10,7 @@ If you want to maximize performance, you need to install with following steps ex
 
 ## `screen/`
 
-Take a screen capture and process it. **This script only works on Windows.**
+Take a screen capture and process it.
 
 When you run the script, a translucent window appears. Position it at where you want to capture the screen and press the enter key to finalize the capture area.
 
