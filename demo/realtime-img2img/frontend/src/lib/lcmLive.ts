@@ -57,7 +57,7 @@ export const lcmLiveActions = {
                             console.log("timeout");
                             lcmLiveStatus.set(LCMLiveStatus.DISCONNECTED);
                             streamId.set(null);
-                            reject("timeout");
+                            reject(new Error("timeout"));
                         case "error":
                             console.log(data.message);
                             lcmLiveStatus.set(LCMLiveStatus.DISCONNECTED);
