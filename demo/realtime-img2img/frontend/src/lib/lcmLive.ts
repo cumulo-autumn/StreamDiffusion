@@ -40,7 +40,6 @@ export const lcmLiveActions = {
                             const userId = data.userId;
                             lcmLiveStatus.set(LCMLiveStatus.CONNECTED);
                             streamId.set(userId);
-                            resolve(userId);
                             break;
                         case "send_frame":
                             lcmLiveStatus.set(LCMLiveStatus.SEND_FRAME);
@@ -57,7 +56,7 @@ export const lcmLiveActions = {
                             console.log("timeout");
                             lcmLiveStatus.set(LCMLiveStatus.DISCONNECTED);
                             streamId.set(null);
-                            reject(new Error("timeout"));
+                            resolve({ status: "timeout" });
                         case "error":
                             console.log(data.message);
                             lcmLiveStatus.set(LCMLiveStatus.DISCONNECTED);

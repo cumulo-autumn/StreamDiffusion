@@ -77,6 +77,16 @@ class App:
             last_time = time.time()
             try:
                 while True:
+                    if args.timeout > 0 and time.time() - last_time > args.timeout:
+                        await websocket.send_json(
+                            {
+                                "status": "timeout",
+                                "message": "Your session has ended",
+                                "userId": str(user_id),
+                            }
+                        )
+                        await websocket.close()
+                        return
                     data = await websocket.receive_json()
                     if data["status"] != "next_frame":
                         asyncio.sleep(THROTTLE)
@@ -94,16 +104,6 @@ class App:
                         params.image = bytes_to_pil(image_data)
                     await user_data.update_data(user_id, params)
                     await websocket.send_json({"status": "wait"})
-                    if args.timeout > 0 and time.time() - last_time > args.timeout:
-                        await websocket.send_json(
-                            {
-                                "status": "timeout",
-                                "message": "Your session has ended",
-                                "userId": user_id,
-                            }
-                        )
-                        await websocket.close()
-                        return
                     await asyncio.sleep(THROTTLE)
 
             except Exception as e:
