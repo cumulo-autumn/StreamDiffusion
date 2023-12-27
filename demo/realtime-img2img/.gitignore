@@ -3,3 +3,4 @@ venv/
 public/
 *.pem
 !lib/
+!static/
