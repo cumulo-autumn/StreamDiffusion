@@ -100,11 +100,11 @@ class App:
                         image_data = await websocket.receive_bytes()
                         if len(image_data) == 0:
                             await websocket.send_json({"status": "send_frame"})
+                            await asyncio.sleep(THROTTLE)
                             continue
                         params.image = bytes_to_pil(image_data)
                     await user_data.update_data(user_id, params)
                     await websocket.send_json({"status": "wait"})
-                    await asyncio.sleep(THROTTLE)
 
             except Exception as e:
                 logging.error(f"Error: {e}")
