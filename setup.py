@@ -7,7 +7,7 @@ from setuptools import find_packages, setup
 _deps = [
     "torch",
     "xformers",
-    "diffusers==0.24.0",
+    "diffusers",
     "transformers",
     "accelerate",
     "fire",
@@ -42,6 +42,7 @@ install_requires = [
     deps["omegaconf"],
     deps["diffusers"],
     deps["transformers"],
+    deps["accelerate"],
 ]
 
 setup(
