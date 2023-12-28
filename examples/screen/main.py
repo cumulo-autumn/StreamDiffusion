@@ -17,26 +17,26 @@ from utils.viewer import receive_images
 from utils.wrapper import StreamDiffusionWrapper
 
 inputs = []
-stop_capture = False
 top = 0
 left = 0
 
 def screen(
+    event: threading.Event,
     height: int = 512,
     width: int = 512,
     monitor: Dict[str, int] = {"top": 300, "left": 200, "width": 512, "height": 512},
 ):
     global inputs
-    global stop_capture
     with mss.mss() as sct:
         while True:
+            if event.is_set():
+                print("terminate read thread")
+                break
             img = sct.grab(monitor)
             img = PIL.Image.frombytes("RGB", img.size, img.bgra, "raw", "BGRX")
             img.resize((height, width))
             inputs.append(pil2tensor(img))
-            if stop_capture:
-                return
-
+    print('exit : screen')
 def dummy_screen(
         width: int,
         height: int,
@@ -61,6 +61,7 @@ def dummy_screen(
 def image_generation_process(
     queue: Queue,
     fps_queue: Queue,
+    close_queue: Queue,
     model_id_or_path: str,
     lora_dict: Optional[Dict[str, float]],
     prompt: str,
@@ -133,7 +134,6 @@ def image_generation_process(
     """
     
     global inputs
-    global stop_capture
     stream = StreamDiffusionWrapper(
         model_id_or_path=model_id_or_path,
         lora_dict=lora_dict,
@@ -160,13 +160,15 @@ def image_generation_process(
         guidance_scale=guidance_scale,
         delta=delta,
     )
-
-    input_screen = threading.Thread(target=screen, args=(height, width, monitor))
+    event = threading.Event()
+    input_screen = threading.Thread(target=screen, args=(event, height, width, monitor))
     input_screen.start()
     time.sleep(5)
 
     while True:
         try:
+            if not close_queue.empty(): # closing check
+                break
             if len(inputs) < frame_buffer_size:
                 time.sleep(0.005)
                 continue
@@ -188,10 +190,12 @@ def image_generation_process(
             fps = 1 / (time.time() - start_time)
             fps_queue.put(fps)
         except KeyboardInterrupt:
-            stop_capture = True
-            print(f"fps: {fps}")
-            return
+            break
 
+    print("closing image_generation_process...")
+    event.set() # stop capture thread
+    input_screen.join()
+    print(f"fps: {fps}")
 
 def main(
     model_id_or_path: str = "KBlueLeaf/kohaku-v2.1",
@@ -219,11 +223,13 @@ def main(
     ctx = get_context('spawn')
     queue = ctx.Queue()
     fps_queue = ctx.Queue()
+    close_queue = Queue()
     process1 = ctx.Process(
         target=image_generation_process,
         args=(
             queue,
             fps_queue,
+            close_queue,
             model_id_or_path,
             lora_dict,
             prompt,
@@ -249,8 +255,18 @@ def main(
     process2 = ctx.Process(target=receive_images, args=(queue, fps_queue))
     process2.start()
 
-    process1.join()
+    # terminate
     process2.join()
+    print("process2 terminated.")
+    close_queue.put(True)
+    print("process1 terminating...")
+    process1.join(5) # with timeout
+    if process1.is_alive():
+        print("process1 still alive. force killing...")
+        process1.terminate() # force kill...
+    process1.join()
+    print("process1 terminated.")
+
 
 if __name__ == "__main__":
     fire.Fire(main)
