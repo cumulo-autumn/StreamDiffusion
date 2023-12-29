@@ -1,8 +1,15 @@
-from diffusers import (
-    AutoPipelineForImage2Image,
-    AutoencoderTiny,
+import sys
+import os
+
+sys.path.append(
+    os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "..",
+    )
 )
-from wrapper import StreamDiffusionWrapper
+
+from utils.wrapper import StreamDiffusionWrapper
 
 import torch
 
