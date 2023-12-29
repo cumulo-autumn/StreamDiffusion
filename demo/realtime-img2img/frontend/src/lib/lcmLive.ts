@@ -6,6 +6,7 @@ export enum LCMLiveStatus {
     DISCONNECTED = "disconnected",
     WAIT = "wait",
     SEND_FRAME = "send_frame",
+    TIMEOUT = "timeout",
 }
 
 const initStatus: LCMLiveStatus = LCMLiveStatus.DISCONNECTED;
@@ -40,6 +41,7 @@ export const lcmLiveActions = {
                             const userId = data.userId;
                             lcmLiveStatus.set(LCMLiveStatus.CONNECTED);
                             streamId.set(userId);
+                            resolve({ status: "connected", userId });
                             break;
                         case "send_frame":
                             lcmLiveStatus.set(LCMLiveStatus.SEND_FRAME);
@@ -54,14 +56,16 @@ export const lcmLiveActions = {
                             break;
                         case "timeout":
                             console.log("timeout");
-                            lcmLiveStatus.set(LCMLiveStatus.DISCONNECTED);
+                            lcmLiveStatus.set(LCMLiveStatus.TIMEOUT);
                             streamId.set(null);
-                            resolve({ status: "timeout" });
+                            reject(new Error("timeout"));
+                            break;
                         case "error":
                             console.log(data.message);
                             lcmLiveStatus.set(LCMLiveStatus.DISCONNECTED);
                             streamId.set(null);
                             reject(new Error(data.message));
+                            break;
                     }
                 };
 
