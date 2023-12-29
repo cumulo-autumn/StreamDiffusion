@@ -49,7 +49,7 @@ def run(
     lora_dict : Optional[Dict[str, float]], optional
         The lora_dict to load, by default None.
         Keys are the LoRA names and values are the LoRA scales.
-        Example: {"LoRA_1" : 0.5 , "LoRA_2" : 0.7 ,...}
+        Example: {'LoRA_1' : 0.5 , 'LoRA_2' : 0.7 ,...}
     prompt : str, optional
         The prompt to use, by default "1girl with brown dog hair, thick glasses, smiling".
     negative_prompt : str, optional

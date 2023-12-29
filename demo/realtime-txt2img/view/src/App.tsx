@@ -1,10 +1,17 @@
-import React, { useCallback, useState } from "react";
+import CircularProgress from '@mui/material/CircularProgress';
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { TextField, Grid } from "@mui/material";
+const controller = new AbortController();
+const { signal } = controller;
+
 
 function App() {
   const [inputPrompt, setInputPrompt] = useState("");
   const [lastPrompt, setLastPrompt] = useState("");
   const [images, setImages] = useState(Array(16).fill("images/white.jpg"));
+  const [isLoading, setIsLoading] = useState(false);
+  const abortControllers = useRef<AbortController[]>([]);
+
 
   const calculateEditDistance = (a: string, b: string) => {
     if (a.length === 0) return b.length;
@@ -34,45 +41,59 @@ function App() {
 
     return matrix[b.length][a.length];
   };
+  const fetchImage = useCallback(async (index: number): Promise<void> => {
+    abortControllers.current[index]?.abort();
+    abortControllers.current[index] = new AbortController();
+    const signal = abortControllers.current[index].signal;
 
-  const fetchImage = useCallback(
-    async (index: number) => {
-      try {
-        const response = await fetch("api/predict", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: inputPrompt }),
-        });
-        const data = await response.json();
-        const imageUrl = `data:image/jpeg;base64,${data.base64_image}`;
+    setIsLoading(true);
+    try {
+      const response = await fetch('api/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: inputPrompt }),
+        signal,
+      });
+      const data = await response.json();
+      const imageUrl = `data:image/jpeg;base64,${data.base64_image}`;
 
-        setImages((prevImages) => {
-          const newImages = [...prevImages];
-          newImages[index] = imageUrl;
-          return newImages;
-        });
-      } catch (error) {
-        console.error("Error fetching image:", error);
+      setImages((prevImages) => {
+        const newImages = [...prevImages];
+        newImages[index] = imageUrl;
+        return newImages;
+      });
+    } catch (error) {
+      if (error instanceof Error && error.name !== 'AbortError') {
+        console.error('Error fetching image:', error);
       }
-    },
-    [inputPrompt]
-  );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [inputPrompt]);
 
-  const handlePromptChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setInputPrompt(event.target.value);
+  const handlePromptChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const newPrompt = event.target.value;
+    setInputPrompt(newPrompt);
     const editDistance = calculateEditDistance(lastPrompt, newPrompt);
 
     if (editDistance >= 4) {
-      setInputPrompt(newPrompt);
       setLastPrompt(newPrompt);
+      // setImages(Array(16).fill('images/white.jpg'));
       for (let i = 0; i < 16; i++) {
         fetchImage(i);
       }
     }
   };
 
+  useEffect(() => {
+    return () => {
+      abortControllers.current.forEach((controller) => controller.abort());
+    };
+  }, []);
+
+
   return (
+    
     <div
       className="App"
       style={{
@@ -95,16 +116,21 @@ function App() {
           flexDirection: "column",
         }}
       >
+          {isLoading ? (
+        <CircularProgress /> // Show spinner when loading
+      ) : (
+        null
+      )}
         <Grid
           container
           spacing={1}
           style={{ maxWidth: "60rem", maxHeight: "70%" }}
         >
           {images.map((image, index) => (
-            <Grid item xs={3} key={index}>
+            <Grid item xs={3}  key={`${index}-${lastPrompt}`}>
               <img
                 src={image}
-                alt={`Generated ${index}`}
+                alt={`Generated ${index}-${lastPrompt}`}
                 style={{
                   display: "block",
                   margin: "0 auto",
