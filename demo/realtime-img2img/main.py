@@ -18,7 +18,10 @@ import os
 import time
 import torch
 from user_queue import UserData
+import mimetypes
 
+# fix mime error on windows
+mimetypes.add_type("application/javascript", ".js")
 THROTTLE = 1.0 / 120
 
 
