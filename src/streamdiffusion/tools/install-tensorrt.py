@@ -41,6 +41,10 @@ def install(cu: Optional[Literal["11", "12"]] = get_cuda_version_from_torch()):
         run_pip(
             "install onnx-graphsurgeon==0.3.26 --extra-index-url https://pypi.ngc.nvidia.com"
         )
+    if not is_installed("pywin32"):
+        run_pip(
+            "install pywin32"
+        )
 
     pass
 

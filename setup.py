@@ -34,9 +34,6 @@ extras["tensorrt"] = deps_list("protobuf", "cuda-python", "onnx", "onnxruntime",
 
 extras["dev"] = extras["xformers"] + extras["torch"] + extras["tensorrt"]
 
-if os.name == "nt":
-    extras["tensorrt"] = extras["tensorrt"] + deps_list("pywin32")
-
 install_requires = [
     deps["fire"],
     deps["omegaconf"],
