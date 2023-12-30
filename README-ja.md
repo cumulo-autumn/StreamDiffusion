@@ -127,13 +127,11 @@ pip install git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=st
 pip install streamdiffusion[tensorrt]
 ```
 
-TensorRT と pywin32 をインストール
-(※※pywin32はWindowsの場合のみ必要です。)
+TensorRT をインストール
+
 
 ```bash
 python -m streamdiffusion.tools.install-tensorrt
-# windows の場合以下も実行
-pip install pywin32
 ```
 
 #### 開発者向け
