@@ -18,7 +18,6 @@ class ServerFullException(Exception):
 class ConnectionManager:
     def __init__(self):
         self.active_connections: Connections = {}
-        self.lock = asyncio.Lock()
 
     async def connect(
         self, user_id: UUID, websocket: WebSocket, max_queue_size: int = 0
@@ -94,10 +93,9 @@ class ConnectionManager:
 
     async def send_json(self, user_id: UUID, data: Dict):
         try:
-            async with self.lock:
-                websocket = self.get_websocket(user_id)
-                if websocket:
-                    await websocket.send_json(data)
+            websocket = self.get_websocket(user_id)
+            if websocket:
+                await websocket.send_json(data)
         except Exception as e:
             logging.error(f"Error: Send json: {e}")
 
