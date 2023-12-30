@@ -1,5 +1,5 @@
-import { useCallback, useState } from 'react'
-import { Box, Container, Flex, Grid, TextInput } from '@mantine/core'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Box, Container, Flex, Grid, Loader, TextInput } from '@mantine/core'
 
 import styles from './app.module.css'
 
@@ -7,6 +7,8 @@ export const App = () => {
   const [inputPrompt, setInputPrompt] = useState('')
   const [lastPrompt, setLastPrompt] = useState('')
   const [images, setImages] = useState(Array(16).fill('images/white.jpg'))
+  const [isLoading, setIsLoading] = useState(false)
+  const abortControllers = useRef<AbortController[]>([])
 
   const calculateEditDistance = (a: string, b: string) => {
     if (a.length === 0) return b.length
@@ -43,12 +45,18 @@ export const App = () => {
   }
 
   const fetchImage = useCallback(
-    async (index: number) => {
+    async (index: number): Promise<void> => {
+      abortControllers.current[index]?.abort()
+      abortControllers.current[index] = new AbortController()
+      const signal = abortControllers.current[index]?.signal
+
+      setIsLoading(true)
       try {
         const response = await fetch('api/predict', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ prompt: inputPrompt }),
+          signal,
         })
         const data = await response.json()
         const imageUrl = `data:image/jpeg;base64,${data.base64_image}`
@@ -59,25 +67,35 @@ export const App = () => {
           return newImages
         })
       } catch (error) {
-        console.error('Error fetching image:', error)
+        if (error instanceof Error && error.name !== 'AbortError') {
+          console.error('Error fetching image:', error)
+        }
+      } finally {
+        setIsLoading(false)
       }
     },
     [inputPrompt],
   )
 
-  const handlePromptChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setInputPrompt(event.target.value)
+  const handlePromptChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const newPrompt = event.target.value
+    setInputPrompt(newPrompt)
     const editDistance = calculateEditDistance(lastPrompt, newPrompt)
 
-    if (editDistance && editDistance >= 2) {
-      setInputPrompt(newPrompt)
+    if (editDistance && editDistance >= 4) {
       setLastPrompt(newPrompt)
+      // setImages(Array(16).fill('images/white.jpg'));
       for (let i = 0; i < 16; i++) {
         fetchImage(i)
       }
     }
   }
+
+  useEffect(() => {
+    return () => {
+      abortControllers.current.forEach((controller) => controller.abort())
+    }
+  }, [])
 
   return (
     <Box bg="#282c34" mih="100vh" w="100vw" p="lg">
@@ -105,6 +123,7 @@ export const App = () => {
             ))}
           </Grid>
           <TextInput w="100%" size="lg" placeholder="Enter a prompt" value={inputPrompt} onChange={handlePromptChange} />
+          {isLoading && <Loader />}
         </Flex>
       </Container>
     </Box>
