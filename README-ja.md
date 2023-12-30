@@ -22,7 +22,7 @@ StreamDiffusionの開発にあたり、丁寧なサポート、有意義なフ�
 ## 主な特徴
 
 1. **Stream Batch**
-   - バッチ処理によるデータ処理の効率化
+   - デノイジングバッチ処理によるデータ処理の効率化
 
 2. **Residual Classifier-Free Guidance** - [詳細](#residual-cfg-rcfg)
    - 計算の冗長性を最小限に抑えるCFG
@@ -127,13 +127,11 @@ pip install git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=st
 pip install streamdiffusion[tensorrt]
 ```
 
-TensorRT と pywin32 をインストール
-(※※pywin32はWindowsの場合のみ必要です。)
+TensorRT拡張をインストール
+
 
 ```bash
 python -m streamdiffusion.tools.install-tensorrt
-# windows の場合以下も実行
-pip install pywin32
 ```
 
 #### 開発者向け
