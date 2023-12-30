@@ -89,8 +89,8 @@ class Pipeline:
             use_denoising_batch=True,
             cfg_type="none",
             use_safety_checker=args.safety_checker,
-            enable_similar_image_filter=True,
-            similar_image_filter_threshold=0.98,
+            # enable_similar_image_filter=True,
+            # similar_image_filter_threshold=0.98,
             engine_dir=args.engine_dir,
         )
 
