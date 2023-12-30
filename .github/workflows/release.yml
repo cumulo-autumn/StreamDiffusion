@@ -24,11 +24,11 @@ jobs:
 
     - name: Build
       run: |
-        python3 setup.py sdist --formats=zip
+        python3 setup.py sdist
+        python3 setup.py bdist_wheel
 
     - name: Publish a Python distribution to Test PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        user: __token__
         password: ${{ secrets.TEST_PYPI_API_TOKEN }}
         repository-url: https://test.pypi.org/legacy/
