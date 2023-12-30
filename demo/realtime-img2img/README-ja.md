@@ -11,10 +11,10 @@
 </p>
 
 
-こちらの [MPJEG server](https://github.com/radames/Real-Time-Latent-Consistency-Model/)　のデモを元にした、webカメラやスクリーンキャプチャを用いたimage-to-imageのデモです。
+こちらの [MPJEG server](https://github.com/radames/Real-Time-Latent-Consistency-Model/)のデモを元にした、webカメラやスクリーンキャプチャを用いたimage-to-imageのデモです。
 
 ## Usage
-こちらのデモを実行するには Node.js 18+ が必要です。また、Python 3.10以外での動作は未確認です。
+こちらのデモを実行するには Node.js 18+が必要です。また、Python 3.10以外での動作は未確認です。
 [installation instructions](../../README.md#installation)に従って、事前に必要なライブラリをインストールしてください。
 
 ```bash
@@ -33,7 +33,7 @@ chmod +x start.sh
 ./start.sh
 ```
 
-その後 `http://0.0.0.0:7860` をブラウザで開いてください。
+上記のコマンドを実行した後 `http://0.0.0.0:7860` をブラウザで開いてください。
 (※ `http://0.0.0.0:7860`で上手く動作しない場合は、`http://localhost:7860`を試してみてください)
 
 ### Running with Docker
