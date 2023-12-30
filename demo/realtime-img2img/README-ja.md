@@ -11,7 +11,7 @@
 </p>
 
 
-こちらの [MPJEG server](https://github.com/radames/Real-Time-Latent-Consistency-Model/)のデモを元にした、webカメラやスクリーンキャプチャを用いたimage-to-imageのデモです。
+こちらの [MPJEG server](https://github.com/radames/Real-Time-Latent-Consistency-Model/)のデモを元にした、webカメラやスクリーンキャプチャを用いたimage-to-imageのデモです。Promptを変更することで、リアルタイムにプロンプトの効果を生成画像に反映することが出来ます。
 
 ## Usage
 こちらのデモを実行するには Node.js 18+が必要です。また、Python 3.10以外での動作は未確認です。
