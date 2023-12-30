@@ -3,38 +3,41 @@ from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi import Request
+
 import markdown2
 
 import logging
-import traceback
-from config import Args
-from user_queue import UserData
 import uuid
 import time
 from types import SimpleNamespace
-from util import pil_to_frame, bytes_to_pil, is_firefox
 import asyncio
 import os
 import time
-import torch
-from user_queue import UserData
 import mimetypes
+import torch
+
+from config import config, Args
+from util import pil_to_frame, bytes_to_pil, is_firefox
+from connection_manager import ConnectionManager, ServerFullException
+from img2img import Pipeline
 
 # fix mime error on windows
 mimetypes.add_type("application/javascript", ".js")
+
 THROTTLE = 1.0 / 120
+# logging.basicConfig(level=logging.DEBUG)
 
 
 class App:
-    def __init__(self, args: Args, pipeline):
-        self.args = args
-        self.user_data = UserData()
+    def __init__(self, config: Args, pipeline):
+        self.args = config
         self.pipeline = pipeline
         self.app = FastAPI()
-        self.init_app(self.app, self.user_data, self.args, self.pipeline)
+        self.conn_manager = ConnectionManager()
+        self.init_app()
 
-    def init_app(self, app: FastAPI, user_data: UserData, args: Args, pipeline):
-        app.add_middleware(
+    def init_app(self):
+        self.app.add_middleware(
             CORSMiddleware,
             allow_origins=["*"],
             allow_credentials=True,
@@ -42,108 +45,99 @@ class App:
             allow_headers=["*"],
         )
 
-        @app.websocket("/api/ws")
-        async def websocket_endpoint(websocket: WebSocket):
-            await websocket.accept()
-            user_count = user_data.get_user_count()
-            if args.max_queue_size > 0 and user_count >= args.max_queue_size:
-                print("Server is full")
-                await websocket.send_json(
-                    {"status": "error", "message": "Server is full"}
-                )
-                await websocket.close()
-                return
+        @self.app.websocket("/api/ws/{user_id}")
+        async def websocket_endpoint(user_id: uuid.UUID, websocket: WebSocket):
             try:
-                user_id = uuid.uuid4()
-                print(f"New user connected: {user_id}")
-
-                await user_data.create_user(user_id, websocket)
-                await websocket.send_json(
-                    {
-                        "status": "connected",
-                        "message": "Connected",
-                        "userId": str(user_id),
-                    }
+                await self.conn_manager.connect(
+                    user_id, websocket, self.args.max_queue_size
                 )
-                await websocket.send_json({"status": "send_frame"})
-                await handle_websocket_data(user_id, websocket)
-            except WebSocketDisconnect as e:
-                logging.error(f"WebSocket Error: {e}, {user_id}")
-                traceback.print_exc()
+                await handle_websocket_data(user_id)
+            except ServerFullException as e:
+                logging.error(f"Server Full: {e}")
             finally:
-                print(f"User disconnected: {user_id}")
-                user_data.delete_user(user_id)
+                await self.conn_manager.disconnect(user_id)
+                logging.info(f"User disconnected: {user_id}")
 
-        async def handle_websocket_data(user_id: uuid.UUID, websocket: WebSocket):
-            if not user_data.check_user(user_id):
+        async def handle_websocket_data(user_id: uuid.UUID):
+            if not self.conn_manager.check_user(user_id):
                 return HTTPException(status_code=404, detail="User not found")
             last_time = time.time()
             try:
                 while True:
-                    if args.timeout > 0 and time.time() - last_time > args.timeout:
-                        await websocket.send_json(
+                    if (
+                        self.args.timeout > 0
+                        and time.time() - last_time > self.args.timeout
+                    ):
+                        await self.conn_manager.send_json(
+                            user_id,
                             {
                                 "status": "timeout",
                                 "message": "Your session has ended",
-                                "userId": str(user_id),
-                            }
+                            },
                         )
-                        await websocket.close()
+                        await self.conn_manager.disconnect(user_id)
                         return
-                    data = await websocket.receive_json()
+                    data = await self.conn_manager.receive_json(user_id)
                     if data["status"] != "next_frame":
                         asyncio.sleep(THROTTLE)
                         continue
 
-                    params = await websocket.receive_json()
+                    params = await self.conn_manager.receive_json(user_id)
                     params = pipeline.InputParams(**params)
                     info = pipeline.Info()
                     params = SimpleNamespace(**params.dict())
                     if info.input_mode == "image":
-                        image_data = await websocket.receive_bytes()
+                        image_data = await self.conn_manager.receive_bytes(user_id)
                         if len(image_data) == 0:
-                            await websocket.send_json({"status": "send_frame"})
+                            await self.conn_manager.send_json(
+                                user_id, {"status": "send_frame"}
+                            )
                             await asyncio.sleep(THROTTLE)
                             continue
                         params.image = bytes_to_pil(image_data)
-                    await user_data.update_data(user_id, params)
-                    await websocket.send_json({"status": "wait"})
+                    await self.conn_manager.update_data(user_id, params)
+                    await self.conn_manager.send_json(user_id, {"status": "wait"})
 
             except Exception as e:
-                logging.error(f"Error: {e}")
-                traceback.print_exc()
+                logging.error(f"Websocket Error: {e}, {user_id} ")
+                await self.conn_manager.disconnect(user_id)
 
-        @app.get("/api/queue")
+        @self.app.get("/api/queue")
         async def get_queue_size():
-            queue_size = user_data.get_user_count()
+            queue_size = self.conn_manager.get_user_count()
             return JSONResponse({"queue_size": queue_size})
 
-        @app.get("/api/stream/{user_id}")
+        @self.app.get("/api/stream/{user_id}")
         async def stream(user_id: uuid.UUID, request: Request):
             try:
 
                 async def generate():
-                    websocket = user_data.get_websocket(user_id)
                     last_params = SimpleNamespace()
                     while True:
                         last_time = time.time()
-                        params = await user_data.get_latest_data(user_id)
+                        params = await self.conn_manager.get_latest_data(user_id)
                         if not vars(params) or params.__dict__ == last_params.__dict__:
-                            await websocket.send_json({"status": "send_frame"})
+                            await self.conn_manager.send_json(
+                                user_id, {"status": "send_frame"}
+                            )
                             continue
 
                         last_params = params
                         image = pipeline.predict(params)
                         if image is None:
-                            await websocket.send_json({"status": "send_frame"})
+                            await self.conn_manager.send_json(
+                                user_id, {"status": "send_frame"}
+                            )
                             continue
                         frame = pil_to_frame(image)
                         yield frame
                         # https://bugs.chromium.org/p/chromium/issues/detail?id=1250396
                         if not is_firefox(request.headers["user-agent"]):
                             yield frame
-                        await websocket.send_json({"status": "send_frame"})
-                        if args.debug:
+                        await self.conn_manager.send_json(
+                            user_id, {"status": "send_frame"}
+                        )
+                        if self.args.debug:
                             print(f"Time taken: {time.time() - last_time}")
 
                 return StreamingResponse(
@@ -153,11 +147,10 @@ class App:
                 )
             except Exception as e:
                 logging.error(f"Streaming Error: {e}, {user_id} ")
-                traceback.print_exc()
                 return HTTPException(status_code=404, detail="User not found")
 
         # route to setup frontend
-        @app.get("/api/settings")
+        @self.app.get("/api/settings")
         async def settings():
             info_schema = pipeline.Info.schema()
             info = pipeline.Info()
@@ -169,7 +162,7 @@ class App:
                 {
                     "info": info_schema,
                     "input_params": input_params,
-                    "max_queue_size": args.max_queue_size,
+                    "max_queue_size": self.args.max_queue_size,
                     "page_content": page_content if info.page_content else "",
                 }
             )
@@ -177,28 +170,24 @@ class App:
         if not os.path.exists("public"):
             os.makedirs("public")
 
-        app.mount(
+        self.app.mount(
             "/", StaticFiles(directory="./frontend/public", html=True), name="public"
         )
 
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+torch_dtype = torch.float16
+pipeline = Pipeline(config, device, torch_dtype)
+app = App(config, pipeline).app
+
 if __name__ == "__main__":
     import uvicorn
-    from config import args
-    from img2img import Pipeline
-
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    torch_dtype = torch.float16
-    pipeline = Pipeline(args, device, torch_dtype)
-
-    app = App(args, pipeline).app
-    args.pretty_print()
 
     uvicorn.run(
-        app,
-        host=args.host,
-        port=args.port,
-        reload=args.reload,
-        ssl_certfile=args.ssl_certfile,
-        ssl_keyfile=args.ssl_keyfile,
+        "main:app",
+        host=config.host,
+        port=config.port,
+        reload=config.reload,
+        ssl_certfile=config.ssl_certfile,
+        ssl_keyfile=config.ssl_keyfile,
     )

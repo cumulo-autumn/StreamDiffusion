@@ -25,7 +25,7 @@
   class="relative mx-auto aspect-square max-w-lg self-center overflow-hidden rounded-lg border border-slate-300"
 >
   <!-- svelte-ignore a11y-missing-attribute -->
-  {#if isLCMRunning}
+  {#if isLCMRunning && $streamId}
     <img
       bind:this={imageEl}
       class="aspect-square w-full rounded-lg"

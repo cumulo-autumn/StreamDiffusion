@@ -20,8 +20,9 @@ export const lcmLiveActions = {
         return new Promise((resolve, reject) => {
 
             try {
+                const userId = crypto.randomUUID();
                 const websocketURL = `${window.location.protocol === "https:" ? "wss" : "ws"
-                    }:${window.location.host}/api/ws`;
+                    }:${window.location.host}/api/ws/${userId}`;
 
                 websocket = new WebSocket(websocketURL);
                 websocket.onopen = () => {
@@ -38,7 +39,6 @@ export const lcmLiveActions = {
                     const data = JSON.parse(event.data);
                     switch (data.status) {
                         case "connected":
-                            const userId = data.userId;
                             lcmLiveStatus.set(LCMLiveStatus.CONNECTED);
                             streamId.set(userId);
                             resolve({ status: "connected", userId });
@@ -89,12 +89,11 @@ export const lcmLiveActions = {
         }
     },
     async stop() {
-
+        lcmLiveStatus.set(LCMLiveStatus.DISCONNECTED);
         if (websocket) {
             websocket.close();
         }
         websocket = null;
-        lcmLiveStatus.set(LCMLiveStatus.DISCONNECTED);
         streamId.set(null);
     },
 };

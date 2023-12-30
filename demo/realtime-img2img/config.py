@@ -105,5 +105,5 @@ parser.add_argument(
     help="Engine Dir",
 )
 parser.set_defaults(taesd=USE_TAESD)
-
-args = Args(**vars(parser.parse_args()))
+config = Args(**vars(parser.parse_args()))
+config.pretty_print()
