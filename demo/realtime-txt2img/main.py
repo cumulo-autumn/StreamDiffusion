@@ -1,8 +1,8 @@
-import sys
-import os
 import asyncio
 import base64
 import logging
+import os
+import sys
 from io import BytesIO
 from pathlib import Path
 
@@ -11,13 +11,14 @@ from config import Config
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-
 from PIL import Image
 from pydantic import BaseModel
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from utils.wrapper import StreamDiffusionWrapper
+
 
 logger = logging.getLogger("uvicorn")
 PROJECT_DIR = Path(__file__).parent.parent
@@ -61,7 +62,7 @@ class Api:
         self.stream_diffusion = StreamDiffusionWrapper(
             mode=config.mode,
             model_id_or_path=config.model_id_or_path,
-            lora_dict = config.lora_dict,
+            lora_dict=config.lora_dict,
             lcm_lora_id=config.lcm_lora_id,
             vae_id=config.vae_id,
             device=config.device,
@@ -86,9 +87,7 @@ class Api:
             allow_methods=["*"],
             allow_headers=["*"],
         )
-        self.app.mount(
-            "/", StaticFiles(directory="../view/build", html=True), name="public"
-        )
+        self.app.mount("/", StaticFiles(directory="./frontend/dist", html=True), name="public")
 
         self._predict_lock = asyncio.Lock()
         self._update_prompt_lock = asyncio.Lock()
@@ -108,11 +107,7 @@ class Api:
             The prediction result.
         """
         async with self._predict_lock:
-            return PredictResponseModel(
-                base64_image=self._pil_to_base64(
-                    self.stream_diffusion(prompt=inp.prompt)
-                )
-            )
+            return PredictResponseModel(base64_image=self._pil_to_base64(self.stream_diffusion(prompt=inp.prompt)))
 
     def _pil_to_base64(self, image: Image.Image, format: str = "JPEG") -> bytes:
         """

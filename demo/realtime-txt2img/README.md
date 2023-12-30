@@ -13,10 +13,10 @@ You can realtimely generate 4x4 images from text, on changing the input prompt.
 
 ```bash
 pip install -r requirements.txt
-cd view
-npm i
-npm run build
-cd ../server
+cd frontend
+pnpm i
+pnpm run build
+cd ..
 python main.py
 ```
 
