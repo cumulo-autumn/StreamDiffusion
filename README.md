@@ -132,7 +132,10 @@ Install TensorRT extension
 ```bash
 python -m streamdiffusion.tools.install-tensorrt
 ```
-
+(Only for Windows) You may need to install pywin32 additionally, if you installed Stable Version(`pip install streamdiffusion[tensorrt]`).
+```bash
+pip install --force-reinstall pywin32
+```
 
 #### For Developer
 

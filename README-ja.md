@@ -133,6 +133,10 @@ TensorRT拡張をインストール
 ```bash
 python -m streamdiffusion.tools.install-tensorrt
 ```
+(Only for Windows)リリースバージョン(`pip install streamdiffusion[tensorrt]`)ではpywin32のインストールが別途必要です。
+```bash
+pip install --force-reinstall pywin32
+```
 
 #### 開発者向け
 
