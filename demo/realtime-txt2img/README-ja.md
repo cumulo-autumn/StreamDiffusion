@@ -15,10 +15,10 @@ StreamDiffusion を用いた GUI を提供します。
 
 ```bash
 pip install -r requirements.txt
-cd view
-npm i
-npm run build
-cd ../server
+cd frontend
+pnpm i
+pnpm run build
+cd ..
 python main.py
 ```
 
