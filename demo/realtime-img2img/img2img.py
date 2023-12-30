@@ -104,9 +104,6 @@ class Pipeline:
 
     def predict(self, params: "Pipeline.InputParams") -> Image.Image:
         image_tensor = self.stream.preprocess_image(params.image)
-        for _ in range(self.stream.batch_size - 1):
-            self.stream(image=image_tensor, prompt=params.prompt)
-
         output_image = self.stream(image=image_tensor, prompt=params.prompt)
 
         return output_image
