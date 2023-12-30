@@ -1,6 +1,6 @@
 # Img2Img Example
 
-[English](./README.md) 
+[English](./README.md) | [日本語](./README-ja.md)
 
 <p align="center">
   <img src="../../assets/img2img1.gif" width=80%>
