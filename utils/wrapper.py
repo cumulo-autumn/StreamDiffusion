@@ -46,6 +46,7 @@ class StreamDiffusionWrapper:
         cfg_type: Literal["none", "full", "self", "initialize"] = "self",
         seed: int = 2,
         use_safety_checker: bool = False,
+        engine_dir: Optional[Union[str, Path]] = "engines",
     ):
         """
         Initializes the StreamDiffusionWrapper.
@@ -59,7 +60,7 @@ class StreamDiffusionWrapper:
         lora_dict : Optional[Dict[str, float]], optional
             The lora_dict to load, by default None.
             Keys are the LoRA names and values are the LoRA scales.
-            Example: {"LoRA_1" : 0.5 , "LoRA_2" : 0.7 ,...}
+            Example: {'LoRA_1' : 0.5 , 'LoRA_2' : 0.7 ,...}
         mode : Literal["img2img", "txt2img"], optional
             txt2img or img2img, by default "img2img".
         output_type : Literal["pil", "pt", "np", "latent"], optional
@@ -161,6 +162,7 @@ class StreamDiffusionWrapper:
             use_tiny_vae=use_tiny_vae,
             cfg_type=cfg_type,
             seed=seed,
+            engine_dir=engine_dir,
         )
 
         if device_ids is not None:
@@ -223,7 +225,7 @@ class StreamDiffusionWrapper:
             The generated image.
         """
         if self.mode == "img2img":
-            return self.img2img(image)
+            return self.img2img(image, prompt)
         else:
             return self.txt2img(prompt)
 
@@ -265,7 +267,7 @@ class StreamDiffusionWrapper:
         return image
 
     def img2img(
-        self, image: Union[str, Image.Image, torch.Tensor]
+        self, image: Union[str, Image.Image, torch.Tensor], prompt: Optional[str] = None
     ) -> Union[Image.Image, List[Image.Image], torch.Tensor, np.ndarray]:
         """
         Performs img2img.
@@ -280,6 +282,9 @@ class StreamDiffusionWrapper:
         Image.Image
             The generated image.
         """
+        if prompt is not None:
+            self.stream.update_prompt(prompt)
+
         if isinstance(image, str) or isinstance(image, Image.Image):
             image = self.preprocess_image(image)
 
@@ -356,6 +361,7 @@ class StreamDiffusionWrapper:
         use_tiny_vae: bool = True,
         cfg_type: Literal["none", "full", "self", "initialize"] = "self",
         seed: int = 2,
+        engine_dir: Optional[Union[str, Path]] = "engines",
     ) -> StreamDiffusion:
         """
         Loads the model.
@@ -378,7 +384,7 @@ class StreamDiffusionWrapper:
         lora_dict : Optional[Dict[str, float]], optional
             The lora_dict to load, by default None.
             Keys are the LoRA names and values are the LoRA scales.
-            Example: {"LoRA_1" : 0.5 , "LoRA_2" : 0.7 ,...}
+            Example: {'LoRA_1' : 0.5 , 'LoRA_2' : 0.7 ,...}
         lcm_lora_id : Optional[str], optional
             The lcm_lora_id to load, by default None.
         vae_id : Optional[str], optional
@@ -490,7 +496,7 @@ class StreamDiffusionWrapper:
                     else:
                         return f"{model_id_or_path}--lcm_lora-{use_lcm_lora}--tiny_vae-{use_tiny_vae}--max_batch-{max_batch_size}--min_batch-{min_batch_size}--mode-{self.mode}"
 
-                engine_dir = os.path.join("engines")
+                engine_dir = Path(engine_dir)
                 unet_path = os.path.join(
                     engine_dir,
                     create_prefix(

@@ -43,7 +43,7 @@ def main(
     lora_dict : Optional[Dict[str, float]], optional
         The lora_dict to load, by default None.
         Keys are the LoRA names and values are the LoRA scales.
-        Example: {"LoRA_1" : 0.5 , "LoRA_2" : 0.7 ,...}
+        Example: {'LoRA_1' : 0.5 , 'LoRA_2' : 0.7 ,...}
     prompt : str
         The prompt to generate images from.
     negative_prompt : str, optional

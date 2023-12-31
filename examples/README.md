@@ -135,7 +135,7 @@ The ```--lora_dict``` is in the format ```"{'LoRA_1 file path' : LoRA_1 scale , 
 
 
 Usage : 
-```--lora_dict "{'C:/stable-diffusion-webui/models/Stable-diffusion/LoRA_1.safetensor' : 0.5 ,"E:/ComfyUI/models/LoRA_2.safetensor' : 0.7 }"``` 
+```--lora_dict "{'C:/stable-diffusion-webui/models/Stable-diffusion/LoRA_1.safetensor' : 0.5 ,'E:/ComfyUI/models/LoRA_2.safetensor' : 0.7 }"``` 
 
 ### Prompt 
 ```--prompt``` allows you to change Prompt.

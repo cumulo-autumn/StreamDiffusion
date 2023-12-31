@@ -139,19 +139,20 @@ def accelerate_with_tensorrt(
             unet_model,
             create_onnx_path("unet", onnx_dir, opt=False),
             create_onnx_path("unet", onnx_dir, opt=True),
-            opt_batch_size=max_batch_size,
+            unet_engine_path,
             **engine_build_options,
         )
     else:
         del unet
 
     if not os.path.exists(vae_decoder_engine_path):
+        vae.forward = vae.decode
         compile_vae_decoder(
             vae,
             vae_decoder_model,
             create_onnx_path("vae_decoder", onnx_dir, opt=False),
             create_onnx_path("vae_decoder", onnx_dir, opt=True),
-            opt_batch_size=max_batch_size,
+            vae_decoder_engine_path,
             **engine_build_options,
         )
 
@@ -162,7 +163,7 @@ def accelerate_with_tensorrt(
             vae_encoder_model,
             create_onnx_path("vae_encoder", onnx_dir, opt=False),
             create_onnx_path("vae_encoder", onnx_dir, opt=True),
-            opt_batch_size=max_batch_size,
+            vae_encoder_engine_path,
             **engine_build_options,
         )
 

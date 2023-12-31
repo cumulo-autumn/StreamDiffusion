@@ -13,10 +13,10 @@ You can realtimely generate 4x4 images from text, on changing the input prompt.
 
 ```bash
 pip install -r requirements.txt
-cd view
-npm i
-npm run build
-cd ../server
+cd frontend
+pnpm i
+pnpm run build
+cd ..
 python main.py
 ```
 
@@ -28,6 +28,6 @@ The video and image demos in this GitHub repository were generated using [kohaku
 
 Special thanks to Kohaku BlueLeaf ([@KBlueleaf](https://twitter.com/KBlueleaf)) for providing the KohakuV2 model, and to [Stability AI](https://ja.stability.ai/) for [SD-Turbo](https://arxiv.org/abs/2311.17042).
 
- KohakuV2 Models can be downloaded from  [Civitai](https://civitai.com/models/136268/kohaku-v2)  and [Hugging Face](https://huggingface.co/stabilityai/sd-turbo).
+ KohakuV2 Models can be downloaded from  [Civitai](https://civitai.com/models/136268/kohaku-v2)  and [Hugging Face](https://huggingface.co/KBlueLeaf/kohaku-v2.1).
 
- [SD-Turbo](https://arxiv.org/abs/2311.17042) is also available on Hugging Face.
+ [SD-Turbo](https://arxiv.org/abs/2311.17042) is also available on [Hugging Face](https://huggingface.co/stabilityai/sd-turbo).
