@@ -172,6 +172,14 @@ docker run --gpus all -it -v $(pwd):/home/ubuntu/streamdiffusion stream-diffusio
   <img src="./assets/demo_01.gif" width=80%>
 </p>
 
+## Real-Time Img2Img Demo
+
+Webカメラを使ったリアルタイムのimg2imgデモは [`demo/realtime-img2img`](./demo/realtime-img2img)にあります。
+
+<p align="center">
+  <img src="./assets/img2img1.gif" width=100%>
+</p>
+
 ## 使用例
 シンプルなStreamDiffusionの使用例を取り上げる. より詳細かつ様々な使用例は[`examples`](./examples)を参照してください。
 
