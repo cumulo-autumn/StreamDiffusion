@@ -1,0 +1,28 @@
+{
+  "name": "view",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@mantine/core": "^7.3.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.38",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react": "^4.2.1",
+    "postcss": "^8.4.32",
+    "postcss-preset-mantine": "^1.11.1",
+    "postcss-simple-vars": "^7.0.1",
+    "prettier": "^3.1.0",
+    "typescript": "^4.9.5",
+    "vite": "^5.0.10",
+    "vite-tsconfig-paths": "^4.2.3"
+  }
+}

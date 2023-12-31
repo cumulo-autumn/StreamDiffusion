@@ -22,7 +22,7 @@ StreamDiffusion을 개발하면서 세심한 지원과 의미 있는 피드백�
 
 1. **Stream Batch**
 
-   - 효율적인 배치 작업을 통해, 데이터 처리를 효율적으로 진행합니다.
+   - 디노이징 배치 작업을 통해, 데이터 처리를 효율적으로 진행합니다.
 
 2. **Residual Classifier-Free Guidance** - [자세히](#residual-cfg-rcfg)
 
@@ -126,13 +126,16 @@ pip install git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=st
 pip install streamdiffusion[tensorrt]
 ```
 
-TensorRT 확장 및 pywin32 설치
-(※※pywin32는 Windows에서만 필요합니다.)
+TensorRT 확장 프로그램 설치
 
 ```bash
 python -m streamdiffusion.tools.install-tensorrt
-# Windows를 사용하는 경우, pywin32를 설치해야 합니다
-pip install pywin32
+```
+
+(윈도우 사용자용) 안정 버젼(`pip install streamdiffusion[tensorrt]`)을 설치한 경우, pywin32를 별도로 설치해야 할 수 있습니다.
+
+```bash
+pip install --force-reinstall pywin32
 ```
 
 #### 개발자용
@@ -165,6 +168,14 @@ docker run --gpus all -it -v $(pwd):/home/ubuntu/streamdiffusion stream-diffusio
 
 <p align="center">
   <img src="./assets/demo_01.gif" width=100%>
+</p>
+
+## 실시간 Img2Img 데모
+
+실시간 웹 카메라 및 스크린 캡쳐에 대한 Web img2img 데모는 [`demo/realtime-img2img`](./demo/realtime-img2img)에서 보실 수 있습니다.
+
+<p align="center">
+  <img src="./assets/img2img1.gif" width=100%>
 </p>
 
 ## 사용 예제

@@ -34,9 +34,6 @@ extras["tensorrt"] = deps_list("protobuf", "cuda-python", "onnx", "onnxruntime",
 
 extras["dev"] = extras["xformers"] + extras["torch"] + extras["tensorrt"]
 
-if os.name == "nt":
-    extras["tensorrt"] = extras["tensorrt"] + deps_list("pywin32")
-
 install_requires = [
     deps["fire"],
     deps["omegaconf"],
@@ -47,7 +44,7 @@ install_requires = [
 
 setup(
     name="streamdiffusion",
-    version="0.1.0",
+    version="0.1.1",
     description="real-time interactive image generation pipeline",
     long_description=open("README.md", "r", encoding="utf-8").read(),
     long_description_content_type="text/markdown",

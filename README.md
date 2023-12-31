@@ -126,13 +126,16 @@ pip install git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=st
 pip install streamdiffusion[tensorrt]
 ```
 
-Install TensorRT extension and pywin32
-(※※pywin32 is required only for Windows.)
+Install TensorRT extension
 
 ```bash
 python -m streamdiffusion.tools.install-tensorrt
-# If you use Windows, you need to install pywin32
-pip install pywin32
+```
+
+(Only for Windows) You may need to install pywin32 additionally, if you installed Stable Version(`pip install streamdiffusion[tensorrt]`).
+
+```bash
+pip install --force-reinstall pywin32
 ```
 
 #### For Developer
@@ -165,6 +168,14 @@ There is an interactive txt2img demo in [`demo/realtime-txt2img`](./demo/realtim
 
 <p align="center">
   <img src="./assets/demo_01.gif" width=100%>
+</p>
+
+## Real-Time Img2Img Demo
+
+There is a real time img2img demo with a live webcam feed or screen capture on a web browser in [`demo/realtime-img2img`](./demo/realtime-img2img) directory!
+
+<p align="center">
+  <img src="./assets/img2img1.gif" width=100%>
 </p>
 
 ## Usage Example

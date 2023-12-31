@@ -30,7 +30,7 @@ def is_installed(package: str) -> bool:
 
 def run_python(command: str, env: Dict[str, str] = None) -> str:
     run_kwargs = {
-        "args": f"{python} {command}",
+        "args": f"\"{python}\" {command}",
         "shell": True,
         "env": os.environ if env is None else env,
         "encoding": "utf8",
