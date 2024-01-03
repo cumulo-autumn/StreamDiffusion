@@ -1,10 +1,11 @@
 # build frontend with node
 FROM node:20-alpine AS frontend
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat git
 WORKDIR /app
 
-COPY . .
-WORKDIR /app/frontend
+RUN git clone https://github.com/cumulo-autumn/StreamDiffusion .
+
+WORKDIR /app/demo/realtime-img2img/frontend
 RUN npm ci
 RUN npm run build
 
@@ -54,14 +55,16 @@ RUN pyenv install $PYTHON_VERSION && \
     pyenv rehash && \
     pip install --no-cache-dir -U pip setuptools wheel
 
-COPY --chown=user:user . .
+WORKDIR $HOME/app
 
-RUN pip install --no-cache-dir --upgrade -r requirements.txt 
+COPY --from=frontend  --chown=user:user /app .
+
+WORKDIR $HOME/app/demo/realtime-img2img
+
+RUN pip install --no-cache-dir -U -r requirements.txt
+RUN pip install git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=streamdiffusion[tensorrt]
 RUN python -m streamdiffusion.tools.install-tensorrt
 
-COPY --from=frontend /app/frontend/public ./frontend/public
-
-WORKDIR $HOME/app/
 
 USER user
 CMD ["python",  "main.py", "--debug", "--acceleration", "tensorrt"]
