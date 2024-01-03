@@ -12,4 +12,3 @@ peft==0.6.0
 xformers; sys_platform != 'darwin' or platform_machine != 'arm64'
 markdown2
 stable_fast @ https://github.com/chengzeyi/stable-fast/releases/download/v0.0.15.post1/stable_fast-0.0.15.post1+torch211cu121-cp310-cp310-manylinux2014_x86_64.whl; sys_platform=='linux'
-git+https://github.com/cumulo-autumn/StreamDiffusion.git@main#egg=streamdiffusion[tensorrt]
