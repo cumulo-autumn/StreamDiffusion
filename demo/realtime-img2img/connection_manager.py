@@ -48,11 +48,6 @@ class ConnectionManager:
         user_session = self.active_connections.get(user_id)
         if user_session:
             queue = user_session["queue"]
-            while not queue.empty():
-                try:
-                    queue.get_nowait()
-                except asyncio.QueueEmpty:
-                    continue
             await queue.put(new_data)
 
     async def get_latest_data(self, user_id: UUID) -> SimpleNamespace:
