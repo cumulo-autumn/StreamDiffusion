@@ -1,6 +1,6 @@
 # StreamDiffusion
 
-[English](./README.md) | [日本語](./README-ja.md)
+[English](./README.md) | [日本語](./README-ja.md) | [한국어](./README-ko.md)
 
 <p align="center">
   <img src="./assets/demo_07.gif" width=90%>
@@ -13,7 +13,6 @@
 
 StreamDiffusion is an innovative diffusion pipeline designed for real-time interactive generation. It introduces significant performance enhancements to current diffusion-based image generation techniques.
 
-
 [![arXiv](https://img.shields.io/badge/arXiv-2307.04725-b31b1b.svg)](https://arxiv.org/abs/2312.12491)
 [![Hugging Face Papers](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-papers-yellow)](https://huggingface.co/papers/2312.12491)
 
@@ -22,34 +21,36 @@ We sincerely thank [Taku Fujimoto](https://twitter.com/AttaQjp) and [Radamés Aj
 ## Key Features
 
 1. **Stream Batch**
+
    - Streamlined data processing through efficient batch operations.
 
 2. **Residual Classifier-Free Guidance** - [Learn More](#residual-cfg-rcfg)
+
    - Improved guidance mechanism that minimizes computational redundancy.
 
 3. **Stochastic Similarity Filter** - [Learn More](#stochastic-similarity-filter)
+
    - Improves GPU utilization efficiency through advanced filtering techniques.
 
 4. **IO Queues**
+
    - Efficiently manages input and output operations for smoother execution.
 
 5. **Pre-Computation for KV-Caches**
+
    - Optimizes caching strategies for accelerated processing.
 
 6. **Model Acceleration Tools**
    - Utilizes various tools for model optimization and performance boost.
 
-
-
 When images are produced using our proposed StreamDiffusion pipeline in an environment with **GPU: RTX 4090**, **CPU: Core i9-13900K**, and **OS: Ubuntu 22.04.3 LTS**.
 
-|model                | Denoising Step      |  fps on Txt2Img      |  fps on Img2Img      |
-|:-------------------:|:-------------------:|:--------------------:|:--------------------:|
-|SD-turbo             | 1              | 106.16                    | 93.897               |
-|LCM-LoRA <br>+<br> KohakuV2| 4        | 38.023                    | 37.133               |
+|            model            | Denoising Step | fps on Txt2Img | fps on Img2Img |
+| :-------------------------: | :------------: | :------------: | :------------: |
+|          SD-turbo           |       1        |     106.16     |     93.897     |
+| LCM-LoRA <br>+<br> KohakuV2 |       4        |     38.023     |     37.133     |
 
 Feel free to explore each feature by following the provided links to learn more about StreamDiffusion's capabilities. If you find it helpful, please consider citing our work:
-
 
 ```bash
 @article{kodaira2023streamdiffusion,
@@ -62,10 +63,7 @@ Feel free to explore each feature by following the provided links to learn more 
 }
 ```
 
-
 ## Installation
-
-
 
 ### Step0: clone this repository
 
@@ -107,6 +105,7 @@ CUDA 12.1
 ```bash
 pip3 install torch==2.1.0 torchvision==0.16.0 xformers --index-url https://download.pytorch.org/whl/cu121
 ```
+
 details: https://pytorch.org/
 
 ### Step3: Install StreamDiffusion
@@ -132,7 +131,9 @@ Install TensorRT extension
 ```bash
 python -m streamdiffusion.tools.install-tensorrt
 ```
+
 (Only for Windows) You may need to install pywin32 additionally, if you installed Stable Version(`pip install streamdiffusion[tensorrt]`).
+
 ```bash
 pip install --force-reinstall pywin32
 ```
@@ -158,7 +159,7 @@ docker run --gpus all -it -v $(pwd):/home/ubuntu/streamdiffusion stream-diffusio
 You can try StreamDiffusion in [`examples`](./examples) directory.
 
 | ![画像3](./assets/demo_02.gif) | ![画像4](./assets/demo_03.gif) |
-|:--------------------:|:--------------------:|
+| :----------------------------: | :----------------------------: |
 | ![画像5](./assets/demo_04.gif) | ![画像6](./assets/demo_05.gif) |
 
 ## Real-Time Txt2Img Demo
@@ -178,8 +179,11 @@ There is a real time img2img demo with a live webcam feed or screen capture on a
 </p>
 
 ## Usage Example
+
 We provide a simple example of how to use StreamDiffusion. For more detailed examples, please refer to [`examples`](./examples) directory.
+
 ### Image-to-Image
+
 ```python
 import torch
 from diffusers import AutoencoderTiny, StableDiffusionPipeline
@@ -231,6 +235,7 @@ while True:
 ```
 
 ### Text-to-Image
+
 ```python
 import torch
 from diffusers import AutoencoderTiny, StableDiffusionPipeline
@@ -279,14 +284,19 @@ while True:
     if input_response == "stop":
         break
 ```
+
 You can make it faster by using SD-Turbo.
 
 ### Faster generation
+
 Replace the following code in the above example.
+
 ```python
 pipe.enable_xformers_memory_efficient_attention()
 ```
+
 To
+
 ```python
 from streamdiffusion.acceleration.tensorrt import accelerate_with_tensorrt
 
@@ -294,6 +304,7 @@ stream = accelerate_with_tensorrt(
     stream, "engines", max_batch_size=2,
 )
 ```
+
 It requires TensorRT extension and time to build the engine, but it will be faster than the above example.
 
 ## Optionals
@@ -370,7 +381,7 @@ The delta has a moderating effect on the effectiveness of RCFG.
 [Tonimono](https://twitter.com/toni_nimono),
 [Verb](https://twitter.com/IMG_5955),
 
-(*alphabetical order)
+(\*alphabetical order)
 </br>
 
 ## Acknowledgements
@@ -379,9 +390,9 @@ The video and image demos in this GitHub repository were generated using [LCM-Lo
 
 Special thanks to [LCM-LoRA authors](https://latent-consistency-models.github.io/) for providing the LCM-LoRA and Kohaku BlueLeaf ([@KBlueleaf](https://twitter.com/KBlueleaf)) for providing the KohakuV2 model and ,to [Stability AI](https://ja.stability.ai/) for [SD-Turbo](https://arxiv.org/abs/2311.17042).
 
- KohakuV2 Models can be downloaded from  [Civitai](https://civitai.com/models/136268/kohaku-v2)  and [Hugging Face](https://huggingface.co/KBlueLeaf/kohaku-v2.1).
+KohakuV2 Models can be downloaded from [Civitai](https://civitai.com/models/136268/kohaku-v2) and [Hugging Face](https://huggingface.co/KBlueLeaf/kohaku-v2.1).
 
- SD-Turbo is also available on [Hugging Face Space](https://huggingface.co/stabilityai/sd-turbo).
+SD-Turbo is also available on [Hugging Face Space](https://huggingface.co/stabilityai/sd-turbo).
 
 ## Contributors
 
