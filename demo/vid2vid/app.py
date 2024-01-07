@@ -88,6 +88,9 @@ def main(
         num_inference_steps=50,
     )
 
+    o = stream(video[0].permute(2, 0, 1))
+    width = int(o.shape[1])
+    height = int(o.shape[2])
     video_result = torch.zeros(video.shape[0], width, height, 3)
 
     for _ in range(stream.batch_size):
@@ -99,7 +102,7 @@ def main(
 
     video_result = video_result * 255
 
-    write_video("tmp.mp4", video_result[2:], fps=fps)
+    write_video(output, video_result[2:], fps=fps)
     return output
 
 
