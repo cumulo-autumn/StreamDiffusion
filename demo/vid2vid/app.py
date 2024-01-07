@@ -99,7 +99,7 @@ def main(
 
     video_result = video_result * 255
 #    write_video(output, video_result[2:], fps=fps)
-    return video_result
+    return video_result.numpy()
 
 
 demo = gr.Interface(
