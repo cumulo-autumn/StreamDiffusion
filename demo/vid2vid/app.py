@@ -98,8 +98,9 @@ def main(
         video_result[i] = output_image.permute(1, 2, 0)
 
     video_result = video_result * 255
-#    write_video(output, video_result[2:], fps=fps)
-    return video_result.numpy()
+
+    write_video("video.tmp", video_result[2:], fps=fps)
+    return output
 
 
 demo = gr.Interface(
