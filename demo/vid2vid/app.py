@@ -99,7 +99,7 @@ def main(
 
     video_result = video_result * 255
 
-    write_video("video.tmp", video_result[2:], fps=fps)
+    write_video("tmp.mp4", video_result[2:], fps=fps)
     return output
 
 
