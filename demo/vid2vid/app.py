@@ -98,7 +98,7 @@ def main(
         video_result[i] = output_image.permute(1, 2, 0)
 
     video_result = video_result * 255
-    write_video(output, video_result[2:], fps=fps)
+#    write_video(output, video_result[2:], fps=fps)
     return video_result
 
 
