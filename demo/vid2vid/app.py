@@ -108,7 +108,7 @@ def main(
 
 demo = gr.Interface(
     main,
-    gr.Video(), 
+    gr.Video(sources=['upload', 'webcam']), 
     "playable_video"
 )
 demo.launch()
