@@ -26,13 +26,13 @@ class Config:
     ####################################################################
     mode: Literal["txt2img", "img2img"] = "txt2img"
     # SD1.x variant model
-    model_id_or_path: str = "KBlueLeaf/kohaku-v2.1"
+    model_id_or_path: str = os.environ.get("MODEL", "KBlueLeaf/kohaku-v2.1")
     # LoRA dictionary write like    field(default_factory=lambda: {'E:/stable-diffusion-webui/models/Lora_1.safetensors' : 1.0 , 'E:/stable-diffusion-webui/models/Lora_2.safetensors' : 0.2})
     lora_dict: dict = None
     # LCM-LORA model
-    lcm_lora_id: str = "latent-consistency/lcm-lora-sdv1-5"
+    lcm_lora_id: str = os.environ.get("LORA", "latent-consistency/lcm-lora-sdv1-5")
     # TinyVAE model
-    vae_id: str = "madebyollin/taesd"
+    vae_id: str = os.environ.get("VAE", "madebyollin/taesd")
     # Device to use
     device: torch.device = torch.device("cuda")
     # Data type
