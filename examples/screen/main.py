@@ -3,6 +3,7 @@ import sys
 import time
 import threading
 from multiprocessing import Process, Queue, get_context
+from multiprocessing.connection import Connection
 from typing import List, Literal, Dict, Optional
 import torch
 import PIL.Image
@@ -58,6 +59,14 @@ def dummy_screen(
     root.mainloop()
     return {"top": top, "left": left, "width": width, "height": height}
 
+def monitor_setting_process(
+    width: int,
+    height: int,
+    monitor_sender: Connection,
+) -> None:
+    monitor = dummy_screen(width, height)
+    monitor_sender.send(monitor)
+
 def image_generation_process(
     queue: Queue,
     fps_queue: Queue,
@@ -79,7 +88,7 @@ def image_generation_process(
     enable_similar_image_filter: bool,
     similar_image_filter_threshold: float,
     similar_image_filter_max_skip_frame: float,
-    monitor: Dict[str, int],
+    monitor_receiver : Connection,
 ) -> None:
     """
     Process for generating images based on a prompt using a specified model.
@@ -160,6 +169,9 @@ def image_generation_process(
         guidance_scale=guidance_scale,
         delta=delta,
     )
+
+    monitor = monitor_receiver.recv()
+
     event = threading.Event()
     input_screen = threading.Thread(target=screen, args=(event, height, width, monitor))
     input_screen.start()
@@ -219,11 +231,13 @@ def main(
     """
     Main function to start the image generation and viewer processes.
     """
-    monitor = dummy_screen(width, height)
     ctx = get_context('spawn')
     queue = ctx.Queue()
     fps_queue = ctx.Queue()
     close_queue = Queue()
+
+    monitor_sender, monitor_receiver = ctx.Pipe()
+
     process1 = ctx.Process(
         target=image_generation_process,
         args=(
@@ -247,10 +261,21 @@ def main(
             enable_similar_image_filter,
             similar_image_filter_threshold,
             similar_image_filter_max_skip_frame,
-            monitor
+            monitor_receiver,
             ),
     )
     process1.start()
+
+    monitor_process = ctx.Process(
+        target=monitor_setting_process,
+        args=(
+            width,
+            height,
+            monitor_sender,
+            ),
+    )
+    monitor_process.start()
+    monitor_process.join()
 
     process2 = ctx.Process(target=receive_images, args=(queue, fps_queue))
     process2.start()

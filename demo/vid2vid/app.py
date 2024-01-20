@@ -1,3 +1,5 @@
+import gradio as gr
+
 import os
 import sys
 from typing import Literal, Dict, Optional
@@ -86,6 +88,9 @@ def main(
         num_inference_steps=50,
     )
 
+    o = stream(video[0].permute(2, 0, 1))
+    height = int(o.shape[1])
+    width = int(o.shape[2])
     video_result = torch.zeros(video.shape[0], height, width, 3)
 
     for _ in range(stream.batch_size):
@@ -96,8 +101,14 @@ def main(
         video_result[i] = output_image.permute(1, 2, 0)
 
     video_result = video_result * 255
+
     write_video(output, video_result[2:], fps=fps)
+    return output
 
 
-if __name__ == "__main__":
-    fire.Fire(main)
+demo = gr.Interface(
+    main,
+    gr.Video(sources=['upload', 'webcam']), 
+    "playable_video"
+)
+demo.launch()
