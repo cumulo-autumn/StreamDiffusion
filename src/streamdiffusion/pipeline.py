@@ -1,4 +1,5 @@
 import time
+
 from typing import List, Optional, Union, Any, Dict, Tuple, Literal
 
 import numpy as np
@@ -30,7 +31,7 @@ class StreamDiffusion:
         self.dtype = torch_dtype
         self.generator = None
 
-        self.timer_event = getattr(torch, self.device)
+        self.timer_event = getattr(torch, str(self.device).split(':', 1)[0])
 
         self.height = height
         self.width = width
