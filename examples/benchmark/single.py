@@ -112,7 +112,7 @@ def run(
 
     results = []
 
-    timer_event = torch.cuda if torch.cuda.is_available() == "cuda" else torch.mps if torch.backends.mps.is_available() else torch.cpu
+    timer_event = getattr(torch, "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
     start = timer_event.Event(enable_timing=True)
     end = timer_event.Event(enable_timing=True)
 

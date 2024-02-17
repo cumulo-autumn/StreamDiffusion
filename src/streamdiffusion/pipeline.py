@@ -30,7 +30,7 @@ class StreamDiffusion:
         self.dtype = torch_dtype
         self.generator = None
 
-        self.timer_event = torch.cuda if self.device == "cuda" else torch.mps
+        self.timer_event = getattr(torch, self.device)
 
         self.height = height
         self.width = width
