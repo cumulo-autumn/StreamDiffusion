@@ -28,7 +28,7 @@ class StreamDiffusionWrapper:
         output_type: Literal["pil", "pt", "np", "latent"] = "pil",
         lcm_lora_id: Optional[str] = None,
         vae_id: Optional[str] = None,
-        device: Literal["cpu", "cuda"] = "cuda",
+        device: Literal["cpu", "cuda", "mps"] = "cuda",
         dtype: torch.dtype = torch.float16,
         frame_buffer_size: int = 1,
         width: int = 512,
@@ -466,7 +466,7 @@ class StreamDiffusionWrapper:
 
         try:
             if acceleration == "xformers":
-                stream.pipe.enable_xformers_memory_efficient_attention()
+                stream.pipe.enable_xformers_memory_efficient_attention() if self.device != "mps" else print("Currently xformers is not avaiable on mps device. Using normal mode instead.")
             if acceleration == "tensorrt":
                 from polygraphy import cuda
                 from streamdiffusion.acceleration.tensorrt import (
