@@ -599,18 +599,18 @@ class StreamDiffusionWrapper:
                         else stream.frame_bff_size,
                     )
 
-                cuda_steram = cuda.Stream()
+                cuda_stream = cuda.Stream()
 
                 vae_config = stream.vae.config
                 vae_dtype = stream.vae.dtype
 
                 stream.unet = UNet2DConditionModelEngine(
-                    unet_path, cuda_steram, use_cuda_graph=False
+                    unet_path, cuda_stream, use_cuda_graph=False
                 )
                 stream.vae = AutoencoderKLEngine(
                     vae_encoder_path,
                     vae_decoder_path,
-                    cuda_steram,
+                    cuda_stream,
                     stream.pipe.vae_scale_factor,
                     use_cuda_graph=False,
                 )
