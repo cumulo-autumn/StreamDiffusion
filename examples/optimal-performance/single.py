@@ -55,7 +55,14 @@ def image_generation_process(
         try:
             start_time = time.time()
 
-            x_outputs = stream.stream.txt2img_sd_turbo(1).cpu()
+            # Pick a supported way to seed it, or leave fully random
+            # (Longer descriptions in multi.py)
+            noise = None
+            # noise = 555
+            # noise = [1234]
+            # noise = stream.stream.noise_from_seeds(noise).neg()
+
+            x_outputs = stream.stream.txt2img_sd_turbo(1, noise).cpu()
             queue.put(x_outputs, block=False)
 
             fps = 1 / (time.time() - start_time)

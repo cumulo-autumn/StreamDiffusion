@@ -208,6 +208,7 @@ class StreamDiffusionWrapper:
         self,
         image: Optional[Union[str, Image.Image, torch.Tensor]] = None,
         prompt: Optional[str] = None,
+        noise: Optional[Union[torch.Tensor, int, List[int]]] = None,
     ) -> Union[Image.Image, List[Image.Image]]:
         """
         Performs img2img or txt2img based on the mode.
@@ -218,6 +219,12 @@ class StreamDiffusionWrapper:
             The image to generate from.
         prompt : Optional[str]
             The prompt to generate images from.
+        noise: Optional[Union[torch.Tensor, int, List[int]]]
+            This is the original noise latent to use for generation.
+            If a Tensor, it must be the proper size.
+            If List[int], it must be of length `batch_size` and will be used as random seeds for each image
+            int is a shorthand for List[int] when batch_size is 1
+            Throws an exception on improper usage (wrong type or size)
 
         Returns
         -------
@@ -225,12 +232,14 @@ class StreamDiffusionWrapper:
             The generated image.
         """
         if self.mode == "img2img":
-            return self.img2img(image, prompt)
+            return self.img2img(image, prompt, noise)
         else:
-            return self.txt2img(prompt)
+            return self.txt2img(prompt, noise)
 
     def txt2img(
-        self, prompt: Optional[str] = None
+        self,
+        prompt: Optional[str] = None,
+        noise: Optional[Union[torch.Tensor, int, List[int]]] = None,
     ) -> Union[Image.Image, List[Image.Image], torch.Tensor, np.ndarray]:
         """
         Performs txt2img.
@@ -239,6 +248,12 @@ class StreamDiffusionWrapper:
         ----------
         prompt : Optional[str]
             The prompt to generate images from.
+        noise: Optional[Union[torch.Tensor, int, List[int]]]
+            This is the original noise latent to use for generation.
+            If a Tensor, it must be the proper size.
+            If List[int], it must be of length `batch_size` and will be used as random seeds for each image
+            int is a shorthand for List[int] when batch_size is 1
+            Throws an exception on improper usage (wrong type or size)
 
         Returns
         -------
@@ -249,9 +264,9 @@ class StreamDiffusionWrapper:
             self.stream.update_prompt(prompt)
 
         if self.sd_turbo:
-            image_tensor = self.stream.txt2img_sd_turbo(self.batch_size)
+            image_tensor = self.stream.txt2img_sd_turbo(self.batch_size, noise)
         else:
-            image_tensor = self.stream.txt2img(self.frame_buffer_size)
+            image_tensor = self.stream.txt2img(self.frame_buffer_size, noise)
         image = self.postprocess_image(image_tensor, output_type=self.output_type)
 
         if self.use_safety_checker:
@@ -267,7 +282,9 @@ class StreamDiffusionWrapper:
         return image
 
     def img2img(
-        self, image: Union[str, Image.Image, torch.Tensor], prompt: Optional[str] = None
+        self,
+        image: Union[str, Image.Image, torch.Tensor], prompt: Optional[str] = None,
+        noise: Optional[Union[torch.Tensor, int, List[int]]] = None,
     ) -> Union[Image.Image, List[Image.Image], torch.Tensor, np.ndarray]:
         """
         Performs img2img.
@@ -276,6 +293,12 @@ class StreamDiffusionWrapper:
         ----------
         image : Union[str, Image.Image, torch.Tensor]
             The image to generate from.
+        noise: Optional[Union[torch.Tensor, int, List[int]]]
+            This is the original noise latent to use for generation - this will be mixed in with the source image rather than random noise
+            If a Tensor, it must be the proper size.
+            If List[int], it must be of length `batch_size` and will be used as random seeds for each image
+            int is a shorthand for List[int] when batch_size is 1
+            Throws an exception on improper usage (wrong type or size)
 
         Returns
         -------
@@ -288,7 +311,7 @@ class StreamDiffusionWrapper:
         if isinstance(image, str) or isinstance(image, Image.Image):
             image = self.preprocess_image(image)
 
-        image_tensor = self.stream(image)
+        image_tensor = self.stream(image, noise)
         image = self.postprocess_image(image_tensor, output_type=self.output_type)
 
         if self.use_safety_checker:

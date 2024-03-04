@@ -438,8 +438,13 @@ class StreamDiffusion:
 
     @torch.no_grad()
     def __call__(
-        self, x: Union[torch.Tensor, PIL.Image.Image, np.ndarray] = None
+        self, x: Union[torch.Tensor, PIL.Image.Image, np.ndarray] = None,
+        noise: Optional[Union[torch.Tensor, int, List[int]]] = None
     ) -> torch.Tensor:
+        """
+        if x is not None, do img2img with similar image filter
+        if x is None, do txt2img, with batch_size 1, optionally setting the noise
+        """
         start = torch.cuda.Event(enable_timing=True)
         end = torch.cuda.Event(enable_timing=True)
         start.record()
@@ -454,10 +459,7 @@ class StreamDiffusion:
                     return self.prev_image_result
             x_t_latent = self.encode_image(x)
         else:
-            # TODO: check the dimension of x_t_latent
-            x_t_latent = torch.randn((1, 4, self.latent_height, self.latent_width)).to(
-                device=self.device, dtype=self.dtype
-            )
+            x_t_latent = self.build_x_t_latent(batch_size=1, noise=noise)
         x_0_pred_out = self.predict_x0_batch(x_t_latent)
         x_output = self.decode_image(x_0_pred_out).detach().clone()
 
@@ -469,21 +471,17 @@ class StreamDiffusion:
         return x_output
 
     @torch.no_grad()
-    def txt2img(self, batch_size: int = 1) -> torch.Tensor:
-        x_0_pred_out = self.predict_x0_batch(
-            torch.randn((batch_size, 4, self.latent_height, self.latent_width)).to(
-                device=self.device, dtype=self.dtype
-            )
-        )
+    def txt2img(self, batch_size: int = 1, noise: Optional[Union[torch.Tensor, int, List[int]]] = None) -> torch.Tensor:
+        x_t_latent = self.build_x_t_latent(batch_size, noise)
+        x_0_pred_out = self.predict_x0_batch(x_t_latent)
         x_output = self.decode_image(x_0_pred_out).detach().clone()
         return x_output
 
-    def txt2img_sd_turbo(self, batch_size: int = 1) -> torch.Tensor:
-        x_t_latent = torch.randn(
-            (batch_size, 4, self.latent_height, self.latent_width),
-            device=self.device,
-            dtype=self.dtype,
-        )
+    def txt2img_sd_turbo(self,
+                         batch_size: int = 1,
+                         noise: Optional[Union[torch.Tensor, int, List[int]]] = None
+                         ) -> torch.Tensor:
+        x_t_latent = self.build_x_t_latent(batch_size, noise)
         model_pred = self.unet(
             x_t_latent,
             self.sub_timesteps_tensor,
@@ -494,3 +492,61 @@ class StreamDiffusion:
             x_t_latent - self.beta_prod_t_sqrt * model_pred
         ) / self.alpha_prod_t_sqrt
         return self.decode_image(x_0_pred_out)
+
+    def noise_size(self, batch_size) -> torch.Size:
+        return torch.Size((batch_size, 4, self.latent_height, self.latent_width))
+
+    def noise_from_seeds(self, seeds: List[int]) -> torch.Tensor:
+        """
+        This generates a seeded noise vector for all batch items.
+        seeds should be of length `batch_size`
+        Each image will we seeded with the proper seeded noise vector 
+        """
+        tensors = [torch.randn(
+            (4, self.latent_height, self.latent_width),
+            device=self.device,
+            dtype=self.dtype,
+            generator=torch.Generator(device=self.device).manual_seed(seed)) 
+            for seed in seeds]
+        return torch.stack(tensors)
+
+    def build_x_t_latent(self,
+                         batch_size: int,
+                         noise: Optional[Union[torch.Tensor, int, List[int]]] = None) -> torch.Tensor:
+        """
+        noise: Optional[Union[torch.Tensor, int, List[int]]]
+            This is the original noise latent to use for generation.
+            If a Tensor, it must be the proper size.
+            If List[int], it must be of length `batch_size` and will be used as random seeds for each image
+            int is a shorthand for List[int] when batch_size is 1
+            Throws an exception on improper usage (wrong type or size)
+        """
+        if batch_size < 1:
+            raise Exception(f"Batch size cannot be {batch_size}")
+
+        # Treat an int as list of size 1
+        if isinstance(noise, int):
+            noise = [noise]
+
+        # Cover remaining cases
+        if isinstance(noise, list):
+            if len(noise) != batch_size:
+                raise Exception(f"Noise list size {len(noise)} but batch size is {batch_size}")
+            if not isinstance(noise[0], int):
+                name = type(noise[0]).__name__
+                raise Exception(f"Expected List[int] got List[{name}]")
+            return self.noise_from_seeds(noise)
+        elif isinstance(noise, torch.Tensor):
+            expected_noise = self.noise_size(batch_size)
+            if noise.shape != expected_noise:
+                raise Exception(f"Expected noise of {expected_noise}, got {noise.shape}")
+            return noise
+        elif noise is None:
+            return torch.randn(
+                self.noise_size(batch_size),
+                device=self.device,
+                dtype=self.dtype,
+                )
+        else:
+            name = type(noise).__name__
+            raise Exception(f"Unsupported type of noise: {name}")
