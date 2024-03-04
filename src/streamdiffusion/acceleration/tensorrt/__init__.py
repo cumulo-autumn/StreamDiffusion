@@ -169,13 +169,13 @@ def accelerate_with_tensorrt(
 
     del vae
 
-    cuda_steram = cuda.Stream()
+    cuda_stream = cuda.Stream()
 
-    stream.unet = UNet2DConditionModelEngine(unet_engine_path, cuda_steram, use_cuda_graph=use_cuda_graph)
+    stream.unet = UNet2DConditionModelEngine(unet_engine_path, cuda_stream, use_cuda_graph=use_cuda_graph)
     stream.vae = AutoencoderKLEngine(
         vae_encoder_engine_path,
         vae_decoder_engine_path,
-        cuda_steram,
+        cuda_stream,
         stream.pipe.vae_scale_factor,
         use_cuda_graph=use_cuda_graph,
     )
