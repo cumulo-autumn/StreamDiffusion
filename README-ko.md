@@ -13,7 +13,7 @@
 
 StreamDiffusion은 실시간 이미지 생성을 위해 최적화 된 파이프라인입니다. diffusion을 기반으로 한 기존 이미지 생성 파이프라인과 비교하여, 압도적인 성능 개선을 이뤄냈습니다.
 
-[![arXiv](https://img.shields.io/badge/arXiv-2307.04725-b31b1b.svg)](https://arxiv.org/abs/2312.12491)
+[![arXiv](https://img.shields.io/badge/arXiv-2312.12491-b31b1b.svg)](https://arxiv.org/abs/2312.12491)
 [![Hugging Face Papers](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-papers-yellow)](https://huggingface.co/papers/2312.12491)
 
 StreamDiffusion을 개발하면서 세심한 지원과 의미 있는 피드백과 토론을 해주신 [Taku Fujimoto](https://twitter.com/AttaQjp), [Radamés Ajna](https://twitter.com/radamar), 그리고 Hugging Face 팀에게 진심으로 감사드립니다.
