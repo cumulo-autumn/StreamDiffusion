@@ -34,6 +34,7 @@ chmod +x start.sh
 ```
 
 then open `http://0.0.0.0:7860` in your browser.
+(*If `http://0.0.0:7860` does not work well, try `http://localhost:7860`)
 
 ### Running with Docker
 
