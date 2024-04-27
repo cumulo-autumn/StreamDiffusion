@@ -1,4 +1,5 @@
 import time
+
 from typing import List, Optional, Union, Any, Dict, Tuple, Literal
 
 import numpy as np
@@ -29,6 +30,8 @@ class StreamDiffusion:
         self.device = pipe.device
         self.dtype = torch_dtype
         self.generator = None
+
+        self.timer_event = getattr(torch, str(self.device).split(':', 1)[0])
 
         self.height = height
         self.width = width
@@ -440,8 +443,8 @@ class StreamDiffusion:
     def __call__(
         self, x: Union[torch.Tensor, PIL.Image.Image, np.ndarray] = None
     ) -> torch.Tensor:
-        start = torch.cuda.Event(enable_timing=True)
-        end = torch.cuda.Event(enable_timing=True)
+        start = self.timer_event.Event(enable_timing=True)
+        end = self.timer_event.Event(enable_timing=True)
         start.record()
         if x is not None:
             x = self.image_processor.preprocess(x, self.height, self.width).to(
@@ -463,7 +466,7 @@ class StreamDiffusion:
 
         self.prev_image_result = x_output
         end.record()
-        torch.cuda.synchronize()
+        self.timer_event.synchronize()
         inference_time = start.elapsed_time(end) / 1000
         self.inference_time_ema = 0.9 * self.inference_time_ema + 0.1 * inference_time
         return x_output

@@ -127,15 +127,16 @@ def run(
 
     results = []
 
-    start = torch.cuda.Event(enable_timing=True)
-    end = torch.cuda.Event(enable_timing=True)
+    timer_event = getattr(torch, "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
+    start = timer_event.Event(enable_timing=True)
+    end = timer_event.Event(enable_timing=True)
     for _ in tqdm(range(iterations)):
         start.record()
         out_tensor = stream.stream(image_tensor).cpu()
         queue.put(out_tensor)
         end.record()
 
-        torch.cuda.synchronize()
+        timer_event.synchronize()
         results.append(start.elapsed_time(end))
 
     print(f"Average time: {sum(results) / len(results)}ms")
