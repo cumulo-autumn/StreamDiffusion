@@ -28,6 +28,7 @@ class StreamDiffusion:
         cfg_type: Literal["none", "full", "self", "initialize"] = "self",
         generator: Optional[torch.Generator] = torch.Generator(),
         denoising_steps_num: Union[None, int] = None,
+        CM_lora_type: Literal["lcm", "Hyper_SD", "none"] = "none",
     ) -> None:
         self.device = pipe.device
         self.dtype = torch_dtype
@@ -40,6 +41,7 @@ class StreamDiffusion:
         self.latent_width = int(width // pipe.vae_scale_factor)
 
         self.cfg_type = cfg_type
+        self.CM_lora_type = CM_lora_type
 
         self.frame_bff_size = frame_buffer_size
 
@@ -99,6 +101,7 @@ class StreamDiffusion:
         adapter_name: Optional[Any] = None,
         **kwargs,
     ) -> None:
+        self.CM_lora_type = "lcm"
         self.pipe.load_lora_weights(
             pretrained_model_name_or_path_or_dict, adapter_name, **kwargs
         )
@@ -111,6 +114,7 @@ class StreamDiffusion:
         adapter_name: Optional[Any] = None,
         **kwargs,
     ) -> None:
+        self.CM_lora_type = "Hyper_SD"
         self.pipe.load_lora_weights(
             hf_hub_download(pretrained_model_name_or_path_or_dict,"Hyper-SD15-1step-lora.safetensors"), adapter_name, **kwargs
         )
@@ -517,15 +521,21 @@ class StreamDiffusion:
 
             if self.denoising_steps_num > 1:
                 x_0_pred_out = x_0_pred_batch[-1].unsqueeze(0)
-                if self.do_add_noise:
+                if self.CM_lora_type == "Hyper_SD":
                     self.x_t_latent_buffer = (
                         self.alpha_prod_t_sqrt[1:] * x_0_pred_batch[:-1]
-                        + self.beta_prod_t_sqrt[1:] * self.init_noise[1:]
+                        + self.beta_prod_t_sqrt[1:] * model_pred[:-1]
                     )
-                else:
-                    self.x_t_latent_buffer = (
-                        self.alpha_prod_t_sqrt[1:] * x_0_pred_batch[:-1]
-                    )
+                elif self.CM_lora_type == "lcm" or self.CM_lora_type == "none":
+                    if self.do_add_noise:
+                        self.x_t_latent_buffer = (
+                            self.alpha_prod_t_sqrt[1:] * x_0_pred_batch[:-1]
+                            + self.beta_prod_t_sqrt[1:] * self.init_noise[1:]
+                        )
+                    else:
+                        self.x_t_latent_buffer = (
+                            self.alpha_prod_t_sqrt[1:] * x_0_pred_batch[:-1]
+                        )
             else:
                 x_0_pred_out = x_0_pred_batch
                 self.x_t_latent_buffer = None
@@ -539,16 +549,19 @@ class StreamDiffusion:
                 )
                 x_0_pred, model_pred = self.unet_step(x_t_latent, t, idx)
                 if idx < len(self.sub_timesteps_tensor) - 1:
-                    if self.do_add_noise:
-                        x_t_latent = self.alpha_prod_t_sqrt[
-                            idx + 1
-                        ] * x_0_pred + self.beta_prod_t_sqrt[
-                            idx + 1
-                        ] * torch.randn_like(
-                            x_0_pred, device=self.device, dtype=self.dtype
-                        )
-                    else:
-                        x_t_latent = self.alpha_prod_t_sqrt[idx + 1] * x_0_pred
+                    if self.CM_lora_type == "Hyper_SD":
+                        x_t_latent = self.alpha_prod_t_sqrt[idx + 1] * x_0_pred + self.beta_prod_t_sqrt[idx + 1] * model_pred
+                    elif self.CM_lora_type == "lcm" or self.CM_lora_type == "none":
+                        if self.do_add_noise:
+                            x_t_latent = self.alpha_prod_t_sqrt[
+                                idx + 1
+                            ] * x_0_pred + self.beta_prod_t_sqrt[
+                                idx + 1
+                            ] * torch.randn_like(
+                                x_0_pred, device=self.device, dtype=self.dtype
+                            )
+                        else:
+                            x_t_latent = self.alpha_prod_t_sqrt[idx + 1] * x_0_pred
             x_0_pred_out = x_0_pred
 
         return x_0_pred_out
