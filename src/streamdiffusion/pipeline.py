@@ -112,11 +112,12 @@ class StreamDiffusion:
             str, Dict[str, torch.Tensor]
         ] = "ByteDance/Hyper-SD",
         adapter_name: Optional[Any] = None,
+        model_name: Optional[str] = None,
         **kwargs,
     ) -> None:
         self.CM_lora_type = "Hyper_SD"
         self.pipe.load_lora_weights(
-            hf_hub_download(pretrained_model_name_or_path_or_dict,"Hyper-SD15-1step-lora.safetensors"), adapter_name, **kwargs
+            hf_hub_download(pretrained_model_name_or_path_or_dict,model_name), adapter_name, **kwargs
         )
 
     def load_lora(

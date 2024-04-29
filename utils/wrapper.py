@@ -70,6 +70,17 @@ class StreamDiffusionWrapper:
             The lcm_lora_id to load, by default None.
             If None, the default LCM-LoRA
             ("latent-consistency/lcm-lora-sdv1-5") will be used.
+        HyperSD_lora_id : Optional[str], optional
+            The HyperSD_lora_id to load, by default None.
+            If None, the default Hyper-SD
+            ("ByteDance/Hyper-SD/Hyper-SD15-1step-lora.safetensors") will be used.
+
+            "Hyper_SD_1step": "Hyper-SD15-1step-lora.safetensors"
+            "Hyper_SD_2step" : "Hyper-SD15-2steps-lora.safetensors"
+            "Hyper_SD_4step" : "Hyper-SD15-4steps-lora.safetensors"
+            "Hyper_SD_8step" : "Hyper-SD15-8steps-lora.safetensors"
+
+            Select the Hyper_SD_LoRA_name from the above list
         vae_id : Optional[str], optional
             The vae_id to load, by default None.
             If None, the default TinyVAE
@@ -444,6 +455,7 @@ class StreamDiffusionWrapper:
         )
         if not self.sd_turbo:
             if CM_lora_type == "lcm":
+                print("-----------------Using lcm-----------------")
                 if lcm_lora_id is not None:
                     stream.load_lcm_lora(
                         pretrained_model_name_or_path_or_dict=lcm_lora_id
@@ -452,13 +464,19 @@ class StreamDiffusionWrapper:
                     stream.load_lcm_lora()
                 stream.fuse_lora()
                 
-            elif CM_lora_type == "Hyper_SD":
+            elif CM_lora_type == "Hyper_SD" :
+
+                print(f"-----------------Using Hyper_SD {HyperSD_lora_id}-----------------")
                 if HyperSD_lora_id is not None:
                     stream.load_HyperSD_lora(
-                        pretrained_model_name_or_path_or_dict=HyperSD_lora_id
+                        pretrained_model_name_or_path_or_dict="ByteDance/Hyper-SD",
+                        model_name = HyperSD_lora_id
                         )
                 else:
-                    stream.load_HyperSD_lora()
+                    stream.load_HyperSD_lora(
+                        pretrained_model_name_or_path_or_dict="ByteDance/Hyper-SD",
+                        model_name = "Hyper-SD15-1step-lora.safetensors"
+                    )
                 stream.fuse_lora()
             else: # CM_lora_type == "none"
                 pass

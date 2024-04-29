@@ -154,6 +154,7 @@ def image_generation_process(
         acceleration=acceleration,
         do_add_noise=do_add_noise,
         CM_lora_type="Hyper_SD",
+        HyperSD_lora_id = "Hyper-SD15-2steps-lora.safetensors", 
         enable_similar_image_filter=enable_similar_image_filter,
         similar_image_filter_threshold=similar_image_filter_threshold,
         similar_image_filter_max_skip_frame=similar_image_filter_max_skip_frame,
