@@ -152,6 +152,23 @@ class StreamDiffusion:
             self.generator.seed()
         else:
             self.generator.manual_seed(seed)
+
+    def generate_t_index_list(
+            self,
+            noise_strength: float = 0.4,
+            num_inference_steps: int = 50,
+            mode: Literal['linear'] ='linear',
+            ) -> List[int]:
+        initial_t_index = int((num_inference_steps-1) * (1-noise_strength))
+        t_index_list = [initial_t_index]
+        if mode == 'linear':
+            t_index_interval = ((num_inference_steps-1) - initial_t_index) / (self.denoising_steps_num-1)
+            for idx in range(1, self.denoising_steps_num):
+                t_index = initial_t_index + int(idx * t_index_interval)
+                t_index_list.append(t_index)
+        else:
+            raise ValueError(f"Unsupported mode {mode}")
+        return t_index_list
             
     @torch.no_grad()
     def update_scheduler(
