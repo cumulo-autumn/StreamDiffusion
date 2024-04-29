@@ -27,6 +27,7 @@ class StreamDiffusionWrapper:
         mode: Literal["img2img", "txt2img"] = "img2img",
         output_type: Literal["pil", "pt", "np", "latent"] = "pil",
         lcm_lora_id: Optional[str] = None,
+        HyperSD_lora_id: Optional[str] = None,
         vae_id: Optional[str] = None,
         device: Literal["cpu", "cuda"] = "cuda",
         dtype: torch.dtype = torch.float16,
@@ -37,7 +38,7 @@ class StreamDiffusionWrapper:
         acceleration: Literal["none", "xformers", "tensorrt"] = "tensorrt",
         do_add_noise: bool = True,
         device_ids: Optional[List[int]] = None,
-        use_lcm_lora: bool = True,
+        CM_lora_type: Literal["lcm", "Hyper_SD", "none"] = "lcm",
         use_tiny_vae: bool = True,
         enable_similar_image_filter: bool = False,
         similar_image_filter_threshold: float = 0.98,
@@ -149,16 +150,18 @@ class StreamDiffusionWrapper:
         self.use_denoising_batch = use_denoising_batch
         self.use_safety_checker = use_safety_checker
 
+
         self.stream: StreamDiffusion = self._load_model(
             model_id_or_path=model_id_or_path,
             lora_dict=lora_dict,
             lcm_lora_id=lcm_lora_id,
+            HyperSD_lora_id=HyperSD_lora_id,
             vae_id=vae_id,
             t_index_list=t_index_list,
             acceleration=acceleration,
             warmup=warmup,
             do_add_noise=do_add_noise,
-            use_lcm_lora=use_lcm_lora,
+            CM_lora_type = CM_lora_type,
             use_tiny_vae=use_tiny_vae,
             cfg_type=cfg_type,
             seed=seed,
@@ -353,11 +356,12 @@ class StreamDiffusionWrapper:
         t_index_list: List[int],
         lora_dict: Optional[Dict[str, float]] = None,
         lcm_lora_id: Optional[str] = None,
+        HyperSD_lora_id: Optional[str] = None,
         vae_id: Optional[str] = None,
         acceleration: Literal["none", "xformers", "tensorrt"] = "tensorrt",
         warmup: int = 10,
         do_add_noise: bool = True,
-        use_lcm_lora: bool = True,
+        CM_lora_type: Literal["lcm", "Hyper_SD", "none"] = "lcm",
         use_tiny_vae: bool = True,
         cfg_type: Literal["none", "full", "self", "initialize"] = "self",
         seed: int = 2,
@@ -439,7 +443,7 @@ class StreamDiffusionWrapper:
             cfg_type=cfg_type,
         )
         if not self.sd_turbo:
-            if use_lcm_lora:
+            if CM_lora_type == "lcm":
                 if lcm_lora_id is not None:
                     stream.load_lcm_lora(
                         pretrained_model_name_or_path_or_dict=lcm_lora_id
@@ -447,12 +451,25 @@ class StreamDiffusionWrapper:
                 else:
                     stream.load_lcm_lora()
                 stream.fuse_lora()
+                
+            elif CM_lora_type == "Hyper_SD":
+                if HyperSD_lora_id is not None:
+                    stream.load_HyperSD_lora(
+                        pretrained_model_name_or_path_or_dict=HyperSD_lora_id
+                        )
+                else:
+                    stream.load_HyperSD_lora()
+                stream.fuse_lora()
+            else: # CM_lora_type == "none"
+                pass
+
 
             if lora_dict is not None:
                 for lora_name, lora_scale in lora_dict.items():
                     stream.load_lora(lora_name)
                     stream.fuse_lora(lora_scale=lora_scale)
                     print(f"Use LoRA: {lora_name} in weights {lora_scale}")
+            
 
         if use_tiny_vae:
             if vae_id is not None:
@@ -492,9 +509,9 @@ class StreamDiffusionWrapper:
                 ):
                     maybe_path = Path(model_id_or_path)
                     if maybe_path.exists():
-                        return f"{maybe_path.stem}--lcm_lora-{use_lcm_lora}--tiny_vae-{use_tiny_vae}--max_batch-{max_batch_size}--min_batch-{min_batch_size}--mode-{self.mode}"
+                        return f"{maybe_path.stem}--CM_lora_type-{CM_lora_type}--tiny_vae-{use_tiny_vae}--max_batch-{max_batch_size}--min_batch-{min_batch_size}--mode-{self.mode}"
                     else:
-                        return f"{model_id_or_path}--lcm_lora-{use_lcm_lora}--tiny_vae-{use_tiny_vae}--max_batch-{max_batch_size}--min_batch-{min_batch_size}--mode-{self.mode}"
+                        return f"{model_id_or_path}--CM_lora_type-{CM_lora_type}--tiny_vae-{use_tiny_vae}--max_batch-{max_batch_size}--min_batch-{min_batch_size}--mode-{self.mode}"
 
                 engine_dir = Path(engine_dir)
                 unet_path = os.path.join(

@@ -40,7 +40,7 @@ def image_generation_process(
         frame_buffer_size=1,
         warmup=10,
         acceleration=acceleration,
-        use_lcm_lora=False,
+        CM_lora_type="none",
         mode="txt2img",
         cfg_type="none",
         use_denoising_batch=True,

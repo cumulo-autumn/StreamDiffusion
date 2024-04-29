@@ -4,6 +4,7 @@ from typing import List, Optional, Union, Any, Dict, Tuple, Literal
 import numpy as np
 import PIL.Image
 import torch
+from huggingface_hub import hf_hub_download
 from diffusers import LCMScheduler, StableDiffusionPipeline
 from diffusers.image_processor import VaeImageProcessor
 from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import (
@@ -100,6 +101,18 @@ class StreamDiffusion:
     ) -> None:
         self.pipe.load_lora_weights(
             pretrained_model_name_or_path_or_dict, adapter_name, **kwargs
+        )
+
+    def load_HyperSD_lora(
+        self,
+        pretrained_model_name_or_path_or_dict: Union[
+            str, Dict[str, torch.Tensor]
+        ] = "ByteDance/Hyper-SD",
+        adapter_name: Optional[Any] = None,
+        **kwargs,
+    ) -> None:
+        self.pipe.load_lora_weights(
+            hf_hub_download(pretrained_model_name_or_path_or_dict,"Hyper-SD15-1step-lora.safetensors"), adapter_name, **kwargs
         )
 
     def load_lora(

@@ -141,7 +141,7 @@ def image_generation_process(
     similar_image_filter_max_skip_frame : int, optional
         The max skip frame for similar image filter, by default 10.
     """
-    
+    ##CM_lora_type="lcm" or "Hyper_SD" or "None"
     global inputs
     stream = StreamDiffusionWrapper(
         model_id_or_path=model_id_or_path,
@@ -153,6 +153,7 @@ def image_generation_process(
         warmup=10,
         acceleration=acceleration,
         do_add_noise=do_add_noise,
+        CM_lora_type="Hyper_SD",
         enable_similar_image_filter=enable_similar_image_filter,
         similar_image_filter_threshold=similar_image_filter_threshold,
         similar_image_filter_max_skip_frame=similar_image_filter_max_skip_frame,
