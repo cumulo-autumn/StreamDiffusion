@@ -642,7 +642,7 @@ class StreamDiffusionWrapper:
             guidance_scale=1.1
             if stream.cfg_type in ["full", "self", "initialize"]
             else 1.0,
-            generator=torch.manual_seed(seed),
+            generator=torch.Generator(),
             seed=seed,
         )
 

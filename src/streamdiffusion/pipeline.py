@@ -17,7 +17,7 @@ class StreamDiffusion:
     def __init__(
         self,
         pipe: StableDiffusionPipeline,
-        t_index_list: List[int],
+        t_index_list: Union[None, List[int]] = None,
         torch_dtype: torch.dtype = torch.float16,
         width: int = 512,
         height: int = 512,
@@ -25,10 +25,12 @@ class StreamDiffusion:
         use_denoising_batch: bool = True,
         frame_buffer_size: int = 1,
         cfg_type: Literal["none", "full", "self", "initialize"] = "self",
+        generator: Optional[torch.Generator] = torch.Generator(),
+        denoising_steps_num: Union[None, int] = None,
     ) -> None:
         self.device = pipe.device
         self.dtype = torch_dtype
-        self.generator = None
+        self.generator = generator
 
         self.height = height
         self.width = width
@@ -36,11 +38,23 @@ class StreamDiffusion:
         self.latent_height = int(height // pipe.vae_scale_factor)
         self.latent_width = int(width // pipe.vae_scale_factor)
 
-        self.frame_bff_size = frame_buffer_size
-        self.denoising_steps_num = len(t_index_list)
-
         self.cfg_type = cfg_type
 
+        self.frame_bff_size = frame_buffer_size
+
+        # Set time step index list and denoising steps number
+        if t_index_list is None and denoising_steps_num is None:
+            raise ValueError(
+                "Please provide either t_index_list or num_denosing_steps"
+            )
+        self.denoising_steps_num = denoising_steps_num
+        if t_index_list is not None:
+            if denoising_steps_num is not None:
+                print("num_denoising_steps is overwritten by the length of the provieded t_index_list")
+            self.denoising_steps_num = len(t_index_list)
+        self.t_list = t_index_list
+
+        # Decide the unet batch size
         if use_denoising_batch:
             self.batch_size = self.denoising_steps_num * frame_buffer_size
             if self.cfg_type == "initialize":
@@ -57,8 +71,7 @@ class StreamDiffusion:
             self.trt_unet_batch_size = self.frame_bff_size
             self.batch_size = frame_buffer_size
 
-        self.t_list = t_index_list
-
+        # Image generation settings
         self.do_add_noise = do_add_noise
         self.use_denoising_batch = use_denoising_batch
 
@@ -66,6 +79,7 @@ class StreamDiffusion:
         self.similar_filter = SimilarImageFilter()
         self.prev_image_result = None
 
+        # Set pipeline components
         self.pipe = pipe
         self.image_processor = VaeImageProcessor(pipe.vae_scale_factor)
 
@@ -120,67 +134,35 @@ class StreamDiffusion:
     def disable_similar_image_filter(self) -> None:
         self.similar_image_filter = False
 
+    def init_generator(self, seed: Union[None, int] = None) -> None:
+        if seed is None or seed < 0:
+            self.generator.seed()
+        else:
+            self.generator.manual_seed(seed)
+            
     @torch.no_grad()
-    def prepare(
-        self,
-        prompt: str,
-        negative_prompt: str = "",
-        num_inference_steps: int = 50,
-        guidance_scale: float = 1.2,
-        delta: float = 1.0,
-        generator: Optional[torch.Generator] = torch.Generator(),
-        seed: int = 2,
+    def update_scheduler(
+        self, 
+        t_index_list: Union[None, List[int]] = None,
+        num_inference_steps: int = 50
     ) -> None:
-        self.generator = generator
-        self.generator.manual_seed(seed)
-        # initialize x_t_latent (it can be any random tensor)
-        if self.denoising_steps_num > 1:
-            self.x_t_latent_buffer = torch.zeros(
-                (
-                    (self.denoising_steps_num - 1) * self.frame_bff_size,
-                    4,
-                    self.latent_height,
-                    self.latent_width,
-                ),
-                dtype=self.dtype,
-                device=self.device,
-            )
-        else:
-            self.x_t_latent_buffer = None
-
-        if self.cfg_type == "none":
-            self.guidance_scale = 1.0
-        else:
-            self.guidance_scale = guidance_scale
-        self.delta = delta
-
-        do_classifier_free_guidance = False
-        if self.guidance_scale > 1.0:
-            do_classifier_free_guidance = True
-
-        encoder_output = self.pipe.encode_prompt(
-            prompt=prompt,
-            device=self.device,
-            num_images_per_prompt=1,
-            do_classifier_free_guidance=do_classifier_free_guidance,
-            negative_prompt=negative_prompt,
-        )
-        self.prompt_embeds = encoder_output[0].repeat(self.batch_size, 1, 1)
-
-        if self.use_denoising_batch and self.cfg_type == "full":
-            uncond_prompt_embeds = encoder_output[1].repeat(self.batch_size, 1, 1)
-        elif self.cfg_type == "initialize":
-            uncond_prompt_embeds = encoder_output[1].repeat(self.frame_bff_size, 1, 1)
-
-        if self.guidance_scale > 1.0 and (
-            self.cfg_type == "initialize" or self.cfg_type == "full"
-        ):
-            self.prompt_embeds = torch.cat(
-                [uncond_prompt_embeds, self.prompt_embeds], dim=0
-            )
-
         self.scheduler.set_timesteps(num_inference_steps, self.device)
         self.timesteps = self.scheduler.timesteps.to(self.device)
+
+        # Sanity check for t_index_list
+        if t_index_list is not None:
+            if len(t_index_list) != self.denoising_steps_num:
+                raise ValueError(
+                    f"The length of the provided t_index_list {len(t_index_list)} does not match the denoising_steps_num {self.denoising_steps_num}"
+                )
+            self.t_list = t_index_list
+        
+        if self.t_list is None:
+            raise ValueError("Please provide t_index_list")
+        
+        if max(self.t_list) >= len(self.timesteps):
+            raise ValueError(f"The maximum value of t_index_list is out of the range of the timesteps list. Current timestep list is {self.timesteps}")
+        
 
         # make sub timesteps list based on the indices in the t_list list and the values in the timesteps list
         self.sub_timesteps = []
@@ -195,13 +177,6 @@ class StreamDiffusion:
             repeats=self.frame_bff_size if self.use_denoising_batch else 1,
             dim=0,
         )
-
-        self.init_noise = torch.randn(
-            (self.batch_size, 4, self.latent_height, self.latent_width),
-            generator=generator,
-        ).to(device=self.device, dtype=self.dtype)
-
-        self.stock_noise = torch.zeros_like(self.init_noise)
 
         c_skip_list = []
         c_out_list = []
@@ -240,6 +215,7 @@ class StreamDiffusion:
             .view(len(self.t_list), 1, 1, 1)
             .to(dtype=self.dtype, device=self.device)
         )
+
         self.alpha_prod_t_sqrt = torch.repeat_interleave(
             alpha_prod_t_sqrt,
             repeats=self.frame_bff_size if self.use_denoising_batch else 1,
@@ -250,16 +226,124 @@ class StreamDiffusion:
             repeats=self.frame_bff_size if self.use_denoising_batch else 1,
             dim=0,
         )
+    
+    @torch.no_grad()
+    def update_prompt(
+        self, 
+        prompt: Union[str, List[str]], 
+        negative_prompt: Union[None, str, List[str]] = None,
+        ) -> None:
+        # Set the prompt embeds cache
+        # Shape: (Bp, S, D), (Bp: batch size of input prompt, S: sequence length, D: hidden size)
+        if negative_prompt is None:
+            encoder_output = self.pipe.encode_prompt(
+                prompt=prompt,
+                device=self.device,
+                num_images_per_prompt=1,
+                do_classifier_free_guidance=False,
+            )
+        else:
+            encoder_output = self.pipe.encode_prompt(
+                prompt=prompt,
+                device=self.device,
+                num_images_per_prompt=1,
+                do_classifier_free_guidance=True,
+                negative_prompt=negative_prompt,
+            )
+            self.negative_prompt_embeds = encoder_output[1]
+        self.prompt_embeds = encoder_output[0].repeat(self.batch_size, 1, 1)
+
+        if self.use_denoising_batch and self.cfg_type == "full":
+            uncond_prompt_embeds = self.negative_prompt_embeds.repeat(self.batch_size, 1, 1)
+        elif self.cfg_type == "initialize":
+            uncond_prompt_embeds = self.negative_prompt_embeds.repeat(self.frame_bff_size, 1, 1)
+
+        if self.cfg_type == "initialize" or self.cfg_type == "full":
+            self.prompt_embeds = torch.cat(
+                [uncond_prompt_embeds, self.prompt_embeds], dim=0
+            )
 
     @torch.no_grad()
-    def update_prompt(self, prompt: str) -> None:
-        encoder_output = self.pipe.encode_prompt(
-            prompt=prompt,
-            device=self.device,
-            num_images_per_prompt=1,
-            do_classifier_free_guidance=False,
-        )
-        self.prompt_embeds = encoder_output[0].repeat(self.batch_size, 1, 1)
+    def update_noise(self, noise: Union[None, torch.Tensor] = None) -> None:
+        if noise is None:
+            self.init_noise = torch.randn(
+                (self.batch_size, 4, self.latent_height, self.latent_width),
+                generator=self.generator,
+            ).to(device=self.device, dtype=self.dtype)
+        else:
+            if noise.size() != self.init_noise.size():
+                raise ValueError(
+                    f"noise size {noise.size()} does not match the init_noise size {self.init_noise.size()}"
+                )
+            self.init_noise = noise.to(device=self.device, dtype=self.dtype)
+        # Noise stock for R-CFG
+        # TODO: Re-implement R-CFG. The stock noise would be removed in the future
+        self.stock_noise = torch.zeros_like(self.init_noise)
+
+    @torch.no_grad()
+    def update_cfg_setting(
+        self, 
+        guidance_scale: float = 1.0,
+        delta: float = 1.0,
+        ) -> None:
+        self.guidance_scale = guidance_scale
+        self.delta = delta
+    
+    def init_stream_buffer(
+            self, 
+            x_t_latent_buffer: Union[None, torch.Tensor] = None
+            ) -> None:
+        # initialize x_t_latent (it can be any random tensor)
+        if self.denoising_steps_num > 1:
+            # StramBatch shape: (B, C, H, W)
+            B = (self.denoising_steps_num - 1) * self.frame_bff_size
+            C = 4
+            H = self.latent_height
+            W = self.latent_width
+            if x_t_latent_buffer is None:
+                self.x_t_latent_buffer = torch.zeros((B, C, H, W), device=self.device, dtype=self.dtype)
+            else:
+                if x_t_latent_buffer.size() != (B, C, H, W):
+                    raise ValueError(
+                        f"x_t_latent_buffer size {x_t_latent_buffer.size()} does not match the expected size {(B, C, H, W)}"
+                    )
+                self.x_t_latent_buffer = x_t_latent_buffer
+        else:
+            self.x_t_latent_buffer = None
+
+    @torch.no_grad()
+    def prepare(
+        self,
+        prompt: str,
+        negative_prompt: Union[None, str] = None,
+        num_inference_steps: int = 50,
+        guidance_scale: float = 1.2,
+        delta: float = 1.0,
+        generator: Optional[torch.Generator] = None,
+        seed: Union[None, int] = None,
+        t_index_list: Union[None, List[int]] = None,
+    ) -> None:
+        # initialize the generator for random number generation
+        if generator is not None:
+            self.generator = generator
+        self.init_generator(seed)
+
+        # initialize stream batch
+        self.init_stream_buffer()
+
+        # initialize the CFG settings
+        self.update_cfg_setting(guidance_scale, delta)
+
+        # set prompt embeds cache
+        if (self.cfg_type == "initialize" or self.cfg_type == "full") and negative_prompt is None:
+            negative_prompt = ""
+        self.update_prompt(prompt, negative_prompt)
+
+        # set scheduler cache
+        self.update_scheduler(t_index_list, num_inference_steps)
+        
+        # set noise cache
+        self.update_noise()
 
     def add_noise(
         self,
@@ -292,7 +376,6 @@ class StreamDiffusion:
             denoised_batch = (
                 self.c_out[idx] * F_theta + self.c_skip[idx] * x_t_latent_batch
             )
-
         return denoised_batch
 
     def unet_step(
@@ -301,10 +384,12 @@ class StreamDiffusion:
         t_list: Union[torch.Tensor, list[int]],
         idx: Optional[int] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-        if self.guidance_scale > 1.0 and (self.cfg_type == "initialize"):
+        
+        # TODO: Re-implement R-CFG according to the equation in the paper
+        if self.cfg_type == "initialize":
             x_t_latent_plus_uc = torch.concat([x_t_latent[0:1], x_t_latent], dim=0)
             t_list = torch.concat([t_list[0:1], t_list], dim=0)
-        elif self.guidance_scale > 1.0 and (self.cfg_type == "full"):
+        elif self.cfg_type == "full":
             x_t_latent_plus_uc = torch.concat([x_t_latent, x_t_latent], dim=0)
             t_list = torch.concat([t_list, t_list], dim=0)
         else:
@@ -317,30 +402,30 @@ class StreamDiffusion:
             return_dict=False,
         )[0]
 
-        if self.guidance_scale > 1.0 and (self.cfg_type == "initialize"):
+        if self.cfg_type == "initialize":
             noise_pred_text = model_pred[1:]
             self.stock_noise = torch.concat(
                 [model_pred[0:1], self.stock_noise[1:]], dim=0
-            )  # ここコメントアウトでself out cfg
-        elif self.guidance_scale > 1.0 and (self.cfg_type == "full"):
+            )
+        elif self.cfg_type == "full":
             noise_pred_uncond, noise_pred_text = model_pred.chunk(2)
         else:
             noise_pred_text = model_pred
-        if self.guidance_scale > 1.0 and (
-            self.cfg_type == "self" or self.cfg_type == "initialize"
-        ):
+        if self.cfg_type == "self" or self.cfg_type == "initialize":
             noise_pred_uncond = self.stock_noise * self.delta
+
         if self.guidance_scale > 1.0 and self.cfg_type != "none":
             model_pred = noise_pred_uncond + self.guidance_scale * (
                 noise_pred_text - noise_pred_uncond
             )
         else:
             model_pred = noise_pred_text
-
+        
         # compute the previous noisy sample x_t -> x_t-1
         if self.use_denoising_batch:
             denoised_batch = self.scheduler_step_batch(model_pred, x_t_latent, idx)
             if self.cfg_type == "self" or self.cfg_type == "initialize":
+                # TODO: Re-implement R-CFG
                 scaled_noise = self.beta_prod_t_sqrt * self.stock_noise
                 delta_x = self.scheduler_step_batch(model_pred, scaled_noise, idx)
                 alpha_next = torch.concat(
@@ -363,7 +448,6 @@ class StreamDiffusion:
                     [self.init_noise[1:], self.init_noise[0:1]], dim=0
                 )
                 self.stock_noise = init_noise + delta_x
-
         else:
             # denoised_batch = self.scheduler.step(model_pred, t_list[0], x_t_latent).denoised
             denoised_batch = self.scheduler_step_batch(model_pred, x_t_latent, idx)
@@ -393,9 +477,12 @@ class StreamDiffusion:
             t_list = self.sub_timesteps_tensor
             if self.denoising_steps_num > 1:
                 x_t_latent = torch.cat((x_t_latent, prev_latent_batch), dim=0)
+
+                # TODO: Re-implement R-CFG. The stock noise would be removed in the future
                 self.stock_noise = torch.cat(
                     (self.init_noise[0:1], self.stock_noise[:-1]), dim=0
                 )
+                
             x_0_pred_batch, model_pred = self.unet_step(x_t_latent, t_list)
 
             if self.denoising_steps_num > 1:
@@ -438,26 +525,33 @@ class StreamDiffusion:
 
     @torch.no_grad()
     def __call__(
-        self, x: Union[torch.Tensor, PIL.Image.Image, np.ndarray] = None
+        self, 
+        x: Union[torch.Tensor, PIL.Image.Image, np.ndarray] = None,
+        x_t_latent: Union[None, torch.Tensor] = None,
     ) -> torch.Tensor:
         start = torch.cuda.Event(enable_timing=True)
         end = torch.cuda.Event(enable_timing=True)
         start.record()
-        if x is not None:
-            x = self.image_processor.preprocess(x, self.height, self.width).to(
-                device=self.device, dtype=self.dtype
-            )
-            if self.similar_image_filter:
-                x = self.similar_filter(x)
-                if x is None:
-                    time.sleep(self.inference_time_ema)
-                    return self.prev_image_result
-            x_t_latent = self.encode_image(x)
+
+        # Set x_t_latent. Shape: (1, 4, H, W)
+        if x_t_latent is not None:
+            x_t_latent = x_t_latent.to(device=self.device, dtype=self.dtype)
         else:
-            # TODO: check the dimension of x_t_latent
-            x_t_latent = torch.randn((1, 4, self.latent_height, self.latent_width)).to(
-                device=self.device, dtype=self.dtype
-            )
+            if x is not None:
+                x = self.image_processor.preprocess(x, self.height, self.width).to(
+                    device=self.device, dtype=self.dtype
+                )
+                if self.similar_image_filter:
+                    x = self.similar_filter(x)
+                    if x is None:
+                        time.sleep(self.inference_time_ema)
+                        return self.prev_image_result
+                x_t_latent = self.encode_image(x)
+            else:
+                # TODO: check the dimension of x_t_latent
+                x_t_latent = torch.randn((1, 4, self.latent_height, self.latent_width)).to(
+                    device=self.device, dtype=self.dtype
+                )
         x_0_pred_out = self.predict_x0_batch(x_t_latent)
         x_output = self.decode_image(x_0_pred_out).detach().clone()
 
