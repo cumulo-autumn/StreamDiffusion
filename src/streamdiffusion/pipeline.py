@@ -112,7 +112,7 @@ class StreamDiffusion:
             str, Dict[str, torch.Tensor]
         ] = "ByteDance/Hyper-SD",
         adapter_name: Optional[Any] = None,
-        model_name: Optional[str] = None,
+        model_name: Optional[str] = "Hyper-SD15-1step-lora.safetensors",
         **kwargs,
     ) -> None:
         self.CM_lora_type = "Hyper_SD"
