@@ -136,16 +136,16 @@ class StreamDiffusion:
             safe_fusing=safe_fusing,
         )
 
-    def load_controlnet(self, controlnet_dict: Dict[str, float]) -> None:
+    def load_controlnet(self, controlnet_dicts: List[Dict[str, float]]) -> None:
         controlnets = [
-            ControlNetModel.from_pretrained(controlnet_name_or_path).to(self.device, self.dtype)
-            for controlnet_name_or_path in controlnet_dict.keys()
+            ControlNetModel.from_pretrained(list(controlnet_dict.keys())[0]).to(self.device, self.dtype)
+            for controlnet_dict in controlnet_dicts
         ]
 
         self.unet = UNet2DConditionControlNetModel(
             unet=self.unet,
             controlnets=controlnets,
-            controlnet_scales=list(controlnet_dict.values()),
+            controlnet_scales=[list(controlnet_dict.values())[0] for controlnet_dict in controlnet_dicts],
         )
 
     def enable_similar_image_filter(self, threshold: float = 0.98, max_skip_frame: float = 10) -> None:

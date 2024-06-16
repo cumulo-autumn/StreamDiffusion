@@ -24,7 +24,7 @@ class StreamDiffusionWrapper:
         model_id_or_path: str,
         t_index_list: List[int],
         lora_dict: Optional[Dict[str, float]] = None,
-        controlnet_dict: Optional[Dict[str, float]] = None,
+        controlnet_dicts: Optional[List[Dict[str, float]]] = None,
         mode: Literal["img2img", "txt2img"] = "img2img",
         output_type: Literal["pil", "pt", "np", "latent"] = "pil",
         lcm_lora_id: Optional[str] = None,
@@ -62,10 +62,10 @@ class StreamDiffusionWrapper:
             The lora_dict to load, by default None.
             Keys are the LoRA names and values are the LoRA scales.
             Example: {'LoRA_1' : 0.5 , 'LoRA_2' : 0.7 ,...}
-        controlnet_dict : Optional[Dict[str, float]], optional
-            The controlnet_dict to load, by default None.
+        controlnet_dicts : Optional[List[Dict[str, float]]], optional
+            The controlnet_dicts to load, by default None.
             Keys are the controlnet names and values are the controlnet scales.
-            Example: {'controlnet_1' : 0.5 , 'controlnet_2' : 0.7 ,...}
+            Example: [{'controlnet_1' : 0.5}, {'controlnet_2' : 0.7},...]
         mode : Literal["img2img", "txt2img"], optional
             txt2img or img2img, by default "img2img".
         output_type : Literal["pil", "pt", "np", "latent"], optional
@@ -153,12 +153,12 @@ class StreamDiffusionWrapper:
         self.use_denoising_batch = use_denoising_batch
         self.use_safety_checker = use_safety_checker
 
-        self.is_controlnet_enabled = controlnet_dict is not None
+        self.is_controlnet_enabled = controlnet_dicts is not None
 
         self.stream: StreamDiffusion = self._load_model(
             model_id_or_path=model_id_or_path,
             lora_dict=lora_dict,
-            controlnet_dict=controlnet_dict,
+            controlnet_dicts=controlnet_dicts,
             lcm_lora_id=lcm_lora_id,
             HyperSD_lora_id=HyperSD_lora_id,
             vae_id=vae_id,
@@ -396,7 +396,7 @@ class StreamDiffusionWrapper:
         model_id_or_path: str,
         t_index_list: List[int],
         lora_dict: Optional[Dict[str, float]] = None,
-        controlnet_dict: Optional[Dict[str, float]] = None,
+        controlnet_dicts: Optional[Dict[str, float]] = None,
         lcm_lora_id: Optional[str] = None,
         HyperSD_lora_id: Optional[str] = None,
         vae_id: Optional[str] = None,
@@ -430,7 +430,7 @@ class StreamDiffusionWrapper:
             The lora_dict to load, by default None.
             Keys are the LoRA names and values are the LoRA scales.
             Example: {'LoRA_1' : 0.5 , 'LoRA_2' : 0.7 ,...}
-        controlnet_dict : Optional[Dict[str, float]], optional
+        controlnet_dicts : Optional[Dict[str, float]], optional
             The controlnet_dict to load, by default None.
             Keys are the controlnet names and values are the controlnet scales.
             Example: {'controlnet_1' : 0.5 , 'controlnet_2' : 0.7 ,...}
@@ -500,7 +500,7 @@ class StreamDiffusionWrapper:
                     stream.load_HyperSD_lora(
                         pretrained_model_name_or_path_or_dict="ByteDance/Hyper-SD", model_name=HyperSD_lora_id
                     )
-                elif HyperSD_lora_id is None and controlnet_dict is not None:
+                elif HyperSD_lora_id is None and controlnet_dicts is not None:
                     stream.load_HyperSD_lora(
                         pretrained_model_name_or_path_or_dict="ByteDance/Hyper-SD",
                         model_name="Hyper-SD15-4step-lora.safetensors",
@@ -522,9 +522,9 @@ class StreamDiffusionWrapper:
                     stream.fuse_lora(lora_scale=lora_scale)
                     print(f"Use LoRA: {lora_name} in weights {lora_scale}")
 
-            if controlnet_dict is not None:
-                stream.load_controlnet(controlnet_dict)
-                print(f"Use controlnet: {controlnet_dict}")
+            if controlnet_dicts is not None:
+                stream.load_controlnet(controlnet_dicts)
+                print(f"Use controlnet: {controlnet_dicts}")
 
         if use_tiny_vae:
             if vae_id is not None:
@@ -607,7 +607,7 @@ class StreamDiffusionWrapper:
                             device=stream.device,
                             max_batch_size=stream.trt_unet_batch_size,
                             min_batch_size=stream.trt_unet_batch_size,
-                            num_controlnets=len(controlnet_dict),
+                            num_controlnets=len(controlnet_dicts),
                             embedding_dim=stream.text_encoder.config.hidden_size,
                             unet_dim=stream.unet.unet.config.in_channels,
                         )
