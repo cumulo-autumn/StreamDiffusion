@@ -3,7 +3,7 @@ import os
 import sys
 import time
 from multiprocessing import Process, Queue
-from typing import List, Literal, Optional, Dict
+from typing import Dict, List, Literal, Optional
 
 import fire
 import PIL.Image
@@ -12,6 +12,7 @@ import torch
 from tqdm import tqdm
 
 from streamdiffusion.image_utils import postprocess_image
+
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 
@@ -40,7 +41,7 @@ def run(
     lora_dict: Optional[Dict[str, float]] = None,
     prompt: str = "1girl with brown dog hair, thick glasses, smiling",
     negative_prompt: str = "bad image , bad quality",
-    CM_lora_type = "lcm",
+    CM_lora_type="lcm",
     use_tiny_vae: bool = True,
     width: int = 512,
     height: int = 512,
@@ -85,7 +86,7 @@ def run(
         Whether to use denoising batch or not, by default True.
     seed : int, optional
         The seed, by default 2. if -1, use random seed.
-    """        
+    """
     stream = StreamDiffusionWrapper(
         model_id_or_path=model_id_or_path,
         t_index_list=[32, 45],

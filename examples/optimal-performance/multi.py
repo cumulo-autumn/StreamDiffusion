@@ -3,7 +3,7 @@ import sys
 import threading
 import time
 import tkinter as tk
-from multiprocessing import Process, Queue, get_context
+from multiprocessing import Queue, get_context
 from typing import List, Literal
 
 import fire
@@ -72,7 +72,6 @@ def image_generation_process(
         model_id_or_path=model_id_or_path,
         t_index_list=[0],
         frame_buffer_size=batch_size,
-        warmup=10,
         acceleration=acceleration,
         CM_lora_type="none",
         mode="txt2img",
@@ -99,9 +98,7 @@ def image_generation_process(
             return
 
 
-def _receive_images(
-    queue: Queue, fps_queue: Queue, labels: List[tk.Label], fps_label: tk.Label
-) -> None:
+def _receive_images(queue: Queue, fps_queue: Queue, labels: List[tk.Label], fps_label: tk.Label) -> None:
     """
     Continuously receive images from a queue and update the labels.
 
@@ -121,9 +118,7 @@ def _receive_images(
             if not queue.empty():
                 [
                     labels[0].after(0, update_image, image_data, labels)
-                    for image_data in postprocess_image(
-                        queue.get(block=False), output_type="pil"
-                    )
+                    for image_data in postprocess_image(queue.get(block=False), output_type="pil")
                 ]
             if not fps_queue.empty():
                 fps_label.config(text=f"FPS: {fps_queue.get(block=False):.2f}")
@@ -154,9 +149,7 @@ def receive_images(queue: Queue, fps_queue: Queue) -> None:
     fps_label = tk.Label(root, text="FPS: 0")
     fps_label.grid(rows=2, columnspan=2)
 
-    thread = threading.Thread(
-        target=_receive_images, args=(queue, fps_queue, labels, fps_label), daemon=True
-    )
+    thread = threading.Thread(target=_receive_images, args=(queue, fps_queue, labels, fps_label), daemon=True)
     thread.start()
 
     try:
@@ -174,7 +167,7 @@ def main(
     """
     Main function to start the image generation and viewer processes.
     """
-    ctx = get_context('spawn')
+    ctx = get_context("spawn")
     queue = ctx.Queue()
     fps_queue = ctx.Queue()
     process1 = ctx.Process(
@@ -188,6 +181,7 @@ def main(
 
     process1.join()
     process2.join()
+
 
 if __name__ == "__main__":
     fire.Fire(main)

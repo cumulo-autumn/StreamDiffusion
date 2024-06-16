@@ -1,7 +1,7 @@
 import io
 import os
 import sys
-from typing import List, Literal, Optional, Dict
+from typing import Dict, List, Literal, Optional
 
 import fire
 import PIL.Image
@@ -62,8 +62,6 @@ def run(
         The width of the image, by default 512.
     height : int, optional
         The height of the image, by default 512.
-    warmup : int, optional
-        The number of warmup steps to perform, by default 10.
     acceleration : Literal["none", "xformers", "tensorrt"], optional
         The acceleration method, by default "tensorrt".
     device_ids : Optional[List[int]], optional
@@ -72,7 +70,7 @@ def run(
         Whether to use denoising batch or not, by default True.
     seed : int, optional
         The seed, by default 2. if -1, use random seed.
-    """       
+    """
     stream = StreamDiffusionWrapper(
         model_id_or_path=model_id_or_path,
         t_index_list=[32, 45],
@@ -81,7 +79,6 @@ def run(
         frame_buffer_size=1,
         width=width,
         height=height,
-        warmup=warmup,
         acceleration=acceleration,
         device_ids=device_ids,
         CM_lora_type=CM_lora_type,
@@ -101,9 +98,7 @@ def run(
         delta=0.5,
     )
 
-    downloaded_image = download_image("https://github.com/ddpn08.png").resize(
-        (width, height)
-    )
+    downloaded_image = download_image("https://github.com/ddpn08.png").resize((width, height))
 
     # warmup
     for _ in range(warmup):

@@ -1,25 +1,30 @@
 import os
 import sys
-import time
 import threading
-from multiprocessing import Process, Queue, get_context
-from multiprocessing.connection import Connection
-from typing import List, Literal, Dict, Optional
-import torch
-import PIL.Image
-from streamdiffusion.image_utils import pil2tensor
-import mss
-import fire
+import time
 import tkinter as tk
+from multiprocessing import Queue, get_context
+from multiprocessing.connection import Connection
+from typing import Dict, Literal, Optional
+
+import fire
+import mss
+import PIL.Image
+import torch
+
+from streamdiffusion.image_utils import pil2tensor
+
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from utils.viewer import receive_images
 from utils.wrapper import StreamDiffusionWrapper
 
+
 inputs = []
 top = 0
 left = 0
+
 
 def screen(
     event: threading.Event,
@@ -37,10 +42,12 @@ def screen(
             img = PIL.Image.frombytes("RGB", img.size, img.bgra, "raw", "BGRX")
             img.resize((height, width))
             inputs.append(pil2tensor(img))
-    print('exit : screen')
+    print("exit : screen")
+
+
 def dummy_screen(
-        width: int,
-        height: int,
+    width: int,
+    height: int,
 ):
     root = tk.Tk()
     root.title("Press Enter to start")
@@ -48,16 +55,21 @@ def dummy_screen(
     root.resizable(False, False)
     root.attributes("-alpha", 0.8)
     root.configure(bg="black")
+
     def destroy(event):
         root.destroy()
+
     root.bind("<Return>", destroy)
+
     def update_geometry(event):
         global top, left
         top = root.winfo_y()
         left = root.winfo_x()
+
     root.bind("<Configure>", update_geometry)
     root.mainloop()
     return {"top": top, "left": left, "width": width, "height": height}
+
 
 def monitor_setting_process(
     width: int,
@@ -66,6 +78,7 @@ def monitor_setting_process(
 ) -> None:
     monitor = dummy_screen(width, height)
     monitor_sender.send(monitor)
+
 
 def image_generation_process(
     queue: Queue,
@@ -88,7 +101,7 @@ def image_generation_process(
     enable_similar_image_filter: bool,
     similar_image_filter_threshold: float,
     similar_image_filter_max_skip_frame: float,
-    monitor_receiver : Connection,
+    monitor_receiver: Connection,
 ) -> None:
     """
     Process for generating images based on a prompt using a specified model.
@@ -141,7 +154,7 @@ def image_generation_process(
     similar_image_filter_max_skip_frame : int, optional
         The max skip frame for similar image filter, by default 10.
     """
-   
+
     global inputs
     stream = StreamDiffusionWrapper(
         model_id_or_path=model_id_or_path,
@@ -150,11 +163,10 @@ def image_generation_process(
         frame_buffer_size=frame_buffer_size,
         width=width,
         height=height,
-        warmup=10,
         acceleration=acceleration,
         do_add_noise=do_add_noise,
         CM_lora_type="Hyper_SD",
-        HyperSD_lora_id = "Hyper-SD15-2steps-lora.safetensors", 
+        HyperSD_lora_id="Hyper-SD15-2steps-lora.safetensors",
         enable_similar_image_filter=enable_similar_image_filter,
         similar_image_filter_threshold=similar_image_filter_threshold,
         similar_image_filter_max_skip_frame=similar_image_filter_max_skip_frame,
@@ -181,7 +193,7 @@ def image_generation_process(
 
     while True:
         try:
-            if not close_queue.empty(): # closing check
+            if not close_queue.empty():  # closing check
                 break
             if len(inputs) < frame_buffer_size:
                 time.sleep(0.005)
@@ -193,9 +205,7 @@ def image_generation_process(
                 sampled_inputs.append(inputs[len(inputs) - index - 1])
             input_batch = torch.cat(sampled_inputs)
             inputs.clear()
-            output_images = stream.stream(
-                input_batch.to(device=stream.device, dtype=stream.dtype)
-            ).cpu()
+            output_images = stream.stream(input_batch.to(device=stream.device, dtype=stream.dtype)).cpu()
             if frame_buffer_size == 1:
                 output_images = [output_images]
             for output_image in output_images:
@@ -207,9 +217,10 @@ def image_generation_process(
             break
 
     print("closing image_generation_process...")
-    event.set() # stop capture thread
+    event.set()  # stop capture thread
     input_screen.join()
     print(f"fps: {fps}")
+
 
 def main(
     model_id_or_path: str = "KBlueLeaf/kohaku-v2.1",
@@ -233,7 +244,7 @@ def main(
     """
     Main function to start the image generation and viewer processes.
     """
-    ctx = get_context('spawn')
+    ctx = get_context("spawn")
     queue = ctx.Queue()
     fps_queue = ctx.Queue()
     close_queue = Queue()
@@ -264,7 +275,7 @@ def main(
             similar_image_filter_threshold,
             similar_image_filter_max_skip_frame,
             monitor_receiver,
-            ),
+        ),
     )
     process1.start()
 
@@ -274,7 +285,7 @@ def main(
             width,
             height,
             monitor_sender,
-            ),
+        ),
     )
     monitor_process.start()
     monitor_process.join()
@@ -287,10 +298,10 @@ def main(
     print("process2 terminated.")
     close_queue.put(True)
     print("process1 terminating...")
-    process1.join(5) # with timeout
+    process1.join(5)  # with timeout
     if process1.is_alive():
         print("process1 still alive. force killing...")
-        process1.terminate() # force kill...
+        process1.terminate()  # force kill...
     process1.join()
     print("process1 terminated.")
 

@@ -3,10 +3,12 @@ import sys
 import threading
 import time
 import tkinter as tk
-from multiprocessing import  Queue
-from typing import List
+from multiprocessing import Queue
+
 from PIL import Image, ImageTk
+
 from streamdiffusion.image_utils import postprocess_image
+
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 
@@ -28,9 +30,8 @@ def update_image(image_data: Image.Image, label: tk.Label) -> None:
     label.configure(image=tk_image, width=width, height=height)
     label.image = tk_image  # keep a reference
 
-def _receive_images(
-    queue: Queue, fps_queue: Queue, label: tk.Label, fps_label: tk.Label
-) -> None:
+
+def _receive_images(queue: Queue, fps_queue: Queue, label: tk.Label, fps_label: tk.Label) -> None:
     """
     Continuously receive images from a queue and update the labels.
 
@@ -85,9 +86,7 @@ def receive_images(queue: Queue, fps_queue: Queue) -> None:
         root.quit()  # stop event loop
         return
 
-    thread = threading.Thread(
-        target=_receive_images, args=(queue, fps_queue, label, fps_label), daemon=True
-    )
+    thread = threading.Thread(target=_receive_images, args=(queue, fps_queue, label, fps_label), daemon=True)
     thread.start()
 
     try:
@@ -95,4 +94,3 @@ def receive_images(queue: Queue, fps_queue: Queue) -> None:
         root.mainloop()
     except KeyboardInterrupt:
         return
-

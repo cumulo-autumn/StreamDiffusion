@@ -29,6 +29,7 @@ RUN pip3 install \
     xformers \
     --index-url https://download.pytorch.org/whl/cu118
 
+    
 COPY . /streamdiffusion
 WORKDIR /streamdiffusion
 

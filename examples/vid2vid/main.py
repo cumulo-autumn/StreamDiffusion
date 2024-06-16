@@ -1,15 +1,17 @@
 import os
 import sys
-from typing import Literal, Dict, Optional
+from typing import Dict, Literal, Optional
 
 import fire
 import torch
 from torchvision.io import read_video, write_video
 from tqdm import tqdm
 
+
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from utils.wrapper import StreamDiffusionWrapper
+
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -26,7 +28,6 @@ def main(
     enable_similar_image_filter: bool = True,
     seed: int = 2,
 ):
-
     """
     Process for generating images based on a prompt using a specified model.
 
@@ -70,7 +71,6 @@ def main(
         frame_buffer_size=1,
         width=width,
         height=height,
-        warmup=10,
         acceleration=acceleration,
         do_add_noise=False,
         mode="img2img",

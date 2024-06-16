@@ -134,17 +134,24 @@ Usage (Local) : ```--model_id_or_path "C:/stable-diffusion-webui/models/Stable-d
 The ```--lora_dict``` is in the format ```"{'LoRA_1 file path' : LoRA_1 scale , 'LoRA_2 file path' : LoRA_2 scale}"```.
 
 
-Usage : 
-```--lora_dict "{'C:/stable-diffusion-webui/models/Stable-diffusion/LoRA_1.safetensor' : 0.5 ,'E:/ComfyUI/models/LoRA_2.safetensor' : 0.7 }"``` 
+Usage :
+```--lora_dict "{'C:/stable-diffusion-webui/models/Stable-diffusion/LoRA_1.safetensor' : 0.5 ,'E:/ComfyUI/models/LoRA_2.safetensor' : 0.7 }"```
 
-### Prompt 
+### controlnet_dict
+```--controlnet_dict``` can specify multiple ControlNets to be used. <br>
+The ```--controlnet_dict``` is in the format ```"{'ControlNet_1 file path' : ControlNet_1 scale , 'ControlNet_2 file path' : ControlNet_2 scale}"```.
+
+Usage :
+```--controlnet_dict "{'C:/stable-diffusion-webui/models/Stable-diffusion/ControlNet_1.safetensor' : 0.5 ,'E:/ComfyUI/models/ControlNet_2.safetensor' : 0.7 }"```
+
+### Prompt
 ```--prompt``` allows you to change Prompt.
 
 Usage : ```--prompt "A cat with a hat"```
 
 ### Negative Prompt
 
-```--negative_prompt``` allows you to change Negative Prompt. <br> 
+```--negative_prompt``` allows you to change Negative Prompt. <br>
 ※※ ```--negative_prompt``` Not available in txt2img ,optimal-performance, and vid2vid.
 
 

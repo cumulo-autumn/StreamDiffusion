@@ -56,6 +56,56 @@ class UNet2DConditionModelEngine:
         pass
 
 
+class UNet2DConditionControlNetModelEngine:
+    def __init__(self, filepath: str, stream: cuda.Stream, use_cuda_graph: bool = False):
+        self.engine = Engine(filepath)
+        self.stream = stream
+        self.use_cuda_graph = use_cuda_graph
+
+        self.engine.load()
+        self.engine.activate()
+
+    def __call__(
+        self,
+        latent_model_input: torch.Tensor,
+        timestep: torch.Tensor,
+        encoder_hidden_states: torch.Tensor,
+        controlnet_images: torch.Tensor,
+        **kwargs,
+    ) -> Any:
+        if timestep.dtype != torch.float32:
+            timestep = timestep.float()
+
+        self.engine.allocate_buffers(
+            shape_dict={
+                "sample": latent_model_input.shape,
+                "timestep": timestep.shape,
+                "encoder_hidden_states": encoder_hidden_states.shape,
+                "controlnet_images": controlnet_images.shape,
+                "latent": latent_model_input.shape,
+            },
+            device=latent_model_input.device,
+        )
+
+        noise_pred = self.engine.infer(
+            {
+                "sample": latent_model_input,
+                "timestep": timestep,
+                "encoder_hidden_states": encoder_hidden_states,
+                "controlnet_images": controlnet_images,
+            },
+            self.stream,
+            use_cuda_graph=self.use_cuda_graph,
+        )["latent"]
+        return UNet2DConditionOutput(sample=noise_pred)
+
+    def to(self, *args, **kwargs):
+        pass
+
+    def forward(self, *args, **kwargs):
+        pass
+
+
 class AutoencoderKLEngine:
     def __init__(
         self,

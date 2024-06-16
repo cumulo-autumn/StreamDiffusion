@@ -9,6 +9,7 @@ from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img impo
 from polygraphy import cuda
 
 from ...pipeline import StreamDiffusion
+from ...unet_with_control import UNet2DConditionControlNetModel
 from .builder import EngineBuilder, create_onnx_path
 from .engine import AutoencoderKLEngine, UNet2DConditionModelEngine
 from .models import VAE, BaseModel, UNet, VAEEncoder
@@ -72,6 +73,28 @@ def compile_unet(
     engine_build_options: dict = {},
 ):
     unet = unet.to(torch.device("cuda"), dtype=torch.float16)
+    builder = EngineBuilder(model_data, unet, device=torch.device("cuda"))
+    builder.build(
+        onnx_path,
+        onnx_opt_path,
+        engine_path,
+        opt_batch_size=opt_batch_size,
+        **engine_build_options,
+    )
+
+
+def compile_control_unet(
+    unet: UNet2DConditionControlNetModel,
+    model_data: BaseModel,
+    onnx_path: str,
+    onnx_opt_path: str,
+    engine_path: str,
+    opt_batch_size: int = 1,
+    engine_build_options: dict = {},
+):
+    unet = unet.to(torch.device("cuda"), dtype=torch.float16)
+    unet.unet = unet.unet.to(torch.device("cuda"), dtype=torch.float16)
+    unet.controlnets = [controlnet.to(torch.device("cuda"), dtype=torch.float16) for controlnet in unet.controlnets]
     builder = EngineBuilder(model_data, unet, device=torch.device("cuda"))
     builder.build(
         onnx_path,

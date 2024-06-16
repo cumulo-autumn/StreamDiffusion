@@ -304,6 +304,103 @@ class UNet(BaseModel):
         )
 
 
+class UNetWithControlNet(BaseModel):
+    def __init__(
+        self,
+        fp16=False,
+        device="cuda",
+        num_controlnets=1,
+        max_batch_size=16,
+        min_batch_size=1,
+        embedding_dim=768,
+        text_maxlen=77,
+        unet_dim=4,
+    ):
+        super(UNetWithControlNet, self).__init__(
+            fp16=fp16,
+            device=device,
+            max_batch_size=max_batch_size,
+            min_batch_size=min_batch_size,
+            embedding_dim=embedding_dim,
+            text_maxlen=text_maxlen,
+        )
+        self.num_controlnets = num_controlnets
+        self.unet_dim = unet_dim
+        self.name = "UNetWithControlNet"
+
+    def get_input_names(self):
+        return ["sample", "timestep", "encoder_hidden_states", "controlnet_images"]
+
+    def get_output_names(self):
+        return ["latent"]
+
+    def get_dynamic_axes(self):
+        return {
+            "sample": {0: "2B", 2: "H", 3: "W"},
+            "timestep": {0: "2B"},
+            "encoder_hidden_states": {0: "2B"},
+            "controlnet_images": {1: "2B", 3: "8H", 4: "8W"},
+            "latent": {0: "2B", 2: "H", 3: "W"},
+        }
+
+    def get_input_profile(self, batch_size, image_height, image_width, static_batch, static_shape):
+        latent_height, latent_width = self.check_dims(batch_size, image_height, image_width)
+        (
+            min_batch,
+            max_batch,
+            min_image_height,
+            max_image_height,
+            min_image_width,
+            max_image_width,
+            min_latent_height,
+            max_latent_height,
+            min_latent_width,
+            max_latent_width,
+        ) = self.get_minmax_dims(batch_size, image_height, image_width, static_batch, static_shape)
+        return {
+            "sample": [
+                (min_batch, self.unet_dim, min_latent_height, min_latent_width),
+                (batch_size, self.unet_dim, latent_height, latent_width),
+                (max_batch, self.unet_dim, max_latent_height, max_latent_width),
+            ],
+            "timestep": [(min_batch,), (batch_size,), (max_batch,)],
+            "encoder_hidden_states": [
+                (min_batch, self.text_maxlen, self.embedding_dim),
+                (batch_size, self.text_maxlen, self.embedding_dim),
+                (max_batch, self.text_maxlen, self.embedding_dim),
+            ],
+            "controlnet_images": [
+                (self.num_controlnets, min_batch, 3, min_image_height, min_image_width),
+                (self.num_controlnets, batch_size, 3, image_height, image_width),
+                (self.num_controlnets, max_batch, 3, max_image_height, max_image_width),
+            ],
+        }
+
+    def get_shape_dict(self, batch_size, image_height, image_width):
+        latent_height, latent_width = self.check_dims(batch_size, image_height, image_width)
+        return {
+            "sample": (2 * batch_size, self.unet_dim, latent_height, latent_width),
+            "timestep": (2 * batch_size,),
+            "encoder_hidden_states": (2 * batch_size, self.text_maxlen, self.embedding_dim),
+            "latent": (2 * batch_size, 4, latent_height, latent_width),
+            "controlnet_images": (self.num_controlnets, 2 * batch_size, 3, image_height, image_width),
+        }
+
+    def get_sample_input(self, batch_size, image_height, image_width):
+        latent_height, latent_width = self.check_dims(batch_size, image_height, image_width)
+        dtype = torch.float16 if self.fp16 else torch.float32
+        return (
+            torch.randn(
+                2 * batch_size, self.unet_dim, latent_height, latent_width, dtype=torch.float32, device=self.device
+            ),
+            torch.ones((2 * batch_size,), dtype=torch.float32, device=self.device),
+            torch.randn(2 * batch_size, self.text_maxlen, self.embedding_dim, dtype=dtype, device=self.device),
+            torch.randn(
+                self.num_controlnets, 2 * batch_size, 3, image_height, image_width, dtype=dtype, device=self.device
+            ),
+        )
+
+
 class VAE(BaseModel):
     def __init__(self, device, max_batch_size, min_batch_size=1):
         super(VAE, self).__init__(
