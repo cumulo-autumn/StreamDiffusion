@@ -85,11 +85,25 @@ def image_generation_process(
         num_inference_steps=50,
     )
 
+    start = 100
     while True:
         try:
             start_time = time.time()
 
-            x_outputs = stream.stream.txt2img_sd_turbo(batch_size).cpu()
+            start += 50
+            # None is the default action, fully random
+            noise = None
+
+            # This will generate seeds the change every iteration (but the video will be the same each time it is run)
+            # noise = list(range(start, start+batch_size))
+
+            # This will generate a constant image stream
+            # noise = [808] * batch_size
+
+            # You can uncomment this with either of the noise lists to generator and pre-process a noise tensor
+            # noise = stream.stream.noise_from_seeds(noise).neg()
+
+            x_outputs = stream.stream.txt2img_sd_turbo(batch_size, noise).cpu()
             queue.put(x_outputs, block=False)
 
             fps = 1 / (time.time() - start_time) * batch_size
@@ -168,7 +182,7 @@ def receive_images(queue: Queue, fps_queue: Queue) -> None:
 def main(
     prompt: str = "cat with sunglasses and a hat, photoreal, 8K",
     model_id_or_path: str = "stabilityai/sd-turbo",
-    batch_size: int = 12,
+    batch_size: int = 8,
     acceleration: Literal["none", "xformers", "tensorrt"] = "tensorrt",
 ) -> None:
     """
