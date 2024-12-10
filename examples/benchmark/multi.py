@@ -140,7 +140,8 @@ def run(
 
     print(f"Average time: {sum(results) / len(results)}ms")
     print(f"Average FPS: {1000 / (sum(results) / len(results))}")
-
+    p.terminate()
+    p.join()
 
 if __name__ == "__main__":
     fire.Fire(run)
