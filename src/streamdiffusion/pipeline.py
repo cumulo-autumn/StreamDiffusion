@@ -437,12 +437,14 @@ class StreamDiffusion:
         return x_0_pred_out
 
     @torch.no_grad()
+    # condition hack event sync/track for non-cuda devices, RIP profiling etc
     def __call__(
         self, x: Union[torch.Tensor, PIL.Image.Image, np.ndarray] = None
     ) -> torch.Tensor:
-        start = torch.cuda.Event(enable_timing=True)
-        end = torch.cuda.Event(enable_timing=True)
-        start.record()
+        if self.device == "cuda":
+            start = torch.cuda.Event(enable_timing=True)
+            end = torch.cuda.Event(enable_timing=True)
+            start.record()
         if x is not None:
             x = self.image_processor.preprocess(x, self.height, self.width).to(
                 device=self.device, dtype=self.dtype
@@ -462,10 +464,11 @@ class StreamDiffusion:
         x_output = self.decode_image(x_0_pred_out).detach().clone()
 
         self.prev_image_result = x_output
-        end.record()
-        torch.cuda.synchronize()
-        inference_time = start.elapsed_time(end) / 1000
-        self.inference_time_ema = 0.9 * self.inference_time_ema + 0.1 * inference_time
+        if self.device == "cuda":
+            end.record()
+            torch.cuda.synchronize()
+            inference_time = start.elapsed_time(end) / 1000
+            self.inference_time_ema = 0.9 * self.inference_time_ema + 0.1 * inference_time
         return x_output
 
     @torch.no_grad()
